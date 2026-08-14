@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DatabaseMaintenanceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ApprovalController;
@@ -15,7 +16,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\QuotaController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\BackupController;
+
 
 
 Route::get('/', function () {
@@ -96,12 +97,17 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->group(function () {
         Route::get('rekap', [RekapController::class, 'index'])->name('rekap.index');
         Route::get('rekap/export', [\App\Http\Controllers\RekapController::class, 'export'])->name('rekap.export');
     });
-    // backup db
-    Route::prefix('backup')->name('backup.')->group(function () {
-        Route::get('/', [BackupController::class, 'index'])->name('index');
-        Route::post('export', [BackupController::class, 'export'])->name('export');
-        Route::post('import', [BackupController::class, 'import'])->name('import');
-        Route::get('/download/{file}', [BackupController::class, 'download'])->name('download');
+    // database maintenance
+    Route::prefix('database')->name('database.')->group(function () {
+        Route::get('/',                          [DatabaseMaintenanceController::class, 'index'])->name('index');
+        Route::post('/backup',                   [DatabaseMaintenanceController::class, 'backup'])->name('backup');
+        Route::get('/backup/{filename}/download', [DatabaseMaintenanceController::class, 'download'])->name('download')
+            ->where('filename', '[a-zA-Z0-9._-]+');
+        Route::delete('/backup/{filename}',      [DatabaseMaintenanceController::class, 'deleteBackup'])->name('delete-backup')
+            ->where('filename', '[a-zA-Z0-9._-]+');
+        Route::post('/restore/upload',           [DatabaseMaintenanceController::class, 'uploadRestore'])->name('restore.upload');
+        Route::post('/restore/confirm',          [DatabaseMaintenanceController::class, 'confirmRestore'])->name('restore.confirm');
+        Route::post('/restore/dismiss',          [DatabaseMaintenanceController::class, 'dismissRestore'])->name('restore.dismiss');
     });
 });
 

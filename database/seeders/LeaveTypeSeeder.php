@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class LeaveTypeSeeder extends Seeder
@@ -12,13 +11,16 @@ class LeaveTypeSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\LeaveType::create([
-            'name' => 'cuti tahunan',
-            'quota' => 12,
-            'gender' => null,
-            'min_years' => 1,
-            'is_active' => true,
-        ]);
+        \App\Models\LeaveType::updateOrCreate(
+            ['name' => 'cuti tahunan'],
+            [
+                'quota' => 12,
+                'gender' => null,
+                'min_years' => 1,
+                'is_active' => true,
+                'is_annual_leave' => true,
+            ]
+        );
         \App\Models\LeaveType::create([
             'name' => 'cuti melahirkan',
             'quota' => 90,

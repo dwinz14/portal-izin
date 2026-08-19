@@ -231,10 +231,21 @@
                                 <p class="text-xs text-gray-500 mt-1">Default: tahun sekarang</p>
                             </div>
                             <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
-                                <h5 class="text-xs font-medium text-blue-700 dark:text-blue-200 mb-2">Generate kuota
-                                    cuti untuk semua karyawan
-                                </h5>
-                            </div>
+                                    <h5 class="text-xs font-medium text-blue-700 dark:text-blue-200 mb-2">Generate kuota
+                                        cuti untuk semua karyawan
+                                    </h5>
+                                    <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                                        Cuti tahunan: kuota dasar
+                                        <span class="font-semibold">{{ $defaultQuota }}</span> −
+                                        cuti bersama
+                                        <span class="font-semibold">{{ $jointLeaveCount }}</span> hari
+                                        ({{ now()->year }}) =
+                                        <span class="font-semibold">{{ $effectiveQuota }}</span> hari.
+                                        Pastikan data cuti bersama sudah diinput di menu
+                                        <a href="{{ route('hrd.holidays.index') }}"
+                                            class="font-semibold underline">Hari Libur</a>.
+                                    </p>
+                                </div>
                             <button type="submit"
                                 class="w-full px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 transition">
                                 <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor"

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Division;
-use App\Models\QuotaSetting;
 use App\Models\LeaveType;
 use App\Models\Office;
 use App\Models\Position;
+use App\Models\PublicHoliday;
+use App\Models\QuotaSetting;
+use App\Models\User;
 use App\Models\UserLeaveBalance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +57,10 @@ class QuotaController extends Controller
         $autoGenerate = QuotaSetting::getValue('auto_generate_leave_balances', true);
         $defaultQuota = QuotaSetting::getValue('default_annual_leave_quota', 12);
 
+        // Info kuota cuti tahunan: 12 - jumlah cuti bersama tahun berjalan
+        $jointLeaveCount = PublicHoliday::countJointLeaveForYear(now()->year);
+        $effectiveQuota = max(0, $defaultQuota - $jointLeaveCount);
+
         return view('hrd.quota', compact(
             'userLeaveBalances',
             'leaveTypes',
@@ -69,7 +73,9 @@ class QuotaController extends Controller
             'search',
             'role',
             'autoGenerate',
-            'defaultQuota'
+            'defaultQuota',
+            'jointLeaveCount',
+            'effectiveQuota'
         ));
     }
 
@@ -84,7 +90,7 @@ class QuotaController extends Controller
                 ->update([
                     'total_quota' => $defaultQuota,
                     'remaining' => $defaultQuota,
-                    'used' => 0
+                    'used' => 0,
                 ]);
         }
 
@@ -106,7 +112,7 @@ class QuotaController extends Controller
                 ->update([
                     'total_quota' => $defaultQuota,
                     'remaining' => $defaultQuota,
-                    'used' => 0
+                    'used' => 0,
                 ]);
         }
 
@@ -128,7 +134,7 @@ class QuotaController extends Controller
                 ->update([
                     'total_quota' => $defaultQuota,
                     'remaining' => $defaultQuota,
-                    'used' => 0
+                    'used' => 0,
                 ]);
         }
 
@@ -138,7 +144,7 @@ class QuotaController extends Controller
     public function update(Request $request, User $user, LeaveType $leaveType)
     {
         $request->validate([
-            'remaining' => 'required|integer|min:0'
+            'remaining' => 'required|integer|min:0',
         ]);
 
         $balance = UserLeaveBalance::where('user_id', $user->id)
@@ -149,7 +155,7 @@ class QuotaController extends Controller
         if ($balance) {
             $balance->update([
                 'remaining' => $request->remaining,
-                'total_quota' => $request->remaining + $balance->used
+                'total_quota' => $request->remaining + $balance->used,
             ]);
         }
 
@@ -189,12 +195,17 @@ class QuotaController extends Controller
     public function generateAnnualBalances(Request $request)
     {
         $request->validate([
-            'year' => 'nullable|integer|min:2020|max:' . (now()->year + 1),
+            'year' => 'nullable|integer|min:2020|max:'.(now()->year + 1),
         ]);
 
         $year = $request->year ?: now()->year;
 
-        DB::transaction(function () use ($year) {
+        // Cuti bersama di tahun tsb memotong kuota cuti tahunan (12 - cuti bersama).
+        // Pastikan HR sudah menginput data hari libur (terutama cuti bersama)
+        // sebelum generate kuota.
+        $jointLeaveCount = PublicHoliday::countJointLeaveForYear($year);
+
+        DB::transaction(function () use ($year, $jointLeaveCount) {
             $users = User::where('role', '!=', 'super_admin')->get();
             $leaveTypes = LeaveType::where('is_active', true)->get();
 
@@ -216,6 +227,12 @@ class QuotaController extends Controller
                         continue;
                     }
 
+                    // Cuti tahunan: kuota dinamis = base quota - jumlah cuti bersama
+                    $quota = $leaveType->quota;
+                    if ($leaveType->is_annual_leave) {
+                        $quota = max(0, $leaveType->quota - $jointLeaveCount);
+                    }
+
                     // Gunakan updateOrCreate untuk menghindari duplikat
                     $balance = UserLeaveBalance::updateOrCreate(
                         [
@@ -224,8 +241,8 @@ class QuotaController extends Controller
                             'year' => $year,
                         ],
                         [
-                            'total_quota' => $leaveType->quota,
-                            'remaining' => $leaveType->quota,
+                            'total_quota' => $quota,
+                            'remaining' => $quota,
                             'used' => 0,
                         ]
                     );
@@ -239,9 +256,15 @@ class QuotaController extends Controller
             }
 
             // Log aktivitas
-            Log::info("Generate kuota cuti tahunan {$year}: {$created} dibuat, {$skipped} dilewati.");
+            Log::info("Generate kuota cuti tahunan {$year}: {$created} dibuat, {$skipped} dilewati. Cuti bersama: {$jointLeaveCount} hari.");
         });
 
-        return back()->with('success', "Generate kuota cuti tahunan untuk tahun {$year} berhasil. Silakan refresh halaman untuk melihat hasil.");
+        $message = "Generate kuota cuti tahunan untuk tahun {$year} berhasil. Silakan refresh halaman untuk melihat hasil.";
+
+        if ($jointLeaveCount > 0) {
+            $message .= " Kuota cuti tahunan dikurangi {$jointLeaveCount} hari cuti bersama.";
+        }
+
+        return back()->with('success', $message);
     }
 }

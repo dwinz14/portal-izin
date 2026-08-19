@@ -63,6 +63,21 @@
                     <x-input-error :messages="$errors->get('is_active')" class="mt-2" />
                 </div> --}}
 
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <label class="flex items-start space-x-3 cursor-pointer">
+                        <input id="is_annual_leave" name="is_annual_leave" type="checkbox"
+                            class="mt-0.5 rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800"
+                            value="1" {{ old('is_annual_leave') ? 'checked' : '' }}>
+                        <span class="text-sm text-gray-700 dark:text-gray-200">
+                            <span class="font-semibold">Cuti tahunan</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                Kuotanya dihitung otomatis: kuota dasar dikurangi jumlah cuti bersama di tahun tersebut
+                                (contoh: 12 − 7 cuti bersama = 5 hari).
+                            </span>
+                        </span>
+                    </label>
+                </div>
+
                 <div class="flex items-center justify-end space-x-3">
                     <a href="{{ route('admin.leave-types.index') }}"
                         class="inline-flex items-center justify-center px-4 py-2 bg-red-400 dark:bg-slate-600 border border-gray-300 dark:border-gray-500 rounded-full font-semibold text-xs text-slate-50 dark:text-gray-200 uppercase tracking-widest shadow-sm hover:bg-rose-300 dark:hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:ring-offset-slate-800 transition ease-in-out duration-150">

@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class LeaveType extends Model
 {
@@ -15,10 +15,12 @@ class LeaveType extends Model
         'gender',
         'min_years',
         'is_active',
+        'is_annual_leave',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_annual_leave' => 'boolean',
     ];
 
     public function userLeaveBalances()

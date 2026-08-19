@@ -79,6 +79,16 @@
                                     class="inline-block w-4 h-4 rounded-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-500"></span>
                                 Normal
                             </span>
+                            <span class="flex items-center gap-1.5">
+                                <span
+                                    class="inline-block w-4 h-4 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700"></span>
+                                Libur nasional (tidak dihitung)
+                            </span>
+                            <span class="flex items-center gap-1.5">
+                                <span
+                                    class="inline-block w-4 h-4 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700"></span>
+                                Cuti bersama (tidak dihitung)
+                            </span>
                         </div>
 
                         {{-- Grid utama --}}
@@ -215,6 +225,7 @@
                                                     <div class="flex items-center justify-center">
                                                         <button x-show="!day.pad" type="button"
                                                             @click="selectStart(day)" :class="dayClass(day, 'start')"
+                                                            :title="day.holiday ? day.holiday.name : ''"
                                                             x-text="day.d">
                                                         </button>
                                                         <span x-show="day.pad" class="w-9 h-9 block"></span>
@@ -324,6 +335,7 @@
                                                     <div class="flex items-center justify-center">
                                                         <button x-show="!day.pad" type="button"
                                                             @click="selectEnd(day)" :class="dayClass(day, 'end')"
+                                                            :title="day.holiday ? day.holiday.name : ''"
                                                             x-text="day.d">
                                                         </button>
                                                         <span x-show="day.pad" class="w-9 h-9 block"></span>
@@ -351,6 +363,28 @@
                                     <span class="font-semibold text-primary-600 dark:text-primary-400"
                                         x-text="workdays"></span>
                                     hari kerja
+                                </div>
+
+                                {{-- Info hari libur dalam rentang --}}
+                                <div x-show="holidaysInRange > 0" x-transition
+                                    class="text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 px-3 py-2 rounded-md flex items-start gap-2">
+                                    <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                    <span>
+                                        Rentang ini mencakup <span class="font-bold"
+                                            x-text="holidaysInRange"></span> hari libur nasional / cuti bersama yang
+                                        <span class="font-semibold">tidak dihitung</span> sebagai hari cuti.
+                                    </span>
+                                </div>
+
+                                {{-- Peringatan: tidak ada hari kerja --}}
+                                <div x-show="startDate && endDate && workdays === 0" x-transition
+                                    class="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 px-3 py-2 rounded-md">
+                                    Rentang yang dipilih tidak memiliki hari kerja (seluruhnya akhir pekan, libur
+                                    nasional, atau cuti bersama). Silakan pilih tanggal lain.
                                 </div>
                             </div>
                         </div>
@@ -520,6 +554,9 @@
                 isSickLeave: false,
                 showProof: false,
 
+                // Data hari libur: {'Y-m-d' => {name, type}} dari server
+                holidays: @json($holidayMap ?? []),
+
                 startDate: @json(old('start_date', '')),
                 endDate: @json(old('end_date', '')),
 
@@ -547,7 +584,7 @@
                         this.startDate <= C.mendadakEndStr;
                 },
 
-                /** Hari kerja (Senin–Jumat) antara start dan end */
+                /** Hari kerja (Senin–Jumat, minus libur nasional & cuti bersama) antara start dan end */
                 get workdays() {
                     if (!this.startDate || !this.endDate || this.endDate < this.startDate) return 0;
                     let n = 0;
@@ -555,7 +592,20 @@
                     const end = new Date(this.endDate + 'T00:00:00');
                     while (cur <= end) {
                         const d = cur.getDay();
-                        if (d !== 0 && d !== 6) n++;
+                        if (d !== 0 && d !== 6 && !this.holidays[toYMD(cur)]) n++;
+                        cur.setDate(cur.getDate() + 1);
+                    }
+                    return n;
+                },
+
+                /** Jumlah hari libur (tanggal merah & cuti bersama) dalam rentang terpilih */
+                get holidaysInRange() {
+                    if (!this.startDate || !this.endDate || this.endDate < this.startDate) return 0;
+                    let n = 0;
+                    const cur = new Date(this.startDate + 'T00:00:00');
+                    const end = new Date(this.endDate + 'T00:00:00');
+                    while (cur <= end) {
+                        if (this.holidays[toYMD(cur)]) n++;
                         cur.setDate(cur.getDate() + 1);
                     }
                     return n;
@@ -617,6 +667,7 @@
                             zone,
                             isSelected: dStr === selectedDate,
                             isToday: dStr === C.todayStr,
+                            holiday: this.holidays[dStr] || null,
                         });
                     }
 
@@ -701,6 +752,14 @@
                     const ring = day.isToday ?
                         ' ring-2 ring-primary-400 ring-offset-1 dark:ring-offset-slate-800' :
                         '';
+
+                    // Hari libur: tanggal merah (tidak dihitung) & cuti bersama (dihitung)
+                    if (day.holiday) {
+                        if (day.holiday.type === 'national_holiday') {
+                            return `${base}${ring} bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer`;
+                        }
+                        return `${base}${ring} bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer`;
+                    }
 
                     // Zone coloring (hanya cuti biasa)
                     if (!this.isSickLeave) {

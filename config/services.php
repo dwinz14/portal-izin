@@ -31,4 +31,11 @@ return [
         ],
     ],
 
+    // API pihak ketiga untuk sinkronisasi hari libur nasional & cuti bersama.
+    // Hanya dipakai sebagai pembuat draft (is_active=false) yang direview HR.
+    // Ganti endpoint lewat env HOLIDAY_API_URL tanpa mengubah kode.
+    'holiday_api' => [
+        'url' => env('HOLIDAY_API_URL', 'https://api-hari-libur.vercel.app/api'),
+    ],
+
 ];

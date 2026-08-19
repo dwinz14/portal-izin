@@ -4,22 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Helpers\LeaveHelper;
 use App\Http\Requests\StoreLeaveRequest;
-use App\Models\Leave;
-use App\Models\User;
 use App\Models\Approval;
 use App\Models\ApprovalHistory;
+use App\Models\Leave;
 use App\Models\LeaveType;
-use App\Models\UserLeaveBalance;
 use App\Models\Office;
+use App\Models\PublicHoliday;
+use App\Models\User;
+use App\Models\UserLeaveBalance;
 use App\Notifications\LeaveRequestSubmitted;
 use App\Notifications\RevisionAccepted;
 use App\Notifications\RevisionRejected;
 use App\Services\LeaveApprovalService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class LeaveController extends Controller
 {
@@ -72,27 +72,23 @@ class LeaveController extends Controller
             // Case 3: role lain → tetap filter satu kantor
         } else {
             $penggantiList = $requiresReplacement
-                ? Cache::remember("pengganti_{$user->office_id}", 300, fn() =>
-                User::select('id', 'name', 'role')->where('office_id', $user->office_id)->where('id', '!=', $user->id)->get())
+                ? Cache::remember("pengganti_{$user->office_id}", 300, fn () => User::select('id', 'name', 'role')->where('office_id', $user->office_id)->where('id', '!=', $user->id)->get())
                 : collect();
         }
-        $requiresAtasan = !in_array($user->role, ['direksi'], true);
+        $requiresAtasan = ! in_array($user->role, ['direksi'], true);
         $atasanList = collect();
 
         if ($requiresAtasan) {
-            $direksi = Cache::remember('direksi_users', 300, fn() =>
-            User::select('id', 'name', 'role')->where('role', 'direksi')->get());
+            $direksi = Cache::remember('direksi_users', 300, fn () => User::select('id', 'name', 'role')->where('role', 'direksi')->get());
 
             $atasanList = $atasanList->merge($direksi);
 
-            $hrd = Cache::remember('hrd_users', 300, fn() =>
-            User::select('id', 'name', 'role')->where('role', 'hrd')->get());
+            $hrd = Cache::remember('hrd_users', 300, fn () => User::select('id', 'name', 'role')->where('role', 'hrd')->get());
 
             $atasanList = $atasanList->merge($hrd);
 
             if ($user->role !== 'hrd') {
-                $others = Cache::remember("atasan_{$user->office_id}", 300, fn() =>
-                User::select('id', 'name', 'role')
+                $others = Cache::remember("atasan_{$user->office_id}", 300, fn () => User::select('id', 'name', 'role')
                     ->where('office_id', $user->office_id)
                     ->whereIn('role', ['kabag-pincab', 'kasie'])
                     ->where('id', '!=', $user->id)
@@ -127,7 +123,10 @@ class LeaveController extends Controller
             ->get()
             ->keyBy('leave_type_id');
 
-        return view('leaves.create', compact('penggantiList', 'requiresReplacement', 'atasanList', 'requiresAtasan', 'leaveTypes', 'userLeaveBalances', 'user'));
+        // Data hari libur (tanggal merah & cuti bersama) untuk menandai kalender
+        $holidayMap = PublicHoliday::getHolidayMap();
+
+        return view('leaves.create', compact('penggantiList', 'requiresReplacement', 'atasanList', 'requiresAtasan', 'leaveTypes', 'userLeaveBalances', 'user', 'holidayMap'));
     }
 
     public function store(StoreLeaveRequest $request)
@@ -138,16 +137,16 @@ class LeaveController extends Controller
 
         // Validasi masa kerja minimal untuk jenis cuti
         if ($leaveType->min_years > 0) {
-            if (!$user->tanggal_aktif_kerja) {
+            if (! $user->tanggal_aktif_kerja) {
                 return back()->withErrors([
-                    'leave_type_id' => 'Tanggal aktif kerja belum diatur. Hubungi Admin.'
+                    'leave_type_id' => 'Tanggal aktif kerja belum diatur. Hubungi Admin.',
                 ])->withInput();
             }
 
             $masaKerjaTahun = $user->masaKerjaTahun();
             if ($masaKerjaTahun < $leaveType->min_years) {
                 return back()->withErrors([
-                    'leave_type_id' => "Jenis cuti ini hanya untuk karyawan dengan masa kerja minimal {$leaveType->min_years} tahun."
+                    'leave_type_id' => "Jenis cuti ini hanya untuk karyawan dengan masa kerja minimal {$leaveType->min_years} tahun.",
                 ])->withInput();
             }
         }
@@ -162,6 +161,12 @@ class LeaveController extends Controller
 
         $totalHari = LeaveHelper::calculateWorkingDays($request->start_date, $request->end_date);
 
+        // Tolak pengajuan yang tidak memiliki hari kerja sama sekali
+        // (misal: seluruh rentang jatuh di akhir pekan / libur nasional / cuti bersama)
+        if ($totalHari <= 0) {
+            return back()->withErrors(['msg' => 'Rentang tanggal yang dipilih tidak memiliki hari kerja (seluruhnya akhir pekan, libur nasional, atau cuti bersama).'])->withInput();
+        }
+
         // Cek kuota (jika cuti memiliki batasan kuota)
         if ($leaveType->quota > 0) {
             $userLeaveBalance = UserLeaveBalance::where('user_id', $user->id)
@@ -169,7 +174,7 @@ class LeaveController extends Controller
                 ->where('year', now()->year)
                 ->first();
 
-            if (!$userLeaveBalance || $userLeaveBalance->remaining < $totalHari) {
+            if (! $userLeaveBalance || $userLeaveBalance->remaining < $totalHari) {
                 return back()->withErrors(['msg' => 'Kuota cuti tidak mencukupi untuk jenis cuti ini.'])->withInput();
             }
         }
@@ -208,16 +213,16 @@ class LeaveController extends Controller
 
             // Buat record cuti
             $leave = Leave::create([
-                'user_id'       => $user->id,
+                'user_id' => $user->id,
                 'leave_type_id' => $request->leave_type_id,
-                'pengganti_id'  => $request->pengganti_id,
-                'start_date'    => $request->start_date,
-                'end_date'      => $request->end_date,
-                'total_hari'    => $totalHari,
-                'alasan'        => $request->alasan,
-                'proof_image'   => $proofImagePath,
-                'status_final'  => 'pending',
-                'is_mendadak'   => !$isSickLeave && \Carbon\Carbon::parse($request->start_date)->lt(\Carbon\Carbon::today()->addWeek()),
+                'pengganti_id' => $request->pengganti_id,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'total_hari' => $totalHari,
+                'alasan' => $request->alasan,
+                'proof_image' => $proofImagePath,
+                'status_final' => 'pending',
+                'is_mendadak' => ! $isSickLeave && \Carbon\Carbon::parse($request->start_date)->lt(\Carbon\Carbon::today()->addWeek()),
             ]);
 
             // Kasus khusus: role direksi -> langsung disetujui
@@ -232,17 +237,17 @@ class LeaveController extends Controller
 
                     if ($balance) {
                         $balance->update([
-                            'used'     => \DB::raw("used + {$totalHari}"),
+                            'used' => \DB::raw("used + {$totalHari}"),
                             'remaining' => \DB::raw("remaining - {$totalHari}"),
                         ]);
                     }
                 }
 
                 ApprovalHistory::create([
-                    'leave_id'    => $leave->id,
+                    'leave_id' => $leave->id,
                     'approved_by' => $user->id,
-                    'role'        => $user->role,
-                    'status'      => 'approved',
+                    'role' => $user->role,
+                    'status' => 'approved',
                 ]);
 
                 return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti disetujui otomatis.');
@@ -250,16 +255,16 @@ class LeaveController extends Controller
 
             // Buat daftar approver (pengganti dan atasan)
             $penggantiId = $request->pengganti_id;
-            $atasanId    = $request->atasan_id;
+            $atasanId = $request->atasan_id;
             $approvers = collect([$penggantiId, $atasanId])->filter()->values();
 
             // Simpan approval steps
             foreach ($approvers as $index => $approverId) {
                 Approval::create([
-                    'leave_id'    => $leave->id,
+                    'leave_id' => $leave->id,
                     'approver_id' => $approverId,
-                    'step'        => $index + 1,
-                    'status'      => 'pending',
+                    'step' => $index + 1,
+                    'status' => 'pending',
                 ]);
             }
 
@@ -277,12 +282,12 @@ class LeaveController extends Controller
                 }
 
                 ApprovalHistory::create([
-                    'leave_id'    => $leave->id,
+                    'leave_id' => $leave->id,
                     'approved_by' => $atasanId,
-                    'role'        => User::find($atasanId)->role,
-                    'step'        => 1,
-                    'status'      => 'approved',
-                    'catatan'     => 'Auto-approved: pengganti dan atasan adalah orang yang sama.',
+                    'role' => User::find($atasanId)->role,
+                    'step' => 1,
+                    'status' => 'approved',
+                    'catatan' => 'Auto-approved: pengganti dan atasan adalah orang yang sama.',
                 ]);
 
                 // Notifikasi ke atasan (yang juga sebagai pengganti), tetapi sekarang atasan menjadi approver step2
@@ -293,12 +298,12 @@ class LeaveController extends Controller
                 // Sesuai logika asli di ApprovalController, jika step1 auto-approve, maka atasan tetap menerima notifikasi sebagai step2.
                 // Karena $approvers hanya berisi satu user, kita harus menambahkan step2 untuk user yang sama.
                 $step2Exists = $leave->approvals()->where('step', 2)->exists();
-                if (!$step2Exists) {
+                if (! $step2Exists) {
                     Approval::create([
-                        'leave_id'    => $leave->id,
+                        'leave_id' => $leave->id,
                         'approver_id' => $atasanId,
-                        'step'        => 2,
-                        'status'      => 'pending',
+                        'step' => 2,
+                        'status' => 'pending',
                     ]);
                 }
 
@@ -356,6 +361,7 @@ class LeaveController extends Controller
     public function destroy(Leave $leave)
     {
         $leave->delete();
+
         return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dihapus.');
     }
 
@@ -394,7 +400,7 @@ class LeaveController extends Controller
 
         $approval = $leave->revisionApproval;
 
-        if (!$approval || !$approval->revised_start_date) {
+        if (! $approval || ! $approval->revised_start_date) {
             return back()->withErrors(['msg' => 'Data revisi tidak ditemukan.']);
         }
 
@@ -419,12 +425,12 @@ class LeaveController extends Controller
             ->update(['status' => 'revision_accepted']);
 
         ApprovalHistory::create([
-            'leave_id'    => $leave->id,
+            'leave_id' => $leave->id,
             'approved_by' => Auth::id(),
-            'role'        => Auth::user()->role,
-            'step'        => null,
-            'status'      => 'revision_accepted',
-            'catatan'     => "Pemohon menyetujui revisi tanggal: {$approval->revised_start_date} s/d {$approval->revised_end_date}",
+            'role' => Auth::user()->role,
+            'step' => null,
+            'status' => 'revision_accepted',
+            'catatan' => "Pemohon menyetujui revisi tanggal: {$approval->revised_start_date} s/d {$approval->revised_end_date}",
         ]);
 
         // Kirim notifikasi ke approver
@@ -473,12 +479,12 @@ class LeaveController extends Controller
             ->update(['status' => 'revision_rejected']);
 
         ApprovalHistory::create([
-            'leave_id'    => $leave->id,
+            'leave_id' => $leave->id,
             'approved_by' => Auth::id(),
-            'role'        => Auth::user()->role,
-            'step'        => null,
-            'status'      => 'revision_rejected',
-            'catatan'     => "Pemohon menolak revisi tanggal dari " . $approval->approver->name,
+            'role' => Auth::user()->role,
+            'step' => null,
+            'status' => 'revision_rejected',
+            'catatan' => 'Pemohon menolak revisi tanggal dari '.$approval->approver->name,
         ]);
 
         // Kirim notifikasi ke approver

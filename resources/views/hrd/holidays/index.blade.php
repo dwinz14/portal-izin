@@ -19,8 +19,7 @@
                     </svg>
                     Tambah Hari Libur
                 </a>
-                <button
-                    @click="showImport = true"
+                <button @click="$dispatch('open-import-modal')"
                     class="inline-flex items-center px-3 py-2 bg-green-600 border border-transparent rounded-full font-medium text-xs text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -32,7 +31,7 @@
         </div>
     </x-slot>
 
-    <div class="space-y-4" x-data="{ showImport: false, showDelete: false, confirmToggle: false, selectedId: null, selectedName: '', selectedAction: '' }">
+    <div class="space-y-4" x-data="{ showImport: false, showDelete: false, confirmToggle: false, selectedId: null, selectedName: '', selectedAction: '', importTab: 'manual' }">
         @if (session('success'))
             <div
                 class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-center">
@@ -78,11 +77,13 @@
                         <select name="year" onchange="this.form.submit()"
                             class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
                             @foreach (range(now()->year, now()->year + 1) as $y)
-                                <option value="{{ $y }}" @selected($y == $year)>{{ $y }}</option>
+                                <option value="{{ $y }}" @selected($y == $year)>{{ $y }}
+                                </option>
                             @endforeach
                             @foreach ($years as $y)
                                 @if ($y < now()->year)
-                                    <option value="{{ $y }}" @selected($y == $year)>{{ $y }}</option>
+                                    <option value="{{ $y }}" @selected($y == $year)>
+                                        {{ $y }}</option>
                                 @endif
                             @endforeach
                         </select>
@@ -90,15 +91,19 @@
                 </form>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-4">
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Libur Nasional</p>
+            <div
+                class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-4">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Libur
+                    Nasional</p>
                 <p class="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">{{ $summary->national_count ?? 0 }}
-                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">hari (tidak potong kuota)</span>
+                    <span class="text-sm font-normal text-gray-500 dark:text-gray-400">hari</span>
                 </p>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-4">
-                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cuti Bersama</p>
+            <div
+                class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-4">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cuti Bersama
+                </p>
                 <p class="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{{ $summary->joint_count ?? 0 }}
                     <span class="text-sm font-normal text-gray-500 dark:text-gray-400">total,
                         {{ $summary->joint_weekday_count ?? 0 }} di hari kerja (potong kuota tahunan)</span>
@@ -110,8 +115,8 @@
             class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 px-4 py-3 rounded-lg text-sm">
             <span class="font-semibold">Catatan:</span> Kuota cuti tahunan dihitung otomatis = 12 − jumlah cuti bersama
             hari kerja tahun tersebut. Input data cuti bersama <span class="font-semibold">sebelum</span> klik "Generate
-            Kuota Tahunan" di menu <a href="{{ route('hrd.quota.index') }}"
-                class="font-semibold underline">Kuota Cuti</a>.
+            Kuota Tahunan" di menu <a href="{{ route('hrd.quota.index') }}" class="font-semibold underline">Kuota
+                Cuti</a>.
         </div>
 
         <div
@@ -147,12 +152,14 @@
                                     {{ $holidays->firstItem() + $index }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
                                     {{ $holiday->date->isoFormat('dddd, D MMMM YYYY') }}
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">({{ $holiday->date->isoFormat('ddd') }})</span>
+                                    <span
+                                        class="text-xs text-gray-500 dark:text-gray-400">({{ $holiday->date->isoFormat('ddd') }})</span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                                     {{ $holiday->name }}
                                     @if ($holiday->description)
-                                        <span class="block text-xs text-gray-500 dark:text-gray-400">{{ $holiday->description }}</span>
+                                        <span
+                                            class="block text-xs text-gray-500 dark:text-gray-400">{{ $holiday->description }}</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm">
@@ -187,7 +194,8 @@
                                         <a href="{{ route('hrd.holidays.edit', $holiday->id) }}"
                                             class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                                             title="Edit">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
@@ -196,7 +204,8 @@
                                             @click="showDelete = true; selectedId = {{ $holiday->id }}; selectedName = '{{ addslashes($holiday->name) }}'"
                                             class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                                             title="Hapus">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
@@ -214,8 +223,8 @@
                                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     <p class="mt-2">Belum ada data hari libur untuk tahun {{ $year }}.</p>
-                                    <p class="mt-1 text-xs">Gunakan tombol "Import Massal" untuk menyalin daftar dari
-                                        SKB 3 Menteri.</p>
+                                    <p class="mt-1 text-xs">Gunakan tombol "Import Massal" (Excel / API / Manual)
+                                        untuk menyalin daftar dari SKB 3 Menteri.</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -232,48 +241,153 @@
 
         {{-- Modal Import Massal --}}
         <div x-show="showImport" x-transition x-cloak style="display: none;"
+            x-on:open-import-modal.window="showImport = true" x-on:close-import-modal.window="showImport = false"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-2xl"
-                x-show="showImport" x-transition:enter="scale-95 opacity-0"
-                x-transition:enter-end="scale-100 opacity-100" x-transition:leave="scale-100 opacity-100"
-                x-transition:leave-end="scale-95 opacity-0">
-                <h2 class="text-lg font-semibold mb-2">Import Massal Hari Libur</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                    Salin daftar dari SKB 3 Menteri / Excel, satu baris per hari libur.
-                    Format: <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">tanggal | nama | tipe</code>
-                    (tipe opsional: <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">nasional</code> atau
-                    <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">cuti_bersama</code>, default
-                    <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">nasional</code>).
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-2xl" x-show="showImport"
+                x-transition:enter="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100"
+                x-transition:leave="scale-100 opacity-100" x-transition:leave-end="scale-95 opacity-0">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-lg font-semibold">Import Massal Hari Libur</h2>
+                    <button type="button" @click="showImport = false"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Pilih metode input: <b>Manual</b> (paste dari SKB 3 Menteri), <b>Excel</b> (template), atau
+                    <b>API</b> (tarik otomatis). Data selalu ditampilkan untuk verifikasi sebelum disimpan.
                 </p>
-                <form method="POST" action="{{ route('hrd.holidays.import') }}">
-                    @csrf
-                    <textarea name="lines" rows="10" required
-                        placeholder="2026-01-01 | Tahun Baru 2026 Masehi | nasional&#10;2026-03-20 | Cuti Bersama Idul Fitri | cuti_bersama"
-                        class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm font-mono"></textarea>
-                    <div class="mt-4 flex justify-end space-x-2">
-                        <button type="button" @click="showImport = false"
-                            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors">Batal</button>
-                        <button type="submit"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md transition-colors">Import</button>
+
+                {{-- Tab navigasi --}}
+                <div class="flex space-x-1 border-b border-gray-200 dark:border-slate-700 mb-4">
+                    <button type="button" @click="importTab = 'manual'"
+                        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+                        :class="importTab === 'manual' ? 'border-primary-600 text-primary-700 dark:text-primary-300' :
+                            'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+                        Manual
+                    </button>
+                    <button type="button" @click="importTab = 'excel'"
+                        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+                        :class="importTab === 'excel' ? 'border-green-600 text-green-700 dark:text-green-300' :
+                            'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+                        Excel
+                    </button>
+                    <button type="button" @click="importTab = 'api'"
+                        class="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+                        :class="importTab === 'api' ? 'border-blue-600 text-blue-700 dark:text-blue-300' :
+                            'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'">
+                        API
+                    </button>
+                </div>
+
+                {{-- Tab Manual --}}
+                <div x-show="importTab === 'manual'" x-cloak>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        Salin daftar dari SKB 3 Menteri / Excel, satu baris per hari libur.
+                        Format: <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">tanggal | nama | tipe</code>
+                        (tipe opsional: <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">nasional</code> atau
+                        <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">cuti_bersama</code>, default
+                        <code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">nasional</code>).
+                    </p>
+                    <form method="POST" action="{{ route('hrd.holidays.import') }}">
+                        @csrf
+                        <textarea name="lines" rows="10" required
+                            placeholder="2026-01-01 | Tahun Baru 2026 Masehi | nasional&#10;2026-03-20 | Cuti Bersama Idul Fitri | cuti_bersama"
+                            class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm font-mono"></textarea>
+                        <div class="mt-4 flex justify-end space-x-2">
+                            <button type="button" @click="showImport = false"
+                                class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors">Batal</button>
+                            <button type="submit"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md transition-colors">Import</button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Tab Excel --}}
+                <div x-show="importTab === 'excel'" x-cloak>
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Unduh template, isi sesuai SKB 3 Menteri, lalu unggah untuk diverifikasi sebelum
+                            disimpan ke sistem.
+                        </p>
+                        <a href="{{ route('hrd.holidays.import.template', ['year' => $year]) }}"
+                            class="inline-flex items-center px-3 py-2 bg-emerald-600 border border-transparent rounded-md font-medium text-xs text-white hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm shrink-0">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Unduh Template Excel
+                        </a>
                     </div>
-                </form>
+                    <form method="POST" action="{{ route('hrd.holidays.import.excelPreview') }}"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <input type="file" name="file" accept=".xlsx,.xls,.csv" required
+                            class="block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 dark:file:bg-green-900/30 file:text-green-700 dark:file:text-green-300 hover:file:bg-green-100 dark:hover:file:bg-green-900/50 cursor-pointer" />
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Format: .xlsx, .xls, atau .csv (maks 1 MB). Kolom template: Tanggal | Nama Hari Libur |
+                            Tipe. Baris yang tanggalnya sudah ada di sistem akan ditandai dan dilewati.
+                        </p>
+                        <div class="mt-4 flex justify-end space-x-2">
+                            <button type="button" @click="showImport = false"
+                                class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors">Batal</button>
+                            <button type="submit"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md transition-colors">Preview
+                                & Verifikasi</button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Tab API --}}
+                <div x-show="importTab === 'api'" x-cloak>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                        Tarik data hari libur nasional & cuti bersama langsung dari API publik
+                        (<code class="bg-gray-100 dark:bg-slate-700 px-1 rounded">api-hari-libur.vercel.app</code>).
+                        Data tampil dalam daftar verifikasi sebelum diimport.
+                    </p>
+                    <form method="POST" action="{{ route('hrd.holidays.import.apiPreview') }}">
+                        @csrf
+                        <div class="flex items-end gap-2">
+                            <div class="flex-1">
+                                <label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tahun</label>
+                                <select name="year"
+                                    class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
+                                    @foreach (range(now()->year, now()->year + 1) as $y)
+                                        <option value="{{ $y }}" @selected($y == $year)>
+                                            {{ $y }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-md transition-colors text-sm font-medium">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                Tarik Data & Preview
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
 
         {{-- Modal Hapus --}}
         <div x-show="showDelete" x-transition x-cloak style="display: none;"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md"
-                x-show="showDelete" x-transition:enter="scale-95 opacity-0"
-                x-transition:enter-end="scale-100 opacity-100" x-transition:leave="scale-100 opacity-100"
-                x-transition:leave-end="scale-95 opacity-0">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md" x-show="showDelete"
+                x-transition:enter="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100"
+                x-transition:leave="scale-100 opacity-100" x-transition:leave-end="scale-95 opacity-0">
                 <h2 class="text-lg font-semibold mb-4">Hapus Hari Libur</h2>
                 <p class="mb-4">
                     Apakah Anda yakin ingin menghapus hari libur <span class="font-bold"
                         x-text="selectedName"></span>?
                 </p>
-                <form
-                    x-bind:action="'{{ route('hrd.holidays.destroy', ':id') }}'.replace(':id', selectedId)"
+                <form x-bind:action="'{{ route('hrd.holidays.destroy', ':id') }}'.replace(':id', selectedId)"
                     method="POST">
                     @csrf
                     @method('DELETE')
@@ -289,17 +403,15 @@
         {{-- Modal Toggle Status --}}
         <div x-show="confirmToggle" x-transition x-cloak style="display: none;"
             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md"
-                x-show="confirmToggle" x-transition:enter="scale-95 opacity-0"
-                x-transition:enter-end="scale-100 opacity-100" x-transition:leave="scale-100 opacity-100"
-                x-transition:leave-end="scale-95 opacity-0">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md" x-show="confirmToggle"
+                x-transition:enter="scale-95 opacity-0" x-transition:enter-end="scale-100 opacity-100"
+                x-transition:leave="scale-100 opacity-100" x-transition:leave-end="scale-95 opacity-0">
                 <h2 class="text-lg font-semibold mb-4">Konfirmasi</h2>
                 <p class="mb-4">
                     Apakah Anda yakin ingin <span class="font-bold" x-text="selectedAction"></span> hari libur
                     <span class="font-bold" x-text="selectedName"></span>?
                 </p>
-                <form
-                    x-bind:action="'{{ route('hrd.holidays.toggle', ':id') }}'.replace(':id', selectedId)"
+                <form x-bind:action="'{{ route('hrd.holidays.toggle', ':id') }}'.replace(':id', selectedId)"
                     method="POST">
                     @csrf
                     @method('PATCH')

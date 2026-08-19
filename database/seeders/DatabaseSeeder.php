@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
             LeaveTypeSeeder::class,
             UserSeeder::class,
             QuotaSettingSeeder::class,
-            PublicHolidaySeeder::class,
+            // PublicHolidaySeeder::class,
         ]);
     }
 }

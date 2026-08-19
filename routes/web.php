@@ -128,6 +128,11 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->prefix('hrd')->name('hrd.')
         Route::delete('/{publicHoliday}', [PublicHolidayController::class, 'destroy'])->name('destroy');
         Route::patch('/{publicHoliday}/toggle', [PublicHolidayController::class, 'toggle'])->name('toggle');
         Route::post('/import', [PublicHolidayController::class, 'import'])->name('import');
+        Route::get('/import/template', [PublicHolidayController::class, 'template'])->name('import.template');
+        Route::post('/import/excel-preview', [PublicHolidayController::class, 'importExcelPreview'])->name('import.excelPreview');
+        Route::post('/import/api-preview', [PublicHolidayController::class, 'importApiPreview'])->name('import.apiPreview');
+        Route::post('/import/confirm', [PublicHolidayController::class, 'importConfirm'])->name('import.confirm');
+        Route::post('/import/cancel', [PublicHolidayController::class, 'importCancel'])->name('import.cancel');
     });
 });
 

@@ -1,522 +1,519 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
                 <h2
-                    class="border-l-[5px] border-primary-700 pl-5 font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">
+                    class="flex items-center gap-2 font-bold text-xl sm:text-2xl text-gray-900 dark:text-gray-100 leading-tight">
+                    <span class="w-1.5 h-5 bg-primary-600 rounded-full"></span>
                     {{ __('Ajukan Cuti') }}
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Isi formulir di bawah ini untuk mengajukan cuti Anda.
+                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 ml-3.5">
+                    Lengkapi formulir di bawah ini untuk mengajukan permohonan cuti Anda.
                 </p>
             </div>
         </div>
     </x-slot>
 
-
-    <div class="flex justify-center bg-gray-50 dark:bg-gray-900 py-2 px-4 sm:px-6 lg:px-8 drop-shadow-xl/50"
+    <div class="py-6 px-4 sm:px-6 lg:px-8 bg-gray-50/50 dark:bg-gray-900/50 min-h-screen flex justify-center"
         x-data="leaveForm()">
+        <div class="w-full max-w-3xl"> {{-- Dikurangi dari max-w-4xl ke max-w-3xl agar lebih proporsional --}}
 
-        <div class="w-full max-w-5x2">
+            {{-- Wrapper Utama --}}
             <div
-                class="bg-white dark:bg-slate-800 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl p-4 sm:p-6 lg:p-8">
-                <form method="POST" action="{{ route('cuti.store') }}" enctype="multipart/form-data" class="space-y-4">
+                class="bg-white dark:bg-slate-800 shadow-sm border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden transition-all duration-300">
+
+                <form method="POST" action="{{ route('cuti.store') }}" enctype="multipart/form-data">
                     @csrf
 
-                    {{-- ── Jenis Cuti ──────────────────────────────────────────── --}}
+                    {{-- ── BAGIAN 1: JENIS CUTI ──────────────────────────────────────────── --}}
                     <div
-                        class="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-slate-700 dark:to-slate-600 p-3 rounded-lg">
+                        class="p-5 sm:p-6 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/50">
                         <label for="leave_type_id"
-                            class="block text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                            <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Pilih Jenis Cuti
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Pilih Jenis Cuti / Izin <span class="text-red-500">*</span>
                         </label>
-                        <select id="leave_type_id" name="leave_type_id" @change="onLeaveTypeChange($event.target)"
-                            class="block w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm font-medium">
-                            <option value="">-- Pilih Jenis Cuti --</option>
-                            @foreach ($leaveTypes as $type)
-                                <option value="{{ $type->id }}" @selected(old('leave_type_id') == $type->id)>
-                                    {{ strtoupper($type->name) }}
-                                    @if ($type->quota > 0 && isset($userLeaveBalances[$type->id]))
-                                        (Sisa: {{ $userLeaveBalances[$type->id]->remaining }} hari)
-                                    @elseif ($type->quota > 0)
-                                        (Kuota: {{ $type->quota }} hari)
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="relative max-w-xl">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <select id="leave_type_id" name="leave_type_id" @change="onLeaveTypeChange($event.target)"
+                                class="block w-full pl-9 pr-9 py-2.5 text-sm bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-gray-100 transition-colors cursor-pointer">
+                                <option value="" class="text-gray-500">-- Silakan Pilih --</option>
+                                @foreach ($leaveTypes as $type)
+                                    <option value="{{ $type->id }}" @selected(old('leave_type_id') == $type->id)>
+                                        {{ strtoupper($type->name) }}
+                                        @if ($type->quota > 0 && isset($userLeaveBalances[$type->id]))
+                                            (Sisa Kuota: {{ $userLeaveBalances[$type->id]->remaining }} Hari)
+                                        @elseif ($type->quota > 0)
+                                            (Total Kuota: {{ $type->quota }} Hari)
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                         @error('leave_type_id')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            <p class="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                {{ $message }}
+                            </p>
                         @enderror
                     </div>
 
-                    {{-- ── Form Fields ──────────────────────────────────────────── --}}
-                    <div x-show="showForm" x-transition:enter="transition ease-out duration-300"
-                        x-transition:enter-start="opacity-0 translate-y-1"
-                        x-transition:enter-end="opacity-100 translate-y-0" class="space-y-5">
+                    {{-- ── FORM DINAMIS (Muncul Setelah Memilih Jenis Cuti) ───────────── --}}
+                    <div x-show="showForm" style="display: none;" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 -translate-y-4"
+                        x-transition:enter-end="opacity-100 translate-y-0" class="p-5 sm:p-6 space-y-6">
+                        {{-- Padding dan space-y diperkecil --}}
 
-                        {{-- Legenda zona warna (hanya cuti biasa) --}}
-                        <div x-show="!isSickLeave" x-transition
-                            class="flex flex-wrap items-center gap-x-5 gap-y-2 px-3 py-2 rounded-lg bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 text-xs text-gray-600 dark:text-gray-400">
-                            <span class="font-semibold text-gray-700 dark:text-gray-300">Keterangan warna
-                                tanggal:</span>
-                            <span class="flex items-center gap-1.5">
-                                <span
-                                    class="inline-block w-4 h-4 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-500"></span>
-                                Tanggal lampau
-                            </span>
-                            <span class="flex items-center gap-1.5">
-                                <span
-                                    class="inline-block w-4 h-4 rounded-full bg-orange-50 dark:bg-orange-900/30 border border-orange-300 dark:border-orange-700"></span>
-                                Zona mendadak (hari ini s/d H+6)
-                            </span>
-                            <span class="flex items-center gap-1.5">
-                                <span
-                                    class="inline-block w-4 h-4 rounded-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-500"></span>
-                                Normal
-                            </span>
-                            <span class="flex items-center gap-1.5">
-                                <span
-                                    class="inline-block w-4 h-4 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700"></span>
-                                Libur nasional (tidak dihitung)
-                            </span>
-                            <span class="flex items-center gap-1.5">
-                                <span
-                                    class="inline-block w-4 h-4 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700"></span>
-                                Cuti bersama (tidak dihitung)
-                            </span>
-                        </div>
+                        {{-- ── BAGIAN 2: WAKTU PELAKSANAAN ─────────────────────────────── --}}
+                        <section>
+                            <h3
+                                class="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Waktu Pelaksanaan
+                            </h3>
 
-                        {{-- Grid utama --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                            {{-- Kolom Kiri: Pengganti & Atasan --}}
-                            <div class="space-y-3">
-                                @if ($requiresReplacement)
-                                    <div class="w-3/4">
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                            Pengganti
-                                        </label>
-                                        <x-select-dropdown name="pengganti_id" label="" :options="$penggantiList->map(
-                                            fn($u) => [
-                                                'id' => $u->id,
-                                                'name' => strtoupper($u->name . ' (' . $u->role . ')'),
-                                            ],
-                                        )"
-                                            :selected="old('pengganti_id')" placeholder="-- Pilih Pengganti --" searchable="true" />
-                                        @error('pengganti_id')
-                                        @enderror
-                                    </div>
-                                @endif
-
-                                @if ($requiresAtasan)
-                                    <div class="w-3/4">
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                            <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            Atasan Langsung
-                                        </label>
-                                        <x-select-dropdown name="atasan_id" label="" :options="$atasanList->map(
-                                            fn($u) => [
-                                                'id' => $u->id,
-                                                'name' => strtoupper($u->name . ' (' . $u->role . ')'),
-                                            ],
-                                        )"
-                                            :selected="old('atasan_id')" placeholder="-- Pilih Atasan --" searchable="true" />
-                                        @error('atasan_id')
-                                        @enderror
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- Kolom Kanan: Date Pickers --}}
-                            <div class="space-y-4">
-
-                                {{-- ── Tanggal Mulai ──────────────────────────── --}}
-                                <div class="w-3/4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        Tanggal Mulai
-                                    </label>
-
-                                    {{-- Wrapper relative: click.outside menutup popup --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {{-- Tanggal Mulai --}}
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal
+                                        Mulai</label>
                                     <div class="relative" @click.outside="startOpen = false">
-
-                                        {{-- Trigger: tampil seperti input --}}
                                         <button type="button" @click="startOpen = !startOpen"
-                                            :class="startOpen
-                                                ?
-                                                'ring-2 ring-primary-500 border-primary-500' :
-                                                'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'"
-                                            class="relative w-full flex items-center justify-between px-3 py-2 bg-white dark:bg-slate-700 border rounded-md shadow-sm text-sm text-left focus:outline-none transition-all duration-150">
+                                            :class="startOpen ? 'ring-2 ring-primary-500 border-primary-500' :
+                                                'border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-gray-500'"
+                                            class="relative w-full flex items-center justify-between px-3.5 py-2 bg-white dark:bg-slate-900 border rounded-lg shadow-sm text-sm text-left focus:outline-none transition-all duration-200">
                                             <span
-                                                :class="startDate ? 'text-gray-900 dark:text-gray-100' :
+                                                :class="startDate ? 'text-gray-900 dark:text-gray-100 font-medium' :
                                                     'text-gray-400 dark:text-gray-500'"
                                                 x-text="startDate ? formatDisplay(startDate) : 'Pilih tanggal mulai'"></span>
-                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                         </button>
-
-                                        {{-- Hidden input untuk form submission --}}
                                         <input type="hidden" name="start_date" :value="startDate">
 
-                                        {{-- Kalender popup --}}
-                                        <div x-show="startOpen" x-transition:enter="transition ease-out duration-150"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-100"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute left-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-2xl p-3 w-72 origin-top-left"
+                                        {{-- Popup Kalender Mulai --}}
+                                        <div x-show="startOpen" x-transition
+                                            class="absolute left-0 top-full mt-1.5 z-50 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-xl p-3 w-64 origin-top-left"
                                             style="display:none">
-
-                                            {{-- Navigasi bulan --}}
-                                            <div class="flex items-center justify-between mb-3 px-1">
+                                            <div class="flex items-center justify-between mb-3">
                                                 <button type="button" @click="prevMonth('start')"
-                                                    class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    class="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"><svg
+                                                        class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M15 19l-7-7 7-7" />
-                                                    </svg>
-                                                </button>
-                                                <span class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+                                                    </svg></button>
+                                                <span class="text-sm font-bold text-gray-800 dark:text-gray-100"
                                                     x-text="MONTHS[startViewMonth] + ' ' + startViewYear"></span>
                                                 <button type="button" @click="nextMonth('start')"
-                                                    class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    class="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"><svg
+                                                        class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </button>
+                                                    </svg></button>
                                             </div>
-
-                                            {{-- Header nama hari --}}
-                                            <div class="grid grid-cols-7 mb-1">
+                                            <div class="grid grid-cols-7 mb-1.5">
                                                 <template x-for="d in DAYS_SHORT" :key="d">
-                                                    <div class="h-7 flex items-center justify-center text-xs font-semibold text-gray-400 dark:text-gray-500"
+                                                    <div class="h-6 flex items-center justify-center text-[10px] uppercase font-semibold text-gray-400 dark:text-gray-500"
                                                         x-text="d"></div>
                                                 </template>
                                             </div>
-
-                                            {{-- Grid hari --}}
                                             <div class="grid grid-cols-7 gap-y-1">
                                                 <template x-for="day in startDays" :key="day.key">
                                                     <div class="flex items-center justify-center">
                                                         <button x-show="!day.pad" type="button"
                                                             @click="selectStart(day)" :class="dayClass(day, 'start')"
                                                             :title="day.holiday ? day.holiday.name : ''"
-                                                            x-text="day.d">
-                                                        </button>
-                                                        <span x-show="day.pad" class="w-9 h-9 block"></span>
+                                                            x-text="day.d"></button>
+                                                        <span x-show="day.pad" class="w-7 h-7 block"></span>
                                                     </div>
                                                 </template>
                                             </div>
                                         </div>
                                     </div>
-
-                                    {{-- Badge Mendadak --}}
-                                    <div x-show="isMendadak" x-transition
-                                        class="mt-2 flex items-start gap-2 px-3 py-2 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700">
-                                        <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-orange-500" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                        </svg>
-                                        <span class="text-xs text-orange-700 dark:text-orange-300">
-                                            <span class="font-bold">⚡ Pengajuan Mendadak</span>
-                                            — Kurang dari 1 minggu dari hari ini. Akan dicatat sebagai
-                                            <span class="font-semibold">cuti/izin mendadak</span>.
-                                        </span>
-                                    </div>
-
                                     @error('start_date')
-                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">Anda harus memilih tanggal
-                                            mulai cuti</p>
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror
                                 </div>
 
-                                {{-- ── Tanggal Selesai ─────────────────────────── --}}
-                                <div class="w-3/4">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        Tanggal Selesai
-                                    </label>
-
+                                {{-- Tanggal Selesai --}}
+                                <div>
+                                    <label
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal
+                                        Selesai</label>
                                     <div class="relative" @click.outside="endOpen = false">
                                         <button type="button" @click="startDate && (endOpen = !endOpen)"
-                                            :class="[
-                                                !startDate ?
-                                                'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-gray-700' :
+                                            :class="[!startDate ?
+                                                'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700' :
                                                 endOpen ?
-                                                'ring-2 ring-primary-500 border-primary-500 bg-white dark:bg-slate-700' :
-                                                'bg-white dark:bg-slate-700 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                                                'ring-2 ring-primary-500 border-primary-500 bg-white dark:bg-slate-900' :
+                                                'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-gray-500'
                                             ]"
-                                            class="relative w-full flex items-center justify-between px-3 py-2 border rounded-md shadow-sm text-sm text-left focus:outline-none transition-all duration-150">
+                                            class="relative w-full flex items-center justify-between px-3.5 py-2 border rounded-lg shadow-sm text-sm text-left focus:outline-none transition-all duration-200">
                                             <span
-                                                :class="endDate ? 'text-gray-900 dark:text-gray-100' :
+                                                :class="endDate ? 'text-gray-900 dark:text-gray-100 font-medium' :
                                                     'text-gray-400 dark:text-gray-500'"
                                                 x-text="endDate ? formatDisplay(endDate) : (startDate ? 'Pilih tanggal selesai' : 'Pilih tanggal mulai dulu')"></span>
-                                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                         </button>
-
                                         <input type="hidden" name="end_date" :value="endDate">
 
-                                        <div x-show="endOpen" x-transition:enter="transition ease-out duration-150"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-100"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute left-0 top-full mt-1 z-50 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-xl shadow-2xl p-3 w-72 origin-top-left"
+                                        {{-- Popup Kalender Selesai --}}
+                                        <div x-show="endOpen" x-transition
+                                            class="absolute left-0 top-full mt-1.5 z-50 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-xl p-3 w-64 origin-top-left"
                                             style="display:none">
-
-                                            {{-- Navigasi bulan --}}
-                                            <div class="flex items-center justify-between mb-3 px-1">
+                                            <div class="flex items-center justify-between mb-3">
                                                 <button type="button" @click="prevMonth('end')"
-                                                    class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    class="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"><svg
+                                                        class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M15 19l-7-7 7-7" />
-                                                    </svg>
-                                                </button>
-                                                <span class="text-sm font-semibold text-gray-800 dark:text-gray-200"
+                                                    </svg></button>
+                                                <span class="text-sm font-bold text-gray-800 dark:text-gray-100"
                                                     x-text="MONTHS[endViewMonth] + ' ' + endViewYear"></span>
                                                 <button type="button" @click="nextMonth('end')"
-                                                    class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 dark:text-gray-400 transition-colors">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    class="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500 transition-colors"><svg
+                                                        class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </button>
+                                                    </svg></button>
                                             </div>
-
-                                            {{-- Header nama hari --}}
-                                            <div class="grid grid-cols-7 mb-1">
+                                            <div class="grid grid-cols-7 mb-1.5">
                                                 <template x-for="d in DAYS_SHORT" :key="d">
-                                                    <div class="h-7 flex items-center justify-center text-xs font-semibold text-gray-400 dark:text-gray-500"
+                                                    <div class="h-6 flex items-center justify-center text-[10px] uppercase font-semibold text-gray-400 dark:text-gray-500"
                                                         x-text="d"></div>
                                                 </template>
                                             </div>
-
-                                            {{-- Grid hari --}}
                                             <div class="grid grid-cols-7 gap-y-1">
                                                 <template x-for="day in endDays" :key="day.key">
                                                     <div class="flex items-center justify-center">
                                                         <button x-show="!day.pad" type="button"
                                                             @click="selectEnd(day)" :class="dayClass(day, 'end')"
                                                             :title="day.holiday ? day.holiday.name : ''"
-                                                            x-text="day.d">
-                                                        </button>
-                                                        <span x-show="day.pad" class="w-9 h-9 block"></span>
+                                                            x-text="day.d"></button>
+                                                        <span x-show="day.pad" class="w-7 h-7 block"></span>
                                                     </div>
                                                 </template>
                                             </div>
                                         </div>
                                     </div>
-
                                     @error('end_date')
-                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">Anda harus memilih tanggal
-                                            selesai cuti</p>
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror
                                 </div>
+                            </div>
 
-                                {{-- Preview durasi --}}
-                                <div x-show="workdays > 0" x-transition
-                                    class="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-3 py-2 rounded-md flex items-center gap-2">
-                                    <svg class="w-4 h-4 flex-shrink-0 text-primary-500" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Durasi cuti:
-                                    <span class="font-semibold text-primary-600 dark:text-primary-400"
-                                        x-text="workdays"></span>
-                                    hari kerja
+                            {{-- Legenda & Alerts --}}
+                            <div class="mt-4 space-y-2.5">
+                                {{-- Legenda (Hanya Cuti Biasa) --}}
+                                <div x-show="!isSickLeave" x-transition
+                                    class="flex flex-wrap items-center gap-3 p-2.5 rounded-lg bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-gray-400">
+                                    <span class="font-bold text-gray-800 dark:text-gray-200">Indikator
+                                        Tanggal:</span>
+                                    <span class="flex items-center gap-1"><span
+                                            class="w-2.5 h-2.5 rounded-full bg-orange-100 border border-orange-300 dark:bg-orange-900/40 dark:border-orange-700"></span>
+                                        Zona Mendadak</span>
+                                    <span class="flex items-center gap-1"><span
+                                            class="w-2.5 h-2.5 rounded-full bg-red-50 border border-red-200 dark:bg-red-900/30 dark:border-red-800"></span>
+                                        Libur Nasional</span>
+                                    <span class="flex items-center gap-1"><span
+                                            class="w-2.5 h-2.5 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800"></span>
+                                        Cuti Bersama</span>
                                 </div>
 
-                                {{-- Info hari libur dalam rentang --}}
+                                {{-- Kalkulasi Durasi --}}
+                                <div x-show="workdays > 0" x-transition
+                                    class="flex items-center gap-2.5 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg">
+                                    <div
+                                        class="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-md text-blue-600 dark:text-blue-400">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Total Durasi
+                                            Cuti</p>
+                                        <p class="text-xs text-blue-700 dark:text-blue-300">
+                                            <span class="font-bold text-sm" x-text="workdays"></span> hari kerja
+                                            efektif terpilih.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {{-- Warning: Libur --}}
                                 <div x-show="holidaysInRange > 0" x-transition
-                                    class="text-xs text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 px-3 py-2 rounded-md flex items-start gap-2">
-                                    <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" fill="none"
+                                    class="flex items-start gap-2.5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                                    <svg class="w-4 h-4 flex-shrink-0 text-amber-500 mt-0.5" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p class="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                                        Rentang ini mencakup <span class="font-bold" x-text="holidaysInRange"></span>
+                                        hari libur yang <span class="font-semibold underline">tidak akan
+                                            memotong</span> kuota Anda.
+                                    </p>
+                                </div>
+
+                                {{-- Warning: Mendadak --}}
+                                <div x-show="isMendadak" x-transition
+                                    class="flex items-start gap-2.5 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                                    <svg class="w-4 h-4 flex-shrink-0 text-orange-500 mt-0.5" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                     </svg>
-                                    <span>
-                                        Rentang ini mencakup <span class="font-bold"
-                                            x-text="holidaysInRange"></span> hari libur nasional / cuti bersama yang
-                                        <span class="font-semibold">tidak dihitung</span> sebagai hari cuti.
-                                    </span>
+                                    <p class="text-xs text-orange-800 dark:text-orange-300 leading-relaxed">
+                                        <span class="font-bold">Pengajuan Mendadak!</span> Jarak kurang dari
+                                        1 minggu. Sistem akan mencatat sebagai cuti mendadak.
+                                    </p>
                                 </div>
 
-                                {{-- Peringatan: tidak ada hari kerja --}}
+                                {{-- Warning: Tidak ada hari kerja --}}
                                 <div x-show="startDate && endDate && workdays === 0" x-transition
-                                    class="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-700 px-3 py-2 rounded-md">
-                                    Rentang yang dipilih tidak memiliki hari kerja (seluruhnya akhir pekan, libur
-                                    nasional, atau cuti bersama). Silakan pilih tanggal lain.
+                                    class="flex items-start gap-2.5 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                    <svg class="w-4 h-4 flex-shrink-0 text-red-500 mt-0.5" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p class="text-xs text-red-800 dark:text-red-300">
+                                        Rentang tanggal yang dipilih seluruhnya adalah hari libur. Silakan pilih rentang
+                                        tanggal lain.
+                                    </p>
                                 </div>
                             </div>
-                        </div>
+                        </section>
 
-                        {{-- Alasan --}}
-                        <div>
-                            <label for="alasan"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
+                        <hr class="border-gray-100 dark:border-slate-700">
+
+                        {{-- ── BAGIAN 3: PERSONIL TERLIBAT (Atasan & Pengganti) ──────── --}}
+                        @if ($requiresReplacement || $requiresAtasan)
+                            <section>
+                                <h3
+                                    class="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    Personil Terlibat
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    @if ($requiresAtasan)
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Atasan
+                                                Langsung (Approver)</label>
+                                            <x-select-dropdown name="atasan_id" label="" :options="$atasanList->map(
+                                                fn($u) => [
+                                                    'id' => $u->id,
+                                                    'name' => strtoupper($u->name . ' (' . $u->role . ')'),
+                                                ],
+                                            )"
+                                                :selected="old('atasan_id')" placeholder="-- Cari & Pilih Atasan --"
+                                                searchable="true" />
+                                            @error('atasan_id')
+                                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                                                    {{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endif
+
+                                    @if ($requiresReplacement)
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rekan
+                                                Pengganti (Backup)</label>
+                                            <x-select-dropdown name="pengganti_id" label="" :options="$penggantiList->map(
+                                                fn($u) => [
+                                                    'id' => $u->id,
+                                                    'name' => strtoupper($u->name . ' (' . $u->role . ')'),
+                                                ],
+                                            )"
+                                                :selected="old('pengganti_id')" placeholder="-- Cari & Pilih Rekan --"
+                                                searchable="true" />
+                                            @error('pengganti_id')
+                                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">
+                                                    {{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                    @endif
+                                </div>
+                            </section>
+                            <hr class="border-gray-100 dark:border-slate-700">
+                        @endif
+
+                        {{-- ── BAGIAN 4: DETAIL & LAMPIRAN ─────────────────────────────── --}}
+                        <section>
+                            <h3
+                                class="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
-                                Alasan Cuti
-                            </label>
-                            <textarea id="alasan" name="alasan" rows="3" placeholder="Jelaskan alasan cuti Anda secara detail..."
-                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm resize-none">{{ old('alasan') }}</textarea>
-                            @error('alasan')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">Anda harus mengisi alasan cuti</p>
-                            @enderror
-                        </div>
+                                Detail Keterangan
+                            </h3>
 
-                        {{-- Bukti Gambar --}}
-                        <div x-show="showProof" x-transition>
-                            <label for="proof_image"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                <svg class="w-4 h-4 inline mr-1 text-primary-600" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Bukti Gambar <span class="text-red-500">*</span>
-                            </label>
-                            <input type="file" id="proof_image" name="proof_image" accept="image/*"
-                                @change="onProofChange($event)"
-                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm">
-                            <button type="button" x-show="proofPreviewUrl" @click="openImagePreview()"
-                                class="mt-2 text-primary-600 hover:text-primary-800 text-sm font-medium flex items-center gap-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                </svg>
-                                Lihat Gambar
-                            </button>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Format: JPG, PNG, GIF. Maksimal
-                                2MB.</p>
-                            @error('proof_image')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">Anda harus menyertakan bukti surat
-                                    dokter</p>
-                            @enderror
-                        </div>
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="alasan"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alasan
+                                        Lengkap <span class="text-red-500">*</span></label>
+                                    <textarea id="alasan" name="alasan" rows="3"
+                                        placeholder="Jelaskan secara detail alasan permohonan cuti/izin Anda di sini..."
+                                        class="block w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm resize-none transition-colors">{{ old('alasan') }}</textarea>
+                                    @error('alasan')
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
 
-                        {{-- Tombol Aksi --}}
-                        <div class="flex items-center justify-end space-x-3 pt-2">
+                                {{-- Upload Bukti (Khusus Izin Sakit dgn Surat) --}}
+                                <div x-show="showProof" x-transition>
+                                    <label for="proof_image"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload
+                                        Bukti (Surat Dokter) <span class="text-red-500">*</span></label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="file" id="proof_image" name="proof_image" accept="image/*"
+                                            @change="onProofChange($event)"
+                                            class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-slate-700 dark:file:text-primary-400 dark:hover:file:bg-slate-600 transition-all border border-gray-300 dark:border-slate-600 rounded-lg cursor-pointer bg-white dark:bg-slate-900">
+
+                                        <button type="button" x-show="proofPreviewUrl" @click="openImagePreview()"
+                                            class="flex-shrink-0 inline-flex items-center px-3 py-2 border border-gray-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none transition-colors">
+                                            <svg class="w-4 h-4 mr-1.5 text-primary-500" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            Preview
+                                        </button>
+                                    </div>
+                                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Format didukung: JPG, PNG, GIF. Maksimal 2MB.
+                                    </p>
+                                    @error('proof_image')
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        </section>
+
+                        {{-- ── ACTIONS ─────────────────────────────────────────────────── --}}
+                        <div
+                            class="pt-5 border-t border-gray-100 dark:border-slate-700 flex items-center justify-end gap-3">
                             <a href="{{ route('cuti.index') }}"
-                                class="inline-flex items-center justify-center px-4 py-2 bg-red-400 dark:bg-slate-600 border border-gray-300 dark:border-gray-500 rounded-full font-semibold text-xs text-slate-50 dark:text-gray-200 uppercase tracking-widest shadow-sm hover:bg-rose-300 dark:hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:ring-offset-slate-800 transition ease-in-out duration-150">
+                                class="px-4 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-lg font-medium text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 dark:focus:ring-slate-900 transition-all">
                                 Batal
                             </a>
-                            <x-primary-button x-data="{ submitting: false }"
-                                x-on:click="submitting = true; setTimeout(() => submitting = false, 5000)">
-                                <span x-show="!submitting">Simpan</span>
-                                <span x-show="submitting">
-                                    <svg class="animate-spin h-4 w-4 inline" ...>...</svg>
+                            <button type="submit" x-data="{ submitting: false }"
+                                x-on:click="if($el.closest('form').checkValidity()){ submitting = true; setTimeout(() => submitting = false, 5000); }"
+                                class="inline-flex items-center justify-center px-5 py-2 bg-primary-600 border border-transparent rounded-lg font-semibold text-sm text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-slate-900 transition-all shadow-sm">
+                                <span x-show="!submitting" class="flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 12h14m-6-6 6 6-6 6" />
+                                    </svg>
+                                    Kirim Pengajuan
+                                </span>
+                                <span x-show="submitting" style="display: none;" class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
                                     Memproses...
                                 </span>
-                            </x-primary-button>
-
+                            </button>
                         </div>
                     </div>
-
                 </form>
             </div>
         </div>
     </div>
 
-    {{-- Modal error kuota --}}
+    {{-- ── MODAL ERROR (Kuota Habis, dsb) ────────────────────────────────────────── --}}
     @if ($errors->has('msg'))
         <div x-data="{ show: true }" x-show="show" x-transition
-            class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg max-w-md w-full mx-4">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <h3 class="text-lg font-semibold text-red-600 dark:text-red-400">Peringatan</h3>
+            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div @click.outside="show = false"
+                class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-2xl max-w-sm w-full transform transition-all">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Gagal Mengajukan</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ $errors->first('msg') }}</p>
+                    </div>
                 </div>
-                <p class="mt-4 text-gray-700 dark:text-gray-300">{{ $errors->first('msg') }}</p>
-                <div class="mt-6 flex justify-end">
+                <div class="mt-5">
                     <button @click="show = false"
-                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition ease-in-out duration-150">
-                        Tutup
+                        class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium text-sm transition-colors">
+                        Mengerti, Tutup
                     </button>
                 </div>
             </div>
         </div>
     @endif
 
-    {{-- Modal preview gambar bukti --}}
+    {{-- ── MODAL PREVIEW GAMBAR BUKTI ────────────────────────────────────────────── --}}
     <div x-data="{ open: false, src: '' }" x-on:open-image-preview.window="open = true; src = $event.detail.src" x-show="open"
         x-transition @click.self="open = false"
-        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" style="display:none">
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg max-w-lg w-full relative mx-4">
+        class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+        style="display:none">
+        <div class="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-2xl max-w-2xl w-full relative">
             <button @click="open = false"
-                class="absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="absolute -top-4 -right-4 bg-white dark:bg-slate-700 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white p-2 rounded-full shadow-lg transition-colors border border-gray-100 dark:border-slate-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <img :src="src" alt="Preview" class="w-full rounded-md mt-4">
+            <img :src="src" alt="Preview Bukti" class="w-full max-h-[80vh] object-contain rounded-lg">
         </div>
     </div>
 
+    {{-- ── SCRIPT ALPINE.JS ──────────────────────────────────────────────────────── --}}
     <script>
-        /**
-         * ================================================================
-         * leaveForm() — Alpine.js component
-         *
-         * Mengelola seluruh form pengajuan cuti/izin:
-         * - Visibilitas form berdasarkan jenis cuti
-         * - Custom date picker dengan pewarnaan zona mendadak
-         * - Deteksi & badge cuti mendadak (tanggal <= H+6)
-         * - Kalkulasi hari kerja otomatis
-         * - Preview gambar bukti
-         *
-         * Tidak ada dependency eksternal. Berjalan di atas Alpine.js
-         * dan Tailwind yang sudah tersedia dari Breeze.
-         * ================================================================
-         */
         function leaveForm() {
-
-            // ── Hitung konstanta tanggal sekali saja ─────────────────────────
             const _now = new Date();
             _now.setHours(0, 0, 0, 0);
 
@@ -525,10 +522,6 @@
             const _mendadakEnd = new Date(_now);
             _mendadakEnd.setDate(_mendadakEnd.getDate() + 6);
 
-            /**
-             * Format Date → 'YYYY-MM-DD' menggunakan nilai lokal,
-             * bukan UTC, untuk menghindari off-by-one akibat timezone.
-             */
             const toYMD = (d) => [
                 d.getFullYear(),
                 String(d.getMonth() + 1).padStart(2, '0'),
@@ -541,50 +534,33 @@
                 mendadakEndStr: toYMD(_mendadakEnd),
             };
 
-            const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
+                'Oktober', 'November', 'Desember'
             ];
             const DAYS_SHORT = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
             const DAYS_LONG = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
             return {
-
-                // ── State ─────────────────────────────────────────────────────
                 showForm: {{ $errors->any() ? 'true' : 'false' }},
                 isSickLeave: false,
                 showProof: false,
-
-                // Data hari libur: {'Y-m-d' => {name, type}} dari server
                 holidays: @json($holidayMap ?? []),
-
                 startDate: @json(old('start_date', '')),
                 endDate: @json(old('end_date', '')),
-
                 startOpen: false,
                 endOpen: false,
                 startViewYear: _now.getFullYear(),
                 startViewMonth: _now.getMonth(),
                 endViewYear: _now.getFullYear(),
                 endViewMonth: _now.getMonth(),
-
                 proofPreviewUrl: '',
-
                 MONTHS,
                 DAYS_SHORT,
 
-                // ── Computed ──────────────────────────────────────────────────
-
-                /**
-                 * Mendadak: bukan izin sakit DAN start_date ≤ H+6
-                 * Contoh: pengajuan 8 Apr → mendadak s/d 14 Apr; normal ab 15 Apr
-                 */
                 get isMendadak() {
-                    return !this.isSickLeave &&
-                        !!this.startDate &&
-                        this.startDate <= C.mendadakEndStr;
+                    return !this.isSickLeave && !!this.startDate && this.startDate <= C.mendadakEndStr;
                 },
 
-                /** Hari kerja (Senin–Jumat, minus libur nasional & cuti bersama) antara start dan end */
                 get workdays() {
                     if (!this.startDate || !this.endDate || this.endDate < this.startDate) return 0;
                     let n = 0;
@@ -598,7 +574,6 @@
                     return n;
                 },
 
-                /** Jumlah hari libur (tanggal merah & cuti bersama) dalam rentang terpilih */
                 get holidaysInRange() {
                     if (!this.startDate || !this.endDate || this.endDate < this.startDate) return 0;
                     let n = 0;
@@ -618,24 +593,12 @@
                     return this._buildDays(this.endViewYear, this.endViewMonth, this.endDate);
                 },
 
-                // ── Builder kalender ──────────────────────────────────────────
-                /**
-                 * Menghasilkan array sel kalender untuk satu bulan.
-                 * Sel padding (awal & akhir) menggunakan { pad:true }
-                 * agar grid 7-kolom selalu penuh tanpa kolom kosong.
-                 *
-                 * Zone (hanya untuk cuti biasa):
-                 *   'past'     → sebelum hari ini  (abu-abu)
-                 *   'mendadak' → hari ini – H+6    (oranye)
-                 *   'normal'   → H+7 ke atas       (putih)
-                 */
                 _buildDays(year, month, selectedDate) {
                     const cells = [];
                     const first = new Date(year, month, 1);
                     const last = new Date(year, month + 1, 0);
-
-                    // Padding awal (Senin = 0 … Minggu = 6)
                     const padStart = (first.getDay() + 6) % 7;
+
                     for (let i = 0; i < padStart; i++) cells.push({
                         pad: true,
                         key: `ps${month}-${i}`
@@ -646,10 +609,7 @@
                         const dow = date.getDay();
                         const dStr = toYMD(date);
                         const isWeekend = dow === 0 || dow === 6;
-
-                        // Disabled: weekend, atau izin sakit hanya boleh tanggal lampau
-                        const isDisabled = isWeekend ||
-                            (this.isSickLeave && dStr >= C.todayStr);
+                        const isDisabled = isWeekend || (this.isSickLeave && dStr >= C.todayStr);
 
                         let zone = 'normal';
                         if (!this.isSickLeave) {
@@ -667,11 +627,10 @@
                             zone,
                             isSelected: dStr === selectedDate,
                             isToday: dStr === C.todayStr,
-                            holiday: this.holidays[dStr] || null,
+                            holiday: this.holidays[dStr] || null
                         });
                     }
 
-                    // Padding akhir agar total selalu kelipatan 7
                     const rem = (7 - (cells.length % 7)) % 7;
                     for (let i = 0; i < rem; i++) cells.push({
                         pad: true,
@@ -681,7 +640,6 @@
                     return cells;
                 },
 
-                // ── Seleksi ───────────────────────────────────────────────────
                 selectStart(day) {
                     if (!day || day.pad || day.isDisabled) return;
                     this.startDate = day.dStr;
@@ -696,85 +654,52 @@
                     this.endOpen = false;
                 },
 
-                // ── Navigasi bulan ────────────────────────────────────────────
                 prevMonth(p) {
-                    if (p === 'start') {
-                        this.startViewMonth === 0 ?
-                            (this.startViewMonth = 11, this.startViewYear--) :
-                            this.startViewMonth--;
-                    } else {
-                        this.endViewMonth === 0 ?
-                            (this.endViewMonth = 11, this.endViewYear--) :
-                            this.endViewMonth--;
-                    }
+                    p === 'start' ? (this.startViewMonth === 0 ? (this.startViewMonth = 11, this.startViewYear--) : this
+                        .startViewMonth--) : (this.endViewMonth === 0 ? (this.endViewMonth = 11, this.endViewYear--) :
+                        this.endViewMonth--);
                 },
-
                 nextMonth(p) {
-                    if (p === 'start') {
-                        this.startViewMonth === 11 ?
-                            (this.startViewMonth = 0, this.startViewYear++) :
-                            this.startViewMonth++;
-                    } else {
-                        this.endViewMonth === 11 ?
-                            (this.endViewMonth = 0, this.endViewYear++) :
-                            this.endViewMonth++;
-                    }
+                    p === 'start' ? (this.startViewMonth === 11 ? (this.startViewMonth = 0, this.startViewYear++) : this
+                        .startViewMonth++) : (this.endViewMonth === 11 ? (this.endViewMonth = 0, this.endViewYear++) :
+                        this.endViewMonth++);
                 },
 
-                // ── Format display di tombol trigger ──────────────────────────
                 formatDisplay(dateStr) {
                     if (!dateStr) return '';
                     const d = new Date(dateStr + 'T00:00:00');
                     return `${DAYS_LONG[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
                 },
 
-                // ── Class Tailwind per sel hari ───────────────────────────────
-                /**
-                 * Mengembalikan string class Tailwind untuk tombol hari di kalender.
-                 * Urutan prioritas: disabled → selected → today → zone
-                 */
                 dayClass(day, picker) {
+                    // Ukuran tombol tanggal kalender diubah ke w-7 h-7 dan ditengah (mx-auto)
                     const base =
-                        'w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium transition-colors duration-150 select-none';
-
-                    // Disabled (weekend atau di luar range)
+                        'w-7 h-7 mx-auto rounded-full flex items-center justify-center text-xs font-medium transition-all duration-150 select-none';
                     const isOutOfRange = picker === 'end' && this.startDate && day.dStr < this.startDate;
-                    if (day.isDisabled || isOutOfRange) {
+
+                    if (day.isDisabled || isOutOfRange)
                         return `${base} text-gray-300 dark:text-gray-600 cursor-not-allowed`;
-                    }
+                    if (day.isSelected) return `${base} bg-primary-600 text-white shadow-sm cursor-pointer`;
 
-                    // Selected
-                    if (day.isSelected) {
-                        return `${base} bg-primary-600 text-white shadow-md cursor-pointer`;
-                    }
-
-                    // Ring hari ini (belum dipilih)
                     const ring = day.isToday ?
-                        ' ring-2 ring-primary-400 ring-offset-1 dark:ring-offset-slate-800' :
-                        '';
+                        ' ring-2 ring-primary-300 ring-offset-1 dark:ring-offset-slate-800 font-bold' : '';
 
-                    // Hari libur: tanggal merah (tidak dihitung) & cuti bersama (dihitung)
                     if (day.holiday) {
-                        if (day.holiday.type === 'national_holiday') {
-                            return `${base}${ring} bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/50 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer`;
-                        }
-                        return `${base}${ring} bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer`;
+                        if (day.holiday.type === 'national_holiday')
+                            return `${base}${ring} bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 cursor-pointer`;
+                        return `${base}${ring} bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 cursor-pointer`;
                     }
 
-                    // Zone coloring (hanya cuti biasa)
                     if (!this.isSickLeave) {
-                        if (day.zone === 'past') {
-                            return `${base}${ring} bg-gray-100 dark:bg-slate-700/50 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer`;
-                        }
-                        if (day.zone === 'mendadak') {
-                            return `${base}${ring} bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-900/40 cursor-pointer`;
-                        }
+                        if (day.zone === 'past')
+                            return `${base}${ring} bg-gray-50 dark:bg-slate-700/50 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer`;
+                        if (day.zone === 'mendadak')
+                            return `${base}${ring} bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 cursor-pointer`;
                     }
 
-                    return `${base}${ring} text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-slate-600 cursor-pointer`;
+                    return `${base}${ring} text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-slate-700 cursor-pointer`;
                 },
 
-                // ── Event: ganti jenis cuti ───────────────────────────────────
                 onLeaveTypeChange(selectEl) {
                     const name = (selectEl.options[selectEl.selectedIndex]?.text || '').toLowerCase();
                     const wasSick = this.isSickLeave;
@@ -785,13 +710,11 @@
                     this.showProof = isSickWith;
                     this.showForm = !!selectEl.value;
 
-                    // Reset tanggal saat beralih antara izin sakit & cuti biasa
                     if (wasSick !== this.isSickLeave) {
                         this.startDate = '';
                         this.endDate = '';
                     }
 
-                    // Kembalikan kalender ke bulan berjalan
                     this.startViewYear = _now.getFullYear();
                     this.startViewMonth = _now.getMonth();
                     this.endViewYear = _now.getFullYear();
@@ -811,5 +734,4 @@
             };
         }
     </script>
-
 </x-app-layout>

@@ -1,67 +1,506 @@
+
+/* ── FONT IMPORT ──────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles for enhanced UI/UX */
+/* Sembunyikan elemen sebelum Alpine selesai diinisialisasi */
+[x-cloak] {
+    display: none !important;
+}
+
+/* ── BASE LAYER ───────────────────────────────────────────── */
+@layer base {
+    html {
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        @apply text-gray-800 dark:text-gray-200;
+    }
+
+    /* Heading pakai Plus Jakarta Sans */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    }
+
+    /* NIK / kode pakai monospace */
+    .font-mono,
+    [data-type="nik"],
+    [data-type="code"] {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    /* Focus ring global — aksesibilitas */
+    *:focus-visible {
+        @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+    }
+
+    /* Supaya dark mode ring offset sesuai */
+    .dark *:focus-visible {
+        @apply ring-offset-dark-900;
+    }
+}
+
+/* ── COMPONENT LAYER ──────────────────────────────────────── */
 @layer components {
-    .theme-transition {
-        transition: background-color 0.3s ease, color 0.3s ease,
-            border-color 0.3s ease;
+    /* ── PAGE STRUCTURE ─────────────────────────────────── */
+
+    .page-header {
+        @apply flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6;
     }
 
-    .card-hover {
-        transition: all 0.3s ease;
+    .page-title {
+        @apply text-2xl font-bold text-gray-900 dark:text-white;
+        font-family: "Plus Jakarta Sans", sans-serif;
     }
 
-    .card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
-            0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    .page-subtitle {
+        @apply text-sm text-gray-500 dark:text-gray-400 mt-1;
     }
 
-    .btn-hover {
-        transition: all 0.2s ease;
+    .page-actions {
+        @apply flex items-center gap-2 flex-shrink-0;
     }
 
-    .btn-hover:hover {
-        transform: translateY(-1px);
+    /* ── CARD ────────────────────────────────────────────── */
+
+    .card {
+        @apply bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-gray-100 dark:border-dark-700;
     }
 
-    .menu-item-hover {
-        transition: all 0.2s ease;
+    .card-body {
+        @apply p-6;
     }
 
-    .menu-item-hover:hover {
-        transform: scale(1.02);
+    .card-header {
+        @apply px-6 py-4 border-b border-gray-100 dark:border-dark-700;
+    }
+
+    .card-footer {
+        @apply px-6 py-4 border-t border-gray-100 dark:border-dark-700 bg-gray-50 dark:bg-dark-900/50 rounded-b-xl;
+    }
+
+    /* Card yang bisa di-klik (hover effect ringan) */
+    .card-clickable {
+        @apply card cursor-pointer transition-all duration-200;
+    }
+    .card-clickable:hover {
+        @apply shadow-md -translate-y-0.5;
+    }
+
+    /* Card stat (dashboard) */
+    .card-stat {
+        @apply card p-5;
+    }
+
+    /* Card dengan aksen warna di kiri */
+    .card-accent-primary {
+        @apply card border-l-4 border-l-primary-500;
+    }
+    .card-accent-success {
+        @apply card border-l-4 border-l-green-500;
+    }
+    .card-accent-warning {
+        @apply card border-l-4 border-l-amber-500;
+    }
+    .card-accent-danger {
+        @apply card border-l-4 border-l-red-500;
+    }
+
+    /* ── BUTTONS ─────────────────────────────────────────── */
+
+    /* Base button */
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 font-medium rounded-md transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed select-none;
+    }
+
+    /* Sizes */
+    .btn-sm {
+        @apply btn text-xs px-3 py-1.5 h-8;
+    }
+    .btn-md {
+        @apply btn text-sm px-4 py-2 h-9;
+    }
+    .btn-lg {
+        @apply btn text-sm px-5 py-2.5 h-11;
+    }
+    .btn-xl {
+        @apply btn text-base px-6 py-3 h-12;
+    }
+
+    /* Variants */
+    .btn-primary {
+        @apply bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500;
+    }
+    .btn-secondary {
+        @apply bg-white dark:bg-dark-700 hover:bg-gray-50 dark:hover:bg-dark-600
+               border border-gray-300 dark:border-dark-600
+               text-gray-700 dark:text-gray-200
+               focus:ring-primary-500;
+    }
+    .btn-danger {
+        @apply bg-red-600 hover:bg-red-700 text-white focus:ring-red-500;
+    }
+    .btn-success {
+        @apply bg-green-600 hover:bg-green-700 text-white focus:ring-green-500;
+    }
+    .btn-warning {
+        @apply bg-amber-500 hover:bg-amber-600 text-white focus:ring-amber-400;
+    }
+    .btn-ghost {
+        @apply bg-transparent hover:bg-gray-100 dark:hover:bg-dark-700
+               text-gray-600 dark:text-gray-300
+               focus:ring-primary-500;
+    }
+    .btn-navy {
+        @apply bg-navy-800 hover:bg-navy-900 text-white focus:ring-navy-600;
+    }
+
+    /* Icon-only button */
+    .btn-icon {
+        @apply btn p-2 w-9 h-9 rounded-full;
+    }
+    .btn-icon-sm {
+        @apply btn p-1.5 w-7 h-7 rounded-full;
+    }
+
+    /* ── FORM ELEMENTS ───────────────────────────────────── */
+
+    .form-label {
+        @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5;
+    }
+
+    .form-input {
+        @apply w-full h-10 px-3.5 text-sm rounded-md
+               bg-white dark:bg-dark-800
+               border border-gray-300 dark:border-dark-600
+               text-gray-900 dark:text-gray-100
+               placeholder-gray-400 dark:placeholder-gray-500
+               transition-colors duration-150
+               focus:outline-none focus:ring-2 focus:ring-primary-500/25 focus:border-primary-500
+               disabled:bg-gray-50 dark:disabled:bg-dark-700 disabled:text-gray-400 disabled:cursor-not-allowed;
+    }
+
+    .form-select {
+        @apply form-input cursor-pointer pr-10;
+    }
+
+    .form-textarea {
+        @apply form-input h-auto min-h-[80px] py-2.5 resize-y;
+    }
+
+    .form-input-error {
+        @apply border-red-400 dark:border-red-500 focus:ring-red-500/20 focus:border-red-400;
+    }
+
+    .form-error-msg {
+        @apply flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400 mt-1.5;
+    }
+
+    .form-helper {
+        @apply text-xs text-gray-500 dark:text-gray-400 mt-1.5;
+    }
+
+    .form-group {
+        @apply flex flex-col gap-0;
+    }
+
+    /* ── STATUS BADGES ───────────────────────────────────── */
+
+    .badge {
+        @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-pending {
+        @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300;
+    }
+
+    .badge-approved {
+        @apply badge bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
+    }
+
+    .badge-rejected {
+        @apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+    }
+
+    .badge-revision {
+        @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+    }
+
+    .badge-info {
+        @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+    }
+
+    .badge-neutral {
+        @apply badge bg-gray-100 text-gray-600 dark:bg-dark-700 dark:text-gray-400;
+    }
+
+    .badge-navy {
+        @apply badge bg-navy-800 text-gold-300;
+    }
+
+    /* ── TABLE ───────────────────────────────────────────── */
+
+    .table-container {
+        @apply card overflow-hidden;
+    }
+
+    .table-toolbar {
+        @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b border-gray-100 dark:border-dark-700;
+    }
+
+    .data-table {
+        @apply w-full text-left;
+    }
+
+    .data-table thead {
+        @apply bg-gray-50 dark:bg-dark-900/50;
+    }
+
+    .data-table thead th {
+        @apply px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap;
+    }
+
+    .data-table tbody {
+        @apply divide-y divide-gray-100 dark:divide-dark-700;
+    }
+
+    .data-table tbody tr {
+        @apply hover:bg-gray-50 dark:hover:bg-dark-700/50 transition-colors duration-100;
+    }
+
+    .data-table tbody td {
+        @apply px-4 py-3 text-sm text-gray-700 dark:text-gray-300;
+    }
+
+    /* Table pagination */
+    .table-pagination {
+        @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-gray-100 dark:border-dark-700;
+    }
+
+    .table-pagination-info {
+        @apply text-sm text-gray-500 dark:text-gray-400;
+    }
+
+    /* ── SECTION HEADING ─────────────────────────────────── */
+
+    /* Ganti border-l-[5px] yang inkonsisten dengan class ini */
+    .section-title {
+        @apply text-xl font-bold text-gray-900 dark:text-white;
+        font-family: "Plus Jakarta Sans", sans-serif;
+    }
+
+    .section-title-accent {
+        @apply section-title pl-4 border-l-[3px] border-primary-600;
+    }
+
+    /* ── SIDEBAR MENU ────────────────────────────────────── */
+
+    /* Item menu non-aktif */
+    .nav-item {
+        @apply flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg
+               text-slate-300 hover:text-white hover:bg-navy-800
+               transition-colors duration-150 cursor-pointer;
+    }
+
+    /* Item menu aktif — signature: gold left-border */
+    .nav-item-active {
+        @apply flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-lg
+               text-white bg-white/10
+               border-l-[3px] border-l-gold-500
+               pl-[calc(0.75rem-3px)];
+    }
+
+    /* Ikon dalam nav item */
+    .nav-item .nav-icon {
+        @apply text-slate-400 flex-shrink-0;
+    }
+    .nav-item:hover .nav-icon {
+        @apply text-slate-200;
+    }
+    .nav-item-active .nav-icon {
+        @apply text-gold-400;
+    }
+
+    /* Badge count di nav item */
+    .nav-badge {
+        @apply ml-auto inline-flex items-center justify-center min-w-[20px] h-5
+               px-1.5 text-xs font-bold rounded-full
+               bg-red-500 text-white;
+    }
+
+    /* Group nav (parent dengan children) */
+    .nav-group-summary {
+        @apply nav-item w-full list-none;
+    }
+
+    /* Children menu item (indent) */
+    .nav-child-item {
+        @apply flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg
+               text-slate-400 hover:text-white hover:bg-navy-800
+               transition-colors duration-150;
+    }
+
+    .nav-child-item-active {
+        @apply flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg
+               text-white bg-white/10
+               border-l-[3px] border-l-gold-500
+               pl-[calc(0.75rem-3px)];
+    }
+
+    /* ── TOPBAR / HEADER ─────────────────────────────────── */
+
+    .topbar {
+        @apply sticky top-0 z-10 flex items-center h-14 gap-4
+               bg-white/90 dark:bg-dark-800/90
+               backdrop-blur-sm
+               border-b border-gray-200 dark:border-dark-700
+               shadow-sm px-4;
+    }
+
+    /* ── ALERT / CALLOUT ─────────────────────────────────── */
+
+    .alert {
+        @apply flex items-start gap-3 p-4 rounded-xl border;
+    }
+
+    .alert-info {
+        @apply alert bg-blue-50 border-blue-200 text-blue-800
+               dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300;
+    }
+
+    .alert-success {
+        @apply alert bg-green-50 border-green-200 text-green-800
+               dark:bg-green-900/20 dark:border-green-800 dark:text-green-300;
+    }
+
+    .alert-warning {
+        @apply alert bg-amber-50 border-amber-200 text-amber-800
+               dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300;
+    }
+
+    .alert-danger {
+        @apply alert bg-red-50 border-red-200 text-red-800
+               dark:bg-red-900/20 dark:border-red-800 dark:text-red-300;
+    }
+
+    /* ── EMPTY STATE ─────────────────────────────────────── */
+
+    .empty-state {
+        @apply flex flex-col items-center justify-center py-16 px-4 text-center;
+    }
+
+    .empty-state-icon {
+        @apply w-14 h-14 text-gray-300 dark:text-dark-600 mb-4;
+    }
+
+    .empty-state-title {
+        @apply text-base font-semibold text-gray-600 dark:text-gray-400 mb-1;
+    }
+
+    .empty-state-desc {
+        @apply text-sm text-gray-400 dark:text-gray-500 mb-4 max-w-xs;
+    }
+
+    /* ── DIVIDER ─────────────────────────────────────────── */
+
+    .divider {
+        @apply border-t border-gray-200 dark:border-dark-700 my-4;
+    }
+
+    /* ── TRANSITION HELPERS ──────────────────────────────── */
+
+    .transition-base {
+        @apply transition-colors duration-150 ease-in-out;
+    }
+
+    .transition-motion {
+        @apply transition-all duration-200 ease-in-out;
+    }
+} /* end @layer components */
+
+/* ── UTILITIES LAYER ──────────────────────────────────────── */
+@layer utilities {
+    /* Font families sebagai utility */
+    .font-display {
+        font-family: "Plus Jakarta Sans", ui-sans-serif, sans-serif;
+    }
+    .font-body {
+        font-family: "Inter", ui-sans-serif, sans-serif;
+    }
+    .font-code {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    /* Text balance untuk heading */
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    /* Truncate multi-line */
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 }
 
-/* Smooth scrollbar for dark mode */
+/* ── SCROLLBAR STYLING ────────────────────────────────────── */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
+    height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: transparent;
 }
-
-.dark ::-webkit-scrollbar-track {
-    background: #1e293b;
-}
-
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    @apply bg-gray-200 dark:bg-dark-700 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-300 dark:bg-dark-600;
+}
+
+/* Sidebar scrollbar lebih tipis dan gelap */
+.sidebar-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 4px;
 }
-
-.dark ::-webkit-scrollbar-thumb {
-    background: #475569;
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
+/* ── PRINT STYLES ─────────────────────────────────────────── */
+@media print {
+    .sidebar,
+    .topbar,
+    .no-print {
+        display: none !important;
+    }
+    body {
+        background: white !important;
+    }
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+    }
 }

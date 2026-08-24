@@ -72,23 +72,23 @@ class LeaveController extends Controller
             // Case 3: role lain → tetap filter satu kantor
         } else {
             $penggantiList = $requiresReplacement
-                ? Cache::remember("pengganti_{$user->office_id}", 300, fn () => User::select('id', 'name', 'role')->where('office_id', $user->office_id)->where('id', '!=', $user->id)->get())
+                ? Cache::remember("pengganti_{$user->office_id}", 300, fn() => User::select('id', 'name', 'role')->where('office_id', $user->office_id)->where('id', '!=', $user->id)->get())
                 : collect();
         }
         $requiresAtasan = ! in_array($user->role, ['direksi'], true);
         $atasanList = collect();
 
         if ($requiresAtasan) {
-            $direksi = Cache::remember('direksi_users', 300, fn () => User::select('id', 'name', 'role')->where('role', 'direksi')->get());
+            $direksi = Cache::remember('direksi_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'direksi')->get());
 
             $atasanList = $atasanList->merge($direksi);
 
-            $hrd = Cache::remember('hrd_users', 300, fn () => User::select('id', 'name', 'role')->where('role', 'hrd')->get());
+            $hrd = Cache::remember('hrd_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'hrd')->get());
 
             $atasanList = $atasanList->merge($hrd);
 
             if ($user->role !== 'hrd') {
-                $others = Cache::remember("atasan_{$user->office_id}", 300, fn () => User::select('id', 'name', 'role')
+                $others = Cache::remember("atasan_{$user->office_id}", 300, fn() => User::select('id', 'name', 'role')
                     ->where('office_id', $user->office_id)
                     ->whereIn('role', ['kabag-pincab', 'kasie'])
                     ->where('id', '!=', $user->id)
@@ -190,8 +190,8 @@ class LeaveController extends Controller
         }
 
         // Cek tumpang tindih cuti dengan pengganti
-        if ($request->pengganti_id && $this->hasOverlapLeave($request->pengganti_id, $request->start_date, $request->end_date)) {
-            return back()->withErrors(['msg' => 'Pengganti yang dipilih sedang cuti di tanggal tersebut.']);
+        if ($request->pengganti_id && $this->hasReplacementOnLeave($request->pengganti_id, $request->start_date, $request->end_date)) {
+            return back()->withErrors(['msg' => 'Pengganti yang dipilih sedang mengajukan cuti di tanggal tersebut.']);
         }
 
         // Cek apakah pengganti sudah ditugaskan di cuti lain
@@ -332,14 +332,17 @@ class LeaveController extends Controller
     {
         return Leave::where('user_id', $userId)
             ->where('status_final', 'approved')
-            ->where(function ($q) use ($start, $end) {
-                $q->whereBetween('start_date', [$start, $end])
-                    ->orWhereBetween('end_date', [$start, $end])
-                    ->orWhere(function ($q2) use ($start, $end) {
-                        $q2->where('start_date', '<=', $start)
-                            ->where('end_date', '>=', $end);
-                    });
-            })
+            ->where('start_date', '<=', $end)
+            ->where('end_date', '>=', $start)
+            ->exists();
+    }
+
+    private function hasReplacementOnLeave(int $replacementId, string $start, string $end): bool
+    {
+        return Leave::where('user_id', $replacementId)
+            ->whereNotIn('status_final', ['rejected'])
+            ->where('start_date', '<=', $end)
+            ->where('end_date', '>=', $start)
             ->exists();
     }
 
@@ -347,14 +350,8 @@ class LeaveController extends Controller
     {
         return Leave::where('pengganti_id', $replacementId)
             ->whereNotIn('status_final', ['rejected'])
-            ->where(function ($q) use ($start, $end) {
-                $q->whereBetween('start_date', [$start, $end])
-                    ->orWhereBetween('end_date', [$start, $end])
-                    ->orWhere(function ($q2) use ($start, $end) {
-                        $q2->where('start_date', '<=', $start)
-                            ->where('end_date', '>=', $end);
-                    });
-            })
+            ->where('start_date', '<=', $end)
+            ->where('end_date', '>=', $start)
             ->exists();
     }
 
@@ -374,23 +371,6 @@ class LeaveController extends Controller
             ->paginate(10);
 
         return view('replacements.index', compact('leaves'));
-    }
-
-    private function calculateWorkingDays($startDate, $endDate)
-    {
-        $start = Carbon::parse($startDate);
-        $end = Carbon::parse($endDate);
-        $workingDays = 0;
-
-        while ($start <= $end) {
-            // Check if it's a weekday (Monday to Friday)
-            if ($start->dayOfWeek !== Carbon::SATURDAY && $start->dayOfWeek !== Carbon::SUNDAY) {
-                $workingDays++;
-            }
-            $start->addDay();
-        }
-
-        return $workingDays;
     }
 
     public function acceptRevision(Leave $leave)
@@ -484,7 +464,7 @@ class LeaveController extends Controller
             'role' => Auth::user()->role,
             'step' => null,
             'status' => 'revision_rejected',
-            'catatan' => 'Pemohon menolak revisi tanggal dari '.$approval->approver->name,
+            'catatan' => 'Pemohon menolak revisi tanggal dari ' . $approval->approver->name,
         ]);
 
         // Kirim notifikasi ke approver

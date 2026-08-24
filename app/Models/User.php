@@ -79,6 +79,16 @@ class User extends Authenticatable
         return $this->hasMany(UserLeaveBalance::class);
     }
 
+    public function attendanceRequests()
+    {
+        return $this->hasMany(AttendanceRequest::class);
+    }
+
+    public function attendanceApprovals()
+    {
+        return $this->hasMany(AttendanceRequest::class, 'approver_id');
+    }
+
     public function masaKerjaTahun()
     {
         if (!$this->tanggal_aktif_kerja) return 0;

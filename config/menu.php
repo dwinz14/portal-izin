@@ -87,6 +87,15 @@ return [
             'active_pattern' => 'cuti.index*',
         ],
         [
+            'name' => 'Kehadiran',
+            'route' => 'kehadiran.index',
+            'icon' => '<svg class="mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>',
+            'roles' => ['hrd', 'kabag-pincab', 'staff', 'kasie'],
+            'active_pattern' => 'kehadiran*',
+        ],
+        [
             'name' => 'Jadwal Pengganti',
             'route' => 'replacements.index',
             'icon' => '<svg class="mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -103,6 +112,15 @@ return [
             </svg>',
             'roles' => ['direksi', 'hrd', 'kabag-pincab', 'kasie', 'staff'],
             'active_pattern' => 'approval.index*',
+        ],
+        [
+            'name' => 'Approval Kehadiran',
+            'route' => 'approval-kehadiran.index',
+            'icon' => '<svg class="mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>',
+            'roles' => ['direksi', 'hrd', 'kabag-pincab', 'kasie'],
+            'active_pattern' => 'approval-kehadiran*',
         ],
         [
             'name' => 'History Approval',
@@ -130,6 +148,15 @@ return [
             </svg>',
             'roles' => ['hrd', 'super_admin'],
             'active_pattern' => 'hrd.rekap.index*',
+        ],
+        [
+            'name' => 'Rekap Kehadiran',
+            'route' => 'hrd.kehadiran.index',
+            'icon' => '<svg class="mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6m4 6V7m4 10v-4M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>',
+            'roles' => ['hrd', 'super_admin'],
+            'active_pattern' => 'hrd.kehadiran*',
         ],
         [
             'name' => 'Kuota Cuti',

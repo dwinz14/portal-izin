@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\AttendanceApprovalController;
+use App\Http\Controllers\AttendanceReportController;
+use App\Http\Controllers\AttendanceRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseMaintenanceController;
 use App\Http\Controllers\DivisionController;
@@ -44,12 +47,24 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/replacements', [LeaveController::class, 'replacements'])->name('replacements.index');
 
+    Route::prefix('kehadiran')->name('kehadiran.')->group(function () {
+        Route::resource('', AttendanceRequestController::class)
+            ->parameters(['' => 'kehadiran'])
+            ->only(['index', 'create', 'store', 'destroy']);
+    });
+
     Route::prefix('approval')->name('approval.')->group(function () {
         Route::get('/', [ApprovalController::class, 'index'])->name('index');
         Route::get('/history', [ApprovalController::class, 'history'])->name('history');
         Route::patch('/{approval}/approve', [ApprovalController::class, 'approve'])->name('approve');
         Route::patch('/{approval}/reject', [ApprovalController::class, 'reject'])->name('reject');
         Route::patch('/{approval}/request-revision', [ApprovalController::class, 'requestRevision'])->name('request-revision');
+    });
+
+    Route::prefix('approval-kehadiran')->name('approval-kehadiran.')->group(function () {
+        Route::get('/', [AttendanceApprovalController::class, 'index'])->name('index');
+        Route::patch('/{attendanceRequest}/approve', [AttendanceApprovalController::class, 'approve'])->name('approve');
+        Route::patch('/{attendanceRequest}/reject', [AttendanceApprovalController::class, 'reject'])->name('reject');
     });
 
     // Routes untuk notifikasi
@@ -94,6 +109,7 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->group(function () {
     Route::prefix('hrd')->name('hrd.')->group(function () {
         Route::get('rekap', [RekapController::class, 'index'])->name('rekap.index');
         Route::get('rekap/export', [\App\Http\Controllers\RekapController::class, 'export'])->name('rekap.export');
+        Route::get('kehadiran', [AttendanceReportController::class, 'index'])->name('kehadiran.index');
     });
     // database maintenance
     Route::prefix('database')->name('database.')->group(function () {

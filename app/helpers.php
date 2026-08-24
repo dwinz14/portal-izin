@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Auth;
 use App\Models\Approval;
+use App\Models\AttendanceRequest;
 use App\Models\Leave;
 
 if (!function_exists('getFilteredMenuItems')) {
@@ -39,6 +40,14 @@ if (!function_exists('getFilteredMenuItems')) {
         // Badge for "Pengajuan Cuti" - count leaves with pending revisions for current user
         $badgeCounts['cuti.index'] = Leave::where('user_id', $userId)
             ->where('is_revision_pending', true)
+            ->count();
+
+        $badgeCounts['approval-kehadiran.index'] = AttendanceRequest::where('approver_id', $userId)
+            ->where('status', AttendanceRequest::STATUS_PENDING)
+            ->count();
+
+        $badgeCounts['kehadiran.index'] = AttendanceRequest::where('user_id', $userId)
+            ->where('status', AttendanceRequest::STATUS_PENDING)
             ->count();
 
         foreach ($menuConfig as $item) {

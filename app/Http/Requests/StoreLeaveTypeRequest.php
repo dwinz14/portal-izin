@@ -14,21 +14,22 @@ class StoreLeaveTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'      => ['required', 'string', 'max:255', 'unique:leave_types,name'],
-            'quota'     => ['required', 'integer', 'min:0'],
-            'gender'    => ['nullable', 'in:L,P'],
+            'name' => ['required', 'string', 'max:255', 'unique:leave_types,name'],
+            'quota' => ['required', 'integer', 'min:0'],
+            'gender' => ['nullable', 'in:L,P'],
             'min_years' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
+            'is_annual_leave' => ['boolean'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'   => 'Nama jenis cuti wajib diisi.',
-            'name.unique'     => 'Nama jenis cuti sudah terdaftar.',
-            'quota.required'  => 'Kuota wajib diisi.',
-            'quota.min'       => 'Kuota tidak boleh negatif.',
+            'name.required' => 'Nama jenis cuti wajib diisi.',
+            'name.unique' => 'Nama jenis cuti sudah terdaftar.',
+            'quota.required' => 'Kuota wajib diisi.',
+            'quota.min' => 'Kuota tidak boleh negatif.',
         ];
     }
 

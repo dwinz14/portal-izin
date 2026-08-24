@@ -1,23 +1,22 @@
 <?php
 
-use App\Http\Controllers\DatabaseMaintenanceController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DatabaseMaintenanceController;
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeavePrintController;
+use App\Http\Controllers\MasterLeaveTypeController;
 use App\Http\Controllers\MasterOfficeController;
 use App\Http\Controllers\MasterPositionController;
-use App\Http\Controllers\MasterLeaveTypeController;
 use App\Http\Controllers\MasterUserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicHolidayController;
 use App\Http\Controllers\QuotaController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\UserManagementController;
-
-
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -29,7 +28,7 @@ Route::get('/', function () {
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
-//route cuti & approve
+// route cuti & approve
 Route::middleware(['auth'])->group(function () {
 
     Route::prefix('cuti')->name('cuti.')->group(function () {
@@ -72,7 +71,6 @@ Route::middleware('auth')->group(function () {
     })->name('password.force-change');
 });
 
-
 // route master for super admin
 Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('divisions', DivisionController::class);
@@ -99,18 +97,17 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->group(function () {
     });
     // database maintenance
     Route::prefix('database')->name('database.')->group(function () {
-        Route::get('/',                          [DatabaseMaintenanceController::class, 'index'])->name('index');
-        Route::post('/backup',                   [DatabaseMaintenanceController::class, 'backup'])->name('backup');
+        Route::get('/', [DatabaseMaintenanceController::class, 'index'])->name('index');
+        Route::post('/backup', [DatabaseMaintenanceController::class, 'backup'])->name('backup');
         Route::get('/backup/{filename}/download', [DatabaseMaintenanceController::class, 'download'])->name('download')
             ->where('filename', '[a-zA-Z0-9._-]+');
-        Route::delete('/backup/{filename}',      [DatabaseMaintenanceController::class, 'deleteBackup'])->name('delete-backup')
+        Route::delete('/backup/{filename}', [DatabaseMaintenanceController::class, 'deleteBackup'])->name('delete-backup')
             ->where('filename', '[a-zA-Z0-9._-]+');
-        Route::post('/restore/upload',           [DatabaseMaintenanceController::class, 'uploadRestore'])->name('restore.upload');
-        Route::post('/restore/confirm',          [DatabaseMaintenanceController::class, 'confirmRestore'])->name('restore.confirm');
-        Route::post('/restore/dismiss',          [DatabaseMaintenanceController::class, 'dismissRestore'])->name('restore.dismiss');
+        Route::post('/restore/upload', [DatabaseMaintenanceController::class, 'uploadRestore'])->name('restore.upload');
+        Route::post('/restore/confirm', [DatabaseMaintenanceController::class, 'confirmRestore'])->name('restore.confirm');
+        Route::post('/restore/dismiss', [DatabaseMaintenanceController::class, 'dismissRestore'])->name('restore.dismiss');
     });
 });
-
 
 // route set kuota cuti
 Route::middleware(['auth', 'role:hrd,super_admin'])->prefix('hrd')->name('hrd.')->group(function () {
@@ -121,6 +118,22 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->prefix('hrd')->name('hrd.')
     Route::post('quota/{user}/{leaveType}', [QuotaController::class, 'update'])->name('quota.update');
     Route::post('quota/settings', [QuotaController::class, 'updateSettings'])->name('quota.settings');
     Route::post('quota/generate-annual', [QuotaController::class, 'generateAnnualBalances'])->name('quota.generateAnnual');
+
+    Route::prefix('holidays')->name('holidays.')->group(function () {
+        Route::get('/', [PublicHolidayController::class, 'index'])->name('index');
+        Route::get('/create', [PublicHolidayController::class, 'create'])->name('create');
+        Route::post('/', [PublicHolidayController::class, 'store'])->name('store');
+        Route::get('/{publicHoliday}/edit', [PublicHolidayController::class, 'edit'])->name('edit');
+        Route::put('/{publicHoliday}', [PublicHolidayController::class, 'update'])->name('update');
+        Route::delete('/{publicHoliday}', [PublicHolidayController::class, 'destroy'])->name('destroy');
+        Route::patch('/{publicHoliday}/toggle', [PublicHolidayController::class, 'toggle'])->name('toggle');
+        Route::post('/import', [PublicHolidayController::class, 'import'])->name('import');
+        Route::get('/import/template', [PublicHolidayController::class, 'template'])->name('import.template');
+        Route::post('/import/excel-preview', [PublicHolidayController::class, 'importExcelPreview'])->name('import.excelPreview');
+        Route::post('/import/api-preview', [PublicHolidayController::class, 'importApiPreview'])->name('import.apiPreview');
+        Route::post('/import/confirm', [PublicHolidayController::class, 'importConfirm'])->name('import.confirm');
+        Route::post('/import/cancel', [PublicHolidayController::class, 'importCancel'])->name('import.cancel');
+    });
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

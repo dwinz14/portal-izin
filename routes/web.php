@@ -111,6 +111,7 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->group(function () {
         Route::get('rekap', [RekapController::class, 'index'])->name('rekap.index');
         Route::get('rekap/export', [\App\Http\Controllers\RekapController::class, 'export'])->name('rekap.export');
         Route::get('kehadiran', [AttendanceReportController::class, 'index'])->name('kehadiran.index');
+        Route::get('kehadiran/export', [AttendanceReportController::class, 'export'])->name('kehadiran.export');
     });
     // database maintenance
     Route::prefix('database')->name('database.')->group(function () {

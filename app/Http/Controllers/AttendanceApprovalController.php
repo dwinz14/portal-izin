@@ -21,6 +21,18 @@ class AttendanceApprovalController extends Controller
         return view('attendance-approvals.index', compact('attendanceRequests'));
     }
 
+    public function history()
+    {
+        $histories = AttendanceRequest::with(['user.position', 'user.office'])
+            ->where('approver_id', Auth::id())
+            ->whereIn('status', [AttendanceRequest::STATUS_APPROVED, AttendanceRequest::STATUS_REJECTED])
+            ->latest('updated_at')
+            ->paginate(10);
+
+        return view('attendance-approvals.history', compact('histories'));
+    }
+
+
     public function approve(AttendanceRequest $attendanceRequest, Request $request)
     {
         $this->authorizeAttendanceApproval($attendanceRequest);

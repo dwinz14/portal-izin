@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('approval-kehadiran')->name('approval-kehadiran.')->group(function () {
         Route::get('/', [AttendanceApprovalController::class, 'index'])->name('index');
+        Route::get('/history', [AttendanceApprovalController::class, 'history'])->name('history');
         Route::patch('/{attendanceRequest}/approve', [AttendanceApprovalController::class, 'approve'])->name('approve');
         Route::patch('/{attendanceRequest}/reject', [AttendanceApprovalController::class, 'reject'])->name('reject');
     });

@@ -37,7 +37,8 @@ class StoreAttendanceRequest extends FormRequest
                 'regex:/^[a-zA-Z0-9\s.,()\/:\-]+$/',
             ],
             'proof_image' => [
-                $type === AttendanceRequest::TYPE_UPDATE_ATTENDANCE ? 'required' : 'nullable',
+                // $type === AttendanceRequest::TYPE_UPDATE_ATTENDANCE ? 'required' : 'nullable',
+                'nullable',
                 'image',
                 'mimes:jpeg,png,jpg,gif',
                 'max:2048',
@@ -61,7 +62,7 @@ class StoreAttendanceRequest extends FormRequest
             'reason.required' => 'Alasan pengajuan wajib diisi.',
             'reason.max' => 'Alasan maksimal 500 karakter.',
             'reason.regex' => 'Alasan hanya boleh berisi huruf, angka, spasi, dan tanda baca umum.',
-            'proof_image.required' => 'Bukti gambar wajib dilampirkan untuk update absensi.',
+            // 'proof_image.required' => 'Bukti gambar wajib dilampirkan untuk update absensi.',
             'proof_image.image' => 'File bukti harus berupa gambar.',
             'proof_image.mimes' => 'Format bukti harus JPG, PNG, JPEG, atau GIF.',
             'proof_image.max' => 'Ukuran gambar maksimal 2MB.',

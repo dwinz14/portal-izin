@@ -133,6 +133,7 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->prefix('hrd')->name('hrd.')
     Route::post('quota/reset', [QuotaController::class, 'resetAll'])->name('quota.reset');
     Route::post('quota/reset-division', [QuotaController::class, 'resetDivision'])->name('quota.resetDivision');
     Route::post('quota/reset-position', [QuotaController::class, 'resetPosition'])->name('quota.resetPosition');
+    Route::post('quota/bulk-update', [QuotaController::class, 'bulkUpdate'])->name('quota.bulkUpdate');
     Route::post('quota/{user}/{leaveType}', [QuotaController::class, 'update'])->name('quota.update');
     Route::post('quota/settings', [QuotaController::class, 'updateSettings'])->name('quota.settings');
     Route::post('quota/generate-annual', [QuotaController::class, 'generateAnnualBalances'])->name('quota.generateAnnual');
@@ -154,4 +155,4 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->prefix('hrd')->name('hrd.')
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

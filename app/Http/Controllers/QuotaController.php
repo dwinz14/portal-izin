@@ -53,6 +53,28 @@ class QuotaController extends Controller
             ->paginate(8)
             ->withQueryString();
 
+        // Get ALL user IDs + names (no pagination) matching same filters — for "select all" feature
+        $allUserBalances = UserLeaveBalance::with('user:id,name')
+            ->join('users', 'user_leave_balances.user_id', '=', 'users.id')
+            ->where('leave_type_id', $leaveTypeId)
+            ->where('year', now()->year)
+            ->where('users.role', '!=', 'super_admin')
+            ->when($search, function ($q) use ($search) {
+                $q->where('users.name', 'like', "%{$search}%");
+            })
+            ->when($positionId, function ($q) use ($positionId) {
+                $q->where('users.position_id', $positionId);
+            })
+            ->when($officeId, function ($q) use ($officeId) {
+                $q->where('users.office_id', $officeId);
+            })
+            ->when($role, function ($q) use ($role) {
+                $q->where('users.role', $role);
+            })
+            ->orderBy('users.name')
+            ->select('user_leave_balances.user_id', 'users.name')
+            ->get();
+
         // Get current settings
         $autoGenerate = QuotaSetting::getValue('auto_generate_leave_balances', true);
         $defaultQuota = QuotaSetting::getValue('default_annual_leave_quota', 12);
@@ -63,6 +85,7 @@ class QuotaController extends Controller
 
         return view('hrd.quota', compact(
             'userLeaveBalances',
+            'allUserBalances',
             'leaveTypes',
             'leaveTypeId',
             'selectedLeaveType',
@@ -163,6 +186,57 @@ class QuotaController extends Controller
         }
 
         return back()->with('success', "Kuota cuti {$user->name} berhasil diperbarui.");
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $request->validate([
+            'leave_type_id'  => 'required|exists:leave_types,id',
+            'mode'           => 'required|in:set,add,subtract',
+            'value'          => 'required|integer|min:0',
+            'user_ids'       => 'required|array|min:1',
+            'user_ids.*'     => 'integer|exists:users,id',
+        ]);
+
+        $leaveTypeId = $request->leave_type_id;
+        $mode        = $request->mode;
+        $value       = (int) $request->value;
+        $userIds     = $request->user_ids;
+        $year        = now()->year;
+
+        $updated = 0;
+
+        DB::transaction(function () use ($leaveTypeId, $mode, $value, $userIds, $year, &$updated) {
+            $balances = UserLeaveBalance::where('leave_type_id', $leaveTypeId)
+                ->where('year', $year)
+                ->whereIn('user_id', $userIds)
+                ->get();
+
+            foreach ($balances as $balance) {
+                $newRemaining = match ($mode) {
+                    'set'      => $value,
+                    'add'      => $balance->remaining + $value,
+                    'subtract' => max(0, $balance->remaining - $value),
+                };
+
+                $balance->update([
+                    'remaining'   => $newRemaining,
+                    'total_quota' => $newRemaining + $balance->used,
+                ]);
+
+                $updated++;
+            }
+        });
+
+        $modeLabel = match ($mode) {
+            'set'      => "diset ke {$value} hari",
+            'add'      => "ditambah {$value} hari",
+            'subtract' => "dikurangi {$value} hari",
+        };
+
+        Log::info("Bulk update kuota: {$updated} karyawan {$modeLabel} (leave_type_id={$leaveTypeId}, tahun={$year})");
+
+        return back()->with('success', "Kuota {$updated} karyawan berhasil {$modeLabel}.");
     }
 
     public function updateSettings(Request $request)

@@ -147,35 +147,6 @@ class User extends Authenticatable
         return $balance ? $balance->remaining : 0;
     }
 
-    /**
-     * Create leave balances for a specific year
-     */
-    public function createLeaveBalancesForYear($year)
-    {
-        $leaveTypes = \App\Models\LeaveType::where('is_active', true)->get();
-
-        foreach ($leaveTypes as $leaveType) {
-            // Skip if gender-specific and user doesn't match
-            if ($leaveType->gender && $leaveType->gender !== $this->gender) {
-                continue;
-            }
-
-            // Check if balance already exists
-            $existing = $this->userLeaveBalances()
-                ->where('leave_type_id', $leaveType->id)
-                ->where('year', $year)
-                ->exists();
-
-            if (!$existing) {
-                $this->userLeaveBalances()->create([
-                    'leave_type_id' => $leaveType->id,
-                    'year' => $year,
-                    'total_quota' => $leaveType->quota,
-                    'remaining' => $leaveType->quota,
-                ]);
-            }
-        }
-    }
 
     /**
      * Get the username field for authentication.
@@ -192,11 +163,8 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        static::created(function ($user) {
-            // Auto-create leave balances if setting is enabled
-            if (\App\Models\QuotaSetting::getValue('auto_generate_leave_balances', true)) {
-                $user->createLeaveBalancesForYear(now()->year);
-            }
+        static::deleting(function (User $user) {
+            $user->userLeaveBalances()->delete();
         });
     }
 }

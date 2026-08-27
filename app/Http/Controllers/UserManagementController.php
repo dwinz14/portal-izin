@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\QuotaSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Services\LeaveQuotaService;
 
 class UserManagementController extends Controller
 {
@@ -80,21 +82,29 @@ class UserManagementController extends Controller
     public function approve($id)
     {
         $user = User::findOrFail($id);
-        $user->update(['status' => 'approved']);
 
-        // Save approval history
-        DB::table('user_registration_approvals')->insert([
-            'user_name' => $user->name,
-            'user_email' => $user->email,
-            'user_role' => $user->role,
-            'division_name' => $user->division->nama_divisi ?? null,
-            'approved_by' => Auth::id(),
-            'status' => 'approved',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        DB::transaction(function () use ($user) {
+            $user->update(['status' => 'approved']);
 
-        return redirect()->back()->with('success', 'User berhasil disetujui.');
+            // Generate kuota cuti untuk user yang baru disetujui
+            if (QuotaSetting::getValue('auto_generate_leave_balances', true)) {
+                app(LeaveQuotaService::class)->generateForUser($user, now()->year);
+            }
+
+            // Simpan riwayat persetujuan
+            DB::table('user_registration_approvals')->insert([
+                'user_name'   => $user->name,
+                'user_email'  => $user->email,
+                'user_role'   => $user->role,
+                'division_name' => $user->division->nama_divisi ?? null,
+                'approved_by' => Auth::id(),
+                'status'      => 'approved',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'User berhasil disetujui dan kuota cuti telah digenerate.');
     }
 
     public function reject($id)

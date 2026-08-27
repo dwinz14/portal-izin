@@ -76,25 +76,24 @@ class MasterUserController extends Controller
             'division_id' => ['nullable', 'exists:divisions,id'],
             'position_id' => ['nullable', 'exists:positions,id'],
             'office_id'   => ['nullable', 'exists:offices,id'],
-
-            // Pesan error kustom (opsional)
-            'nik.regex' => 'Format NIK salah.',
-            'tanggal_aktif_kerja.before_or_equal' => 'Tanggal aktif kerja tidak boleh lebih dari hari ini.',
         ]);
 
-
-        // Normalisasi & sanitasi data
-        $validated['name'] = strtolower(strip_tags(trim($validated['name'])));
-        $validated['email'] = strtolower(trim($validated['email']));
-
-        // Gunakan default password dari .env
-        $defaultPassword = config('app.default_user_password', 'password123');
-        $validated['password'] = Hash::make($defaultPassword);
+        $validated['name']               = strtolower(strip_tags(trim($validated['name'])));
+        $validated['email']              = strtolower(trim($validated['email']));
+        $validated['password']           = Hash::make(config('app.default_user_password', 'password123'));
         $validated['must_change_password'] = true;
+        $validated['status']             = 'approved'; // Admin buat user → langsung approved
 
-        User::create($validated);
+        $user = User::create($validated);
 
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan dengan password default.');
+        // Generate kuota cuti untuk user baru (sudah approved)
+        if (\App\Models\QuotaSetting::getValue('auto_generate_leave_balances', true)) {
+            app(\App\Services\LeaveQuotaService::class)
+                ->generateForUser($user, now()->year);
+        }
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User berhasil ditambahkan dengan password default.');
     }
 
     public function edit(User $user)

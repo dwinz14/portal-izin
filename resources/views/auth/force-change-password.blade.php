@@ -33,7 +33,7 @@
                     </div>
                 </div>
                 <div class="bg-gray-50 dark:bg-slate-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <form method="post" action="{{ route('password.update') }}" class="w-full">
+                    <form method="post" action="{{ route('password.update.profile') }}" class="w-full">
                         @csrf
                         @method('put')
 

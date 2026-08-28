@@ -18,7 +18,7 @@ class ForcePasswordChangeMiddleware
     {
         if (Auth::check() && Auth::user()->must_change_password) {
             // Allow access to force-change-password and password update routes
-            if (!in_array($request->route()->getName(), ['password.force-change', 'password.update'])) {
+            if (!in_array($request->route()->getName(), ['password.force-change', 'password.update.profile'])) {
                 return redirect()->route('password.force-change');
             }
         }

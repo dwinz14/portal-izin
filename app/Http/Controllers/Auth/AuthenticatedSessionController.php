@@ -32,7 +32,12 @@ class AuthenticatedSessionController extends Controller
         // Check if user status is approved
         if ($user->status !== 'approved') {
             Auth::logout();
-            return redirect()->route('login')->withErrors(['nik' => 'Akun Anda belum disetujui oleh admin.']);
+
+            $message = is_null($user->email_verified_at)
+                ? 'Akun belum diverifikasi. Cek email Anda dan masukkan kode OTP yang dikirim saat pendaftaran.'
+                : 'Akun Anda tidak memiliki akses. Hubungi administrator.';
+
+            return redirect()->route('login')->withErrors(['nik' => $message]);
         }
 
         // Check if user must change password

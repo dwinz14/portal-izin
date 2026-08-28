@@ -36,6 +36,9 @@
                             <div class="text-sm text-stone-600 dark:text-gray-400 space-y-1">
                                 <p><span class="font-medium">Role:</span> {{ strtoupper($user->role) }}
                                 </p>
+                                <p><span class="font-medium">NIK:</span>
+                                    <span class="font-mono tracking-wider">{{ $user->nik ?? '-' }}</span>
+                                </p>
                                 <p><span class="font-medium">Divisi:</span>
                                     {{ $user->division?->nama_divisi ? Strtoupper($user->division?->nama_divisi) : '-' }}
                                 </p>
@@ -116,7 +119,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Approval History
+            History Registrasi
         </h3>
 
         @if (isset($approvalHistory) && $approvalHistory->count() > 0)
@@ -125,7 +128,7 @@
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700 text-sm">
                     <thead class="bg-blue-100 dark:bg-blue-900 inset-shadow-sm inset-shadow-indigo-500">
                         <tr>
-                            @foreach (['Nama', 'Email', 'Status', 'Tanggal', 'Oleh'] as $header)
+                            @foreach (['Nama', 'NIK', 'Email', 'Status', 'Tanggal', 'Diproses Oleh'] as $header)
                                 <th
                                     class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                     {{ $header }}
@@ -139,23 +142,40 @@
                                 <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                                     {{ Str::title($history->name) }}
                                 </td>
+                                <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 tracking-wider">
+                                    {{ $history->nik ?? '-' }}
+                                </td>
                                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400">
                                     {{ $history->email }}
                                 </td>
                                 <td class="px-4 py-3">
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold
-                                        @if ($history->status === 'approved') bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400
-                                        @elseif ($history->status === 'rejected') bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400
-                                        @else bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400 @endif">
+                    @if ($history->status === 'approved') bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400
+                    @elseif ($history->status === 'rejected') bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400
+                    @else bg-gray-100 text-gray-700 @endif">
                                         {{ ucfirst($history->status) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-gray-500 dark:text-gray-400">
+                                <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">
                                     {{ \Carbon\Carbon::parse($history->updated_at)->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-4 py-3 text-gray-500 dark:text-gray-400">
-                                    {{ $history->approved_by ?? 'System' }}
+                                <td class="px-4 py-3">
+                                    @if ($history->verified_via === 'otp')
+                                        <span
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            </svg>
+                                            Verifikasi OTP
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">
+                                            {{ $history->approved_by_name ?? 'Admin' }}
+                                        </span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

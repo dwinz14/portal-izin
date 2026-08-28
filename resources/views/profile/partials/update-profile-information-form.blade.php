@@ -9,9 +9,9 @@
         </p>
     </header>
 
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
+    {{-- <form id="send-verification" method="post" action="{{ route('verification.send') }}">
         @csrf
-    </form>
+    </form> --}}
 
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
@@ -19,8 +19,8 @@
 
         <div>
             <x-input-label for="nik" :value="__('NIK')" />
-            <x-text-input id="nik" name="nik" type="text" class="mt-1 block w-full" :value="old('nik', $user->nik)"
-                required autofocus autocomplete="nik" />
+            <x-text-input id="nik" name="nik" type="text" class="mt-1 block w-full" :value="old('nik', $user->nik)" required
+                autofocus autocomplete="nik" />
             <x-input-error class="mt-2" :messages="$errors->get('nik')" />
         </div>
 

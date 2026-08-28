@@ -2,7 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h2 class="border-l-4 border-primary-700 pl-5 font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">
+                <h2
+                    class="border-l-4 border-primary-700 pl-5 font-semibold text-xl text-gray-800 dark:text-gray-100 leading-tight">
                     {{ __('Persetujuan Kehadiran') }}
                 </h2>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -10,7 +11,8 @@
                 </p>
             </div>
             <div class="flex items-center space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-                <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-300">
+                <span
+                    class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary-100 dark:bg-primary-900/50 text-primary-600 dark:text-primary-300">
                     {{ $attendanceRequests->total() }}
                 </span>
                 <span>Menunggu Tindakan</span>
@@ -21,14 +23,18 @@
     <div class="space-y-4">
         @forelse ($attendanceRequests as $attendanceRequest)
             <div x-data="{ open: false }" class="bg-white dark:bg-slate-800 rounded-xl shadow-md overflow-hidden">
-                <button type="button" @click="open = !open" class="w-full flex items-center p-4 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+                <button type="button" @click="open = !open"
+                    class="w-full flex items-center p-4 text-left hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
                     <div class="flex-shrink-0 mr-4">
-                        <img loading="lazy" class="h-10 w-10 rounded-full" src="{{ asset('img/user.png') }}" alt="">
+                        <img loading="lazy" class="h-10 w-10 rounded-full" src="{{ asset('img/user.png') }}"
+                            alt="">
                     </div>
                     <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                         <div>
-                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ strtoupper($attendanceRequest->user->name) }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ strtoupper(optional($attendanceRequest->user->position)->nama_jabatan ?? '-') }}</p>
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {{ strtoupper($attendanceRequest->user->name) }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ strtoupper(optional($attendanceRequest->user->position)->nama_jabatan ?? '-') }}</p>
                         </div>
                         <div class="text-sm text-gray-800 dark:text-gray-200">
                             {{ $attendanceRequest->type_label }}
@@ -41,7 +47,8 @@
                             @endif
                         </div>
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-5 h-5 text-gray-400 transition-transform duration-300" :class="{ 'rotate-180': open }"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
@@ -50,7 +57,8 @@
                     <div class="px-5 pb-5 pt-2 border-t border-gray-200 dark:border-slate-700">
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <div class="lg:col-span-2">
-                                <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-3">Detail Pengajuan</h4>
+                                <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase mb-3">Detail
+                                    Pengajuan</h4>
                                 <dl class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                                     <div class="flex items-start">
                                         <dt class="font-medium w-36 flex-shrink-0">Pemohon</dt>
@@ -58,7 +66,8 @@
                                     </div>
                                     <div class="flex items-start">
                                         <dt class="font-medium w-36 flex-shrink-0">Kantor</dt>
-                                        <dd>: {{ optional($attendanceRequest->user->office)->nama_kantor ?? '-' }}</dd>
+                                        <dd>: {{ strtoupper($attendanceRequest->user?->office?->nama_kantor ?? '-') }}
+                                        </dd>
                                     </div>
                                     <div class="flex items-start">
                                         <dt class="font-medium w-36 flex-shrink-0">Jenis</dt>
@@ -73,19 +82,21 @@
                                         <dd>:
                                             {{ \Illuminate\Support\Str::of($attendanceRequest->start_time)->substr(0, 5) }}
                                             @if ($attendanceRequest->end_time)
-                                                - {{ \Illuminate\Support\Str::of($attendanceRequest->end_time)->substr(0, 5) }}
+                                                -
+                                                {{ \Illuminate\Support\Str::of($attendanceRequest->end_time)->substr(0, 5) }}
                                             @endif
                                         </dd>
                                     </div>
                                     <div class="flex items-start">
                                         <dt class="font-medium w-36 flex-shrink-0">Alasan</dt>
-                                        <dd>: {{ $attendanceRequest->reason }}</dd>
+                                        <dd>: " {{ $attendanceRequest->reason }} "</dd>
                                     </div>
                                 </dl>
 
                                 @if ($attendanceRequest->proof_image)
                                     <div class="mt-4">
-                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">Bukti Gambar</p>
+                                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-2">
+                                            Bukti Gambar</p>
                                         <img src="{{ asset('storage/' . $attendanceRequest->proof_image) }}"
                                             alt="Bukti Kehadiran"
                                             class="max-w-full h-auto max-h-56 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 cursor-pointer hover:opacity-90 transition"
@@ -95,10 +106,12 @@
                             </div>
 
                             <div class="space-y-4">
-                                <form action="{{ route('approval-kehadiran.approve', $attendanceRequest) }}" method="POST" class="space-y-3">
+                                <form action="{{ route('approval-kehadiran.approve', $attendanceRequest) }}"
+                                    method="POST" class="space-y-3">
                                     @csrf
                                     @method('PATCH')
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Catatan Persetujuan</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Catatan
+                                        Persetujuan</label>
                                     <textarea name="approval_note" rows="3" maxlength="500"
                                         class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
                                         placeholder="Opsional"></textarea>
@@ -108,10 +121,12 @@
                                     </button>
                                 </form>
 
-                                <form action="{{ route('approval-kehadiran.reject', $attendanceRequest) }}" method="POST" class="space-y-3">
+                                <form action="{{ route('approval-kehadiran.reject', $attendanceRequest) }}"
+                                    method="POST" class="space-y-3">
                                     @csrf
                                     @method('PATCH')
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Alasan Penolakan <span class="text-red-500">*</span></label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Alasan
+                                        Penolakan <span class="text-red-500">*</span></label>
                                     <textarea name="rejection_reason" rows="3" maxlength="500" required
                                         class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-900 dark:text-gray-100 focus:border-primary-500 focus:ring-primary-500"
                                         placeholder="Wajib diisi jika ditolak"></textarea>

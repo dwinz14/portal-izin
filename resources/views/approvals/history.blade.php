@@ -267,7 +267,7 @@
 
                                 {{-- Your Activity --}}
                                 <div
-                                    class="mb-4 p-4 rounded-lg {{ $history->role_badge_color }} border-2 {{ $history->approved_by === $history->leave->user_id ? 'border-blue-300 dark:border-blue-700' : ($history->approved_by === $history->leave->pengganti_id ? 'border-purple-300 dark:border-purple-700' : 'border-indigo-300 dark:border-indigo-700') }}">
+                                    class="mb-4 p-4 rounded-lg dark:bg-slate-700 {{ $history->role_badge_color }} border-2 {{ $history->approved_by === $history->leave->user_id ? 'border-blue-300 dark:border-blue-700' : ($history->approved_by === $history->leave->pengganti_id ? 'border-purple-300 dark:border-slate-700' : 'border-indigo-300 dark:border-slate-700') }}">
                                     <div class="flex items-start">
                                         <div class="flex-shrink-0 mt-1">
                                             <div

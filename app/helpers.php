@@ -70,7 +70,16 @@ if (!function_exists('getFilteredMenuItems')) {
                             $filteredChildren[] = $child;
                         }
                     }
+                    // Aggregate badge count from children to parent
                     if (!empty($filteredChildren)) {
+                        $totalBadgeCount = 0;
+                        foreach ($filteredChildren as $child) {
+                            $totalBadgeCount += $child['badge_count'] ?? 0;
+                        }
+                        if ($totalBadgeCount > 0) {
+                            $item['badge_count'] = $totalBadgeCount;
+                            $item['badge_tone'] = 'danger';
+                        }
                         $item['children'] = $filteredChildren;
                         $filteredItems[] = $item;
                     }

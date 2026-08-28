@@ -56,8 +56,16 @@
                             aria-hidden="true">
                             {!! $item['icon'] !!}
                         </span>
-                        <span class="truncate">{{ $item['name'] }}</span>
-                    </span>
+<span class="truncate">{{ $item['name'] }}</span>
+</span>
+
+                    @if (isset($item['badge_count']) && $item['badge_count'] > 0)
+                        <span
+                            class="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-100 text-rose-800 text-[10px] font-bold ring-1 ring-rose-200/70 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/20"
+                            aria-label="{{ $item['badge_count'] }} item menunggu">
+                            {{ $item['badge_count'] > 99 ? '99+' : $item['badge_count'] }}
+                        </span>
+                    @endif
 
                     <svg :class="expanded ? 'rotate-90' : ''"
                         class="h-4 w-4 flex-shrink-0 text-white transition-transform duration-200 group-hover:text-gold-200 dark:text-indigo-400/50"

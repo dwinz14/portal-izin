@@ -71,7 +71,7 @@
                                             class="h-8 w-8 rounded-full ring-2 ring-gray-200 dark:ring-gray-600"
                                             src="{{ asset('img/user.png') }}" alt="">
                                         <span class="ml-2 text-gray-700 dark:text-gray-300 font-medium hidden sm:block">
-                                            {{ Auth::user()->name }}
+                                            {{ strtoupper(Auth::user()->name) }}
                                         </span>
                                         <svg class="ml-1 h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">

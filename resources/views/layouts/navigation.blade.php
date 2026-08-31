@@ -117,7 +117,7 @@
                             </div>
                         </div>
                         <div class="ml-3 truncate">
-                            <p class="truncate text-[13px] font-bold text-white">{{ Auth::user()->name }}</p>
+                            <p class="truncate text-[13px] font-bold text-white">PROFILE SAYA</p>
                             <p class="truncate text-[10px] font-medium text-white/70">Lihat Profil &amp; Pengaturan</p>
                         </div>
                     </div>

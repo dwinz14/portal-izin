@@ -22,7 +22,7 @@
     <div class="space-y-4">
         @forelse ($histories as $history)
             <div x-data="{ open: false }"
-                class="bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-l-4 {{ $history->approved_by === $history->leave->user_id ? 'border-blue-500' : ($history->approved_by === $history->leave->pengganti_id ? 'border-purple-500' : 'border-indigo-500') }}">
+                class="uppercase bg-white dark:bg-slate-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-l-4 {{ $history->approved_by === $history->leave->user_id ? 'border-blue-500' : ($history->approved_by === $history->leave->pengganti_id ? 'border-purple-500' : 'border-indigo-500') }}">
 
                 {{-- Header Card --}}
                 <div @click="open = !open"
@@ -131,7 +131,7 @@
                                             class="font-medium text-gray-600 dark:text-gray-400 w-28 flex-shrink-0">Pemohon:</span>
                                         <div class="flex-1">
                                             <p class="text-gray-900 dark:text-gray-100 font-semibold">
-                                                {{ $history->leave->user->name }}</p>
+                                                {{ strtoupper($history->leave->user->name) }}</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400">
                                                 {{ strtoupper($history->leave->user->position->nama_jabatan) ?? 'N/A' }}
                                             </p>

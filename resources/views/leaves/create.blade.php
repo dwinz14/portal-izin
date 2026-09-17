@@ -1,16 +1,26 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div>
+        <div class="flex flex-col gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+
                 <h2
-                    class="flex items-center gap-2 font-bold text-xl sm:text-2xl text-gray-900 dark:text-gray-100 leading-tight">
-                    <span class="w-1.5 h-5 bg-primary-600 rounded-full"></span>
-                    {{ __('Ajukan Cuti') }}
+                    class="border-l-4 border-primary-700 pl-4 font-bold text-xl text-gray-800 dark:text-gray-100 leading-tight">
+                    {{ __('Ajukan Izin Cuti') }}
                 </h2>
-                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 ml-3.5">
-                    Lengkapi formulir di bawah ini untuk mengajukan permohonan cuti Anda.
-                </p>
+
+                <a href="{{ route('cuti.index') }}"
+                    class="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center transition sm:mr-1">
+                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Kembali
+                </a>
             </div>
+
+            <p class="text-sm text-gray-500 dark:text-gray-400 pl-4">
+                Lengkapi formulir di bawah ini untuk mengajukan permohonan izin cuti Anda..
+            </p>
         </div>
     </x-slot>
 

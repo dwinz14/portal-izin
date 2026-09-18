@@ -8,6 +8,7 @@ use App\Models\Position;
 use App\Observers\DivisionObserver;
 use App\Observers\OfficeObserver;
 use App\Observers\PositionObserver;
+use App\Services\WhatsApp\WhatsAppManager;
 use Carbon\Carbon;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,17 +17,13 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        // Daftarkan WhatsAppManager sebagai singleton dengan alias 'whatsapp'.
+        // Singleton memastikan driver hanya diinisialisasi sekali per request.
+        $this->app->singleton('whatsapp', fn() => new WhatsAppManager());
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         RateLimiter::for('api', function () {
@@ -37,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('http');
         }
 
-        // Set timezone to WIB (Asia/Jakarta)
+        // Set timezone ke WIB (Asia/Jakarta)
         config(['app.timezone' => 'Asia/Jakarta']);
         date_default_timezone_set('Asia/Jakarta');
 

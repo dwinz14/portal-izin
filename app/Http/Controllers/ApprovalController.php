@@ -74,7 +74,7 @@ class ApprovalController extends Controller
         $employee = $leave->user;
 
         // Beritahu pemohon bahwa step ini sudah disetujui
-        $employee->notify(new LeaveRequestApproved($leave->id, Auth::user()->name));
+        $employee->notify(new LeaveRequestApproved($leave, Auth::user()->name, $request->input('catatan')));
 
         // Cek apakah masih ada step approval berikutnya
         $nextApproval = $leave->approvals()
@@ -86,7 +86,7 @@ class ApprovalController extends Controller
             // Masih ada approver berikutnya, kirim notifikasi ke mereka
             $nextApprover = User::find($nextApproval->approver_id);
             if ($nextApprover) {
-                $nextApprover->notify(new LeaveRequestSubmitted($leave->id, $leave->user->name));
+                $nextApprover->notify(new LeaveRequestSubmitted($leave));
             }
         } else {
             // Semua step selesai, lakukan final approval
@@ -134,7 +134,14 @@ class ApprovalController extends Controller
         ]);
 
         // Kirim notifikasi ke pemohon
-        $approval->leave->user->notify(new LeaveRequestRevisionRequested($approval->leave_id, Auth::user()->name));
+        $approval->leave->user->notify(new LeaveRequestRevisionRequested(
+            $approval->leave,
+            Auth::user()->name,
+            $request->revised_start_date,
+            $request->revised_end_date,
+            $revisedTotalHari,
+            "Revisi tanggal: {$request->revised_start_date} s/d {$request->revised_end_date} ({$revisedTotalHari} hari)"
+        ));
 
         return back()->with('success', 'Permintaan revisi tanggal telah dikirim ke pemohon.');
     }
@@ -157,7 +164,7 @@ class ApprovalController extends Controller
         ]);
 
         // Kirim notifikasi ke pemohon cuti
-        $approval->leave->user->notify(new LeaveRequestRejected($approval->leave_id, Auth::user()->name));
+        $approval->leave->user->notify(new LeaveRequestRejected($approval->leave, Auth::user()->name, $request->input('catatan')));
 
         return back()->with('success', 'Approval ditolak.');
     }

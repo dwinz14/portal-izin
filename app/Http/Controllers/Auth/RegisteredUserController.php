@@ -28,6 +28,7 @@ class RegisteredUserController extends Controller
         $input['nik']                  = strtoupper(trim($input['nik'] ?? ''));
         $input['name']                 = strtolower(trim($input['name'] ?? ''));
         $input['email']                = strtolower(trim($input['email'] ?? ''));
+        $input['phone'] = (isset($input['phone']) && $input['phone'] !== '') ? preg_replace('/\s+/', '', $input['phone']) : null;
         $input['gender']               = trim($input['gender'] ?? '');
         $input['role']                 = trim($input['role'] ?? '');
         $input['division_id']          = $input['division_id'] ?? null;
@@ -46,6 +47,7 @@ class RegisteredUserController extends Controller
             'position_id'         => ['nullable', 'exists:positions,id'],
             'office_id'           => ['nullable', 'exists:offices,id'],
             'tanggal_aktif_kerja' => ['required', 'date', 'before_or_equal:today'],
+            'phone' => ['nullable', 'string', 'regex:/^(\+62|62|0)[0-9]{8,13}$/'],
             'password' => [
                 'required',
                 'confirmed',
@@ -69,6 +71,7 @@ class RegisteredUserController extends Controller
             'nik'                 => $input['nik'],
             'name'                => $input['name'],
             'email'               => $input['email'],
+            'phone'               => $input['phone'],
             'gender'              => $input['gender'],
             'password'            => Hash::make($input['password']),
             'role'                => $input['role'],
@@ -82,11 +85,15 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         // Kirim OTP verifikasi email
-        $this->otpService->send($user, 'verify_email');
+        $delivery = $this->otpService->send($user, 'verify_email');
 
         // Simpan session untuk halaman verifikasi (tanpa auto-login)
-        Session::put('verification_user_id', $user->id);
-        Session::put('verification_email',   $user->email);
+        Session::put('verification_user_id',  $user->id);
+        Session::put('verification_email',    $user->email);
+        Session::put('verification_delivery', $delivery ?: [
+            'channels' => ['email'],
+            'masked'   => $this->otpService->maskEmail($user->email),
+        ]);
 
         return redirect()->route('register.verify');
     }

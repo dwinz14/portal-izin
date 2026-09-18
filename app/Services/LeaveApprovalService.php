@@ -4,15 +4,16 @@ namespace App\Services;
 
 use App\Models\Leave;
 use App\Models\UserLeaveBalance;
-use App\Jobs\SendNotification;
 use App\Notifications\LeaveFinalApproved;
 use Illuminate\Support\Facades\DB;
 
 class LeaveApprovalService
 {
-    public function finalApprove(Leave $leave)
+    public function finalApprove(Leave $leave): void
     {
         $leave->update(['status_final' => 'approved']);
+
+        $remainingBalance = null;
 
         $leaveType = $leave->leaveType;
         if ($leaveType->quota > 0) {
@@ -22,22 +23,33 @@ class LeaveApprovalService
                 ->first();
 
             if ($balance) {
+                // Hitung sisa kuota SETELAH pemotongan (untuk ditampilkan di WA)
+                $remainingBalance = max(0, $balance->remaining - $leave->total_hari);
+
                 $balance->update([
-                    'used' => DB::raw("used + {$leave->total_hari}"),
+                    'used'      => DB::raw("used + {$leave->total_hari}"),
                     'remaining' => DB::raw("remaining - {$leave->total_hari}"),
                 ]);
             } else {
+                $remainingBalance = max(0, $leaveType->quota - $leave->total_hari);
+
                 UserLeaveBalance::create([
-                    'user_id' => $leave->user_id,
+                    'user_id'       => $leave->user_id,
                     'leave_type_id' => $leave->leave_type_id,
-                    'year' => now()->year,
-                    'total_quota' => $leaveType->quota,
-                    'used' => $leave->total_hari,
-                    'remaining' => $leaveType->quota - $leave->total_hari,
+                    'year'          => now()->year,
+                    'total_quota'   => $leaveType->quota,
+                    'used'          => $leave->total_hari,
+                    'remaining'     => $remainingBalance,
                 ]);
             }
         }
 
-        $leave->user->notify(new LeaveFinalApproved($leave->id));
+        // Notifikasi ke pemohon (database + WA)
+        $leave->user->notify(new LeaveFinalApproved($leave, $remainingBalance));
+
+        // Notifikasi ke pengganti jika ada (WA saja — pesannya berbeda)
+        if ($leave->pengganti_id && $leave->pengganti) {
+            $leave->pengganti->notify(new LeaveFinalApproved($leave, null));
+        }
     }
 }

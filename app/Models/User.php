@@ -23,6 +23,7 @@ class User extends Authenticatable
         'nik',
         'name',
         'email',
+        'phone',
         'password',
         'role',
         'status',
@@ -30,10 +31,10 @@ class User extends Authenticatable
         'position_id',
         'office_id',
         'tanggal_aktif_kerja',
-        // 'sisa_cuti',
         'last_login_at',
         'must_change_password',
-        'gender'
+        'gender',
+        'email_verified_at',
     ];
 
     /**
@@ -154,6 +155,34 @@ class User extends Authenticatable
     public function username()
     {
         return 'nik';
+    }
+
+    /**
+     * Routing untuk WhatsApp notification channel.
+     * Menormalisasi nomor HP ke format internasional Indonesia (628xxx).
+     * Mengembalikan null jika nomor tidak ada atau tidak valid.
+     */
+    public function routeNotificationForWhatsApp(): ?string
+    {
+        if (empty($this->phone)) {
+            return null;
+        }
+
+        // Hapus semua karakter bukan angka
+        $phone = preg_replace('/[^0-9]/', '', $this->phone);
+
+        // 0812xxx → 62812xxx
+        if (str_starts_with($phone, '0')) {
+            $phone = '62' . substr($phone, 1);
+        }
+
+        // Pastikan diawali 62
+        if (! str_starts_with($phone, '62')) {
+            $phone = '62' . $phone;
+        }
+
+        // Validasi panjang: nomor Indonesia 10–15 digit setelah normalisasi
+        return (strlen($phone) >= 10 && strlen($phone) <= 15) ? $phone : null;
     }
 
     /**

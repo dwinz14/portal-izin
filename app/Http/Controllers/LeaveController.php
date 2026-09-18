@@ -271,7 +271,7 @@ class LeaveController extends Controller
             // Notifikasi ke approver pertama
             $firstApprover = User::find($approvers->first());
             if ($firstApprover) {
-                $firstApprover->notify(new \App\Notifications\LeaveRequestSubmitted($leave->id, $user->name));
+                $firstApprover->notify(new \App\Notifications\LeaveRequestSubmitted($leave));
             }
 
             // Kasus khusus: jika pengganti == atasan, maka step1 langsung auto-approve
@@ -310,7 +310,7 @@ class LeaveController extends Controller
                 // Kirim notifikasi ke atasan untuk step2
                 $atasan = User::find($atasanId);
                 if ($atasan) {
-                    $atasan->notify(new \App\Notifications\LeaveRequestSubmitted($leave->id, $user->name));
+                    $atasan->notify(new \App\Notifications\LeaveRequestSubmitted($leave));
                 }
             }
 
@@ -415,7 +415,7 @@ class LeaveController extends Controller
 
         // Kirim notifikasi ke approver
         $approver = User::find($approval->approver_id);
-        $approver->notify(new RevisionAccepted($leave->id, Auth::user()->name));
+        $approver->notify(new RevisionAccepted($leave, Auth::user()->name));;
 
         // Cek apakah ada approver berikutnya
         $nextApproval = $leave->approvals()->where('step', '>', $approval->step)->orderBy('step')->first();
@@ -424,7 +424,7 @@ class LeaveController extends Controller
             // Kirim notifikasi ke approver berikutnya
             $nextApprover = User::find($nextApproval->approver_id);
             if ($nextApprover) {
-                $nextApprover->notify(new LeaveRequestSubmitted($leave->id, $leave->user->name));
+                $nextApprover->notify(new LeaveRequestSubmitted($leave));
             }
         } else {
             // Final approve
@@ -469,7 +469,7 @@ class LeaveController extends Controller
 
         // Kirim notifikasi ke approver
         $approver = User::find($approval->approver_id);
-        $approver->notify(new RevisionRejected($leave->id, Auth::user()->name));
+        $approver->notify(new RevisionRejected($leave, Auth::user()->name));
 
         return redirect()->route('cuti.index')->with('error', 'Revisi tanggal ditolak. Pengajuan cuti dibatalkan.');
     }

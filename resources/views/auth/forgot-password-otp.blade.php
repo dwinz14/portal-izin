@@ -23,9 +23,24 @@
             </div>
             <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Verifikasi Identitas</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Kode OTP telah dikirim ke email yang terdaftar untuk NIK
-                <span
-                    class="font-semibold text-slate-700 dark:text-slate-300 font-mono tracking-widest">{{ $nik }}</span>
+                @if ($delivery)
+                    @php $channels = $delivery['channels'] ?? ['email']; @endphp
+
+                    @if (in_array('email', $channels) && in_array('whatsapp', $channels))
+                        Kode OTP dikirim ke <span class="font-semibold text-slate-700 dark:text-slate-300">email</span>
+                        dan <span class="font-semibold text-green-600 dark:text-green-400">WhatsApp</span> terdaftar.
+                    @elseif (in_array('whatsapp', $channels))
+                        Kode OTP dikirim ke WhatsApp
+                        <span
+                            class="font-semibold text-green-600 dark:text-green-400 font-mono">{{ $delivery['masked'] }}</span>
+                    @else
+                        Kode OTP dikirim ke email terdaftar untuk NIK
+                        <span
+                            class="font-semibold text-slate-700 dark:text-slate-300 font-mono tracking-widest">{{ $nik }}</span>
+                    @endif
+                @else
+                    Jika NIK terdaftar, kode OTP telah dikirim ke kontak yang terdaftar.
+                @endif
             </p>
         </div>
 

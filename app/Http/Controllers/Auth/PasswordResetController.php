@@ -34,18 +34,21 @@ class PasswordResetController extends Controller
         $nik  = strtoupper(trim($request->nik));
         $user = User::where('nik', $nik)->where('status', 'approved')->first();
 
-        // Anti-enumeration: selalu tampil pesan sukses meski NIK tidak ada
-        if ($user) {
-            $this->otpService->send($user, 'reset_password');
-        }
-
+        // Anti-enumeration: selalu simpan NIK dan redirect, meski tidak ditemukan
         Session::put('reset_nik', $nik);
 
+        if ($user) {
+            $delivery = $this->otpService->send($user, 'reset_password');
+            if ($delivery) {
+                Session::put('reset_delivery', $delivery);
+            }
+        }
+
         return redirect()->route('password.otp')
-            ->with('status', 'Jika NIK terdaftar dan aktif, kode OTP akan dikirim ke email yang terkait dalam beberapa menit.');
+            ->with('status', 'Jika NIK terdaftar dan aktif, kode OTP akan dikirim dalam beberapa menit.');
     }
 
-    // ── STEP 2: Input & Verifikasi OTP ─────────────────────────────────────
+    // ── STEP 2: Verifikasi OTP ──────────────────────────────────────────────
 
     public function otpForm(): View|RedirectResponse
     {
@@ -56,8 +59,9 @@ class PasswordResetController extends Controller
         $nik      = Session::get('reset_nik');
         $user     = User::where('nik', $nik)->where('status', 'approved')->first();
         $cooldown = $user ? $this->otpService->resendCooldownSeconds($user, 'reset_password') : 0;
+        $delivery = Session::get('reset_delivery');
 
-        return view('auth.forgot-password-otp', compact('nik', 'cooldown'));
+        return view('auth.forgot-password-otp', compact('nik', 'cooldown', 'delivery'));
     }
 
     public function verifyOtp(Request $request): RedirectResponse
@@ -112,17 +116,20 @@ class PasswordResetController extends Controller
             return redirect()->route('password.request');
         }
 
-        $sent = $this->otpService->send($user, 'reset_password');
+        $delivery = $this->otpService->send($user, 'reset_password');
 
-        if (! $sent) {
+        if (! $delivery) {
             $cooldown = $this->otpService->resendCooldownSeconds($user, 'reset_password');
             return back()->withErrors(['otp' => "Harap tunggu {$cooldown} detik sebelum meminta kode baru."]);
         }
 
-        return back()->with('status', 'Kode OTP baru telah dikirim ke email Anda.');
+        Session::put('reset_delivery', $delivery);
+
+        $channelText = $this->deliveryChannelText($delivery['channels']);
+        return back()->with('status', "Kode OTP baru telah dikirim ke {$channelText} Anda.");
     }
 
-    // ── STEP 3: Form & Simpan Password Baru ────────────────────────────────
+    // ── STEP 3: Password Baru ───────────────────────────────────────────────
 
     public function newPasswordForm(): View|RedirectResponse
     {
@@ -157,9 +164,17 @@ class PasswordResetController extends Controller
         $user = User::findOrFail(Session::get('reset_user_id'));
         $user->update(['password' => Hash::make($request->password)]);
 
-        Session::forget(['reset_nik', 'reset_verified', 'reset_user_id']);
+        Session::forget(['reset_nik', 'reset_verified', 'reset_user_id', 'reset_delivery']);
 
         return redirect()->route('login')
             ->with('status', 'Password berhasil diubah. Silakan masuk dengan password baru Anda.');
+    }
+
+    private function deliveryChannelText(array $channels): string
+    {
+        if (in_array('email', $channels) && in_array('whatsapp', $channels)) {
+            return 'email dan WhatsApp';
+        }
+        return in_array('whatsapp', $channels) ? 'WhatsApp' : 'email';
     }
 }

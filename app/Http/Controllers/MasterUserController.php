@@ -76,10 +76,12 @@ class MasterUserController extends Controller
             'division_id' => ['nullable', 'exists:divisions,id'],
             'position_id' => ['nullable', 'exists:positions,id'],
             'office_id'   => ['nullable', 'exists:offices,id'],
+            'phone' => ['nullable', 'string', 'regex:/^(\+62|62|0)[0-9]{8,13}$/'],
         ]);
 
         $validated['name']               = strtolower(strip_tags(trim($validated['name'])));
         $validated['email']              = strtolower(trim($validated['email']));
+        $validated['phone'] = isset($validated['phone']) ? preg_replace('/\s+/', '', $validated['phone']) : null;
         $validated['password']           = Hash::make(config('app.default_user_password', 'password123'));
         $validated['must_change_password'] = true;
         $validated['status']             = 'approved'; // Admin buat user → langsung approved
@@ -122,6 +124,7 @@ class MasterUserController extends Controller
             'division_id' => ['nullable', 'exists:divisions,id'],
             'position_id' => ['nullable', 'exists:positions,id'],
             'office_id'   => ['nullable', 'exists:offices,id'],
+            'phone' => ['nullable', 'string', 'regex:/^(\+62|62|0)[0-9]{8,13}$/'],
 
             // Pesan error kustom (opsional)
             'nik.regex' => 'Format NIK salah.',
@@ -130,6 +133,7 @@ class MasterUserController extends Controller
 
         $validated['name'] = strtolower(strip_tags(trim($validated['name'])));
         $validated['email'] = strtolower(trim($validated['email']));
+        $validated['phone'] = isset($validated['phone']) ? preg_replace('/\s+/', '', $validated['phone']) : null;
 
         $user->fill($validated)->save();
 

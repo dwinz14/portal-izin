@@ -7,16 +7,15 @@ use App\Models\User;
 use App\Services\LeaveQuotaService;
 use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
-use Illuminate\Http\Request;
 
 class OtpVerificationController extends Controller
 {
     public function __construct(private OtpService $otpService) {}
 
-    /** Tampilkan halaman verifikasi OTP setelah register. */
     public function showVerify(): View|RedirectResponse
     {
         if (! Session::has('verification_user_id')) {
@@ -26,17 +25,23 @@ class OtpVerificationController extends Controller
         $user = User::find(Session::get('verification_user_id'));
 
         if (! $user || $user->status !== 'pending') {
-            Session::forget(['verification_user_id', 'verification_email']);
+            Session::forget(['verification_user_id', 'verification_email', 'verification_delivery']);
             return redirect()->route('register');
         }
 
-        $maskedEmail = $this->maskEmail(Session::get('verification_email', $user->email));
-        $cooldown    = $this->otpService->resendCooldownSeconds($user, 'verify_email');
+        // Ambil delivery info — fallback ke email jika session belum ada
+        $delivery = Session::get('verification_delivery', [
+            'channels' => ['email'],
+            'masked'   => $this->otpService->maskEmail(
+                Session::get('verification_email', $user->email)
+            ),
+        ]);
 
-        return view('auth.verify-otp', compact('maskedEmail', 'cooldown'));
+        $cooldown = $this->otpService->resendCooldownSeconds($user, 'verify_email');
+
+        return view('auth.verify-otp', compact('delivery', 'cooldown'));
     }
 
-    /** Proses verifikasi OTP registrasi. */
     public function verify(Request $request): RedirectResponse
     {
         $request->validate([
@@ -53,7 +58,7 @@ class OtpVerificationController extends Controller
         $user = User::find(Session::get('verification_user_id'));
 
         if (! $user || $user->status !== 'pending') {
-            Session::forget(['verification_user_id', 'verification_email']);
+            Session::forget(['verification_user_id', 'verification_email', 'verification_delivery']);
             return redirect()->route('register');
         }
 
@@ -61,14 +66,13 @@ class OtpVerificationController extends Controller
 
         if ($result !== 'valid') {
             return back()->withErrors(['otp' => match ($result) {
-                'invalid'     => 'Kode OTP tidak valid. Periksa kembali kode yang Anda masukkan.',
+                'invalid'     => 'Kode OTP tidak valid. Periksa kembali.',
                 'expired'     => 'Kode OTP sudah kedaluwarsa. Silakan minta kode baru.',
                 'max_attempt' => 'Terlalu banyak percobaan salah. Silakan minta kode baru.',
                 default       => 'Verifikasi gagal. Silakan coba lagi.',
             }]);
         }
 
-        // OTP valid — approve user, generate kuota, catat riwayat
         DB::transaction(function () use ($user) {
             $user->update([
                 'status'            => 'approved',
@@ -91,13 +95,12 @@ class OtpVerificationController extends Controller
             ]);
         });
 
-        Session::forget(['verification_user_id', 'verification_email']);
+        Session::forget(['verification_user_id', 'verification_email', 'verification_delivery']);
 
         return redirect()->route('login')
             ->with('status', 'Akun berhasil diverifikasi! Silakan masuk dengan NIK dan password Anda.');
     }
 
-    /** Kirim ulang OTP verifikasi. */
     public function resend(): RedirectResponse
     {
         if (! Session::has('verification_user_id')) {
@@ -107,24 +110,29 @@ class OtpVerificationController extends Controller
         $user = User::find(Session::get('verification_user_id'));
 
         if (! $user || $user->status !== 'pending') {
-            Session::forget(['verification_user_id', 'verification_email']);
+            Session::forget(['verification_user_id', 'verification_email', 'verification_delivery']);
             return redirect()->route('register');
         }
 
-        $sent = $this->otpService->send($user, 'verify_email');
+        $delivery = $this->otpService->send($user, 'verify_email');
 
-        if (! $sent) {
+        if (! $delivery) {
             $cooldown = $this->otpService->resendCooldownSeconds($user, 'verify_email');
             return back()->withErrors(['otp' => "Harap tunggu {$cooldown} detik sebelum meminta kode baru."]);
         }
 
-        return back()->with('status', 'Kode OTP baru telah dikirim ke email Anda.');
+        // Perbarui delivery info di session (channel bisa berubah jika nomor baru ditambahkan)
+        Session::put('verification_delivery', $delivery);
+
+        $channelText = $this->deliveryChannelText($delivery['channels']);
+        return back()->with('status', "Kode OTP baru telah dikirim ke {$channelText} Anda.");
     }
 
-    private function maskEmail(string $email): string
+    private function deliveryChannelText(array $channels): string
     {
-        [$local, $domain] = explode('@', $email, 2);
-        $visible = min(3, strlen($local));
-        return substr($local, 0, $visible) . str_repeat('*', max(0, strlen($local) - $visible)) . '@' . $domain;
+        if (in_array('email', $channels) && in_array('whatsapp', $channels)) {
+            return 'email dan WhatsApp';
+        }
+        return in_array('whatsapp', $channels) ? 'WhatsApp' : 'email';
     }
 }

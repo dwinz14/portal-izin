@@ -141,6 +141,188 @@
             </div>
         </div>
     </div>
+
+    @auth
+        {{-- idle-auto log out --}}
+        <div id="idle-timer-root" x-data="idleTimer()" x-init="init()">
+
+            {{-- Overlay + Warning Modal --}}
+            <div x-show="showWarning" x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                style="display: none;">
+
+                <div x-show="showWarning" x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                    class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm
+                        border border-gray-100 dark:border-slate-700 p-7">
+
+                    {{-- Icon --}}
+                    <div
+                        class="flex items-center justify-center w-16 h-16 rounded-full
+                            bg-amber-100 dark:bg-amber-900/30 mx-auto mb-5">
+                        <svg class="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+
+                    {{-- Text --}}
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 text-center mb-2">
+                        Sesi Akan Berakhir
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 text-center leading-relaxed mb-5">
+                        Tidak ada aktivitas terdeteksi.<br>
+                        Anda akan logout otomatis dalam:
+                    </p>
+
+                    {{-- Countdown --}}
+                    <div class="flex items-center justify-center mb-6">
+                        <div
+                            class="px-6 py-3 bg-amber-50 dark:bg-amber-900/20
+                                border-2 border-amber-300 dark:border-amber-700 rounded-2xl">
+                            <span class="text-4xl font-mono font-bold text-amber-600 dark:text-amber-400 tabular-nums"
+                                x-text="formatCountdown(countdown)"></span>
+                        </div>
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="flex gap-3">
+                        <button @click="stayLoggedIn()"
+                            class="flex-1 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800
+                               text-white font-semibold rounded-xl text-sm transition-colors shadow-sm">
+                            Tetap Login
+                        </button>
+                        <button @click="doLogout()"
+                            class="flex-1 py-2.5 bg-white dark:bg-slate-700
+                               border border-gray-300 dark:border-slate-600
+                               text-gray-700 dark:text-gray-300 font-semibold rounded-xl text-sm
+                               hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors">
+                            Logout
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- Form logout tersembunyi — dipakai saat idle timeout --}}
+            <form id="idle-logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
+                @csrf
+            </form>
+
+        </div>
+
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('idleTimer', () => ({
+                    showWarning: false,
+                    countdown: 60,
+                    idleSeconds: 0,
+                    timeoutSeconds: 600, // Durasi total idle (misal 10 menit = 600 detik)
+                    warningBefore: 300, // Tampilkan modal peringatan detik sebelum logout
+                    _tickTimer: null,
+                    _countTimer: null,
+                    _events: ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'],
+                    _resetHandler: null,
+
+                    init() {
+                        this._resetHandler = () => this.resetTimer();
+                        this._events.forEach(e =>
+                            document.addEventListener(e, this._resetHandler, {
+                                passive: true
+                            })
+                        );
+
+                        // Timer pengecekan setiap detik
+                        this._tickTimer = setInterval(() => {
+                            this.idleSeconds++;
+                            const warningAt = this.timeoutSeconds - this.warningBefore;
+
+                            if (this.idleSeconds >= this.timeoutSeconds) {
+                                this.doLogout();
+                            } else if (this.idleSeconds >= warningAt && !this.showWarning) {
+                                this.countdown = this.timeoutSeconds - this.idleSeconds;
+                                this.showWarning = true;
+                                this._startCountdown();
+                            }
+                        }, 1000);
+                    },
+
+                    resetTimer() {
+                        this.idleSeconds = 0;
+                        if (this.showWarning) {
+                            this.showWarning = false;
+                            if (this._countTimer) {
+                                clearInterval(this._countTimer);
+                                this._countTimer = null;
+                            }
+                        }
+                    },
+
+                    _startCountdown() {
+                        this._countTimer = setInterval(() => {
+                            this.countdown--;
+                            if (this.countdown <= 0) {
+                                clearInterval(this._countTimer);
+                                this._countTimer = null;
+                                this.doLogout();
+                            }
+                        }, 1000);
+                    },
+
+                    stayLoggedIn() {
+                        this.resetTimer();
+                    },
+
+                    doLogout() {
+                        // 1. Matikan semua timer
+                        if (this._tickTimer) clearInterval(this._tickTimer);
+                        if (this._countTimer) clearInterval(this._countTimer);
+
+                        // 2. Lepas semua event listener agar gerakan mouse tidak menginterupsi
+                        this._events.forEach(e =>
+                            document.removeEventListener(e, this._resetHandler)
+                        );
+
+                        // 3. Ambil CSRF Token
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content');
+
+                        // 4. Kirim request logout di background lalu langsung redirect seketika
+                        fetch("{{ route('logout') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            }
+                        }).finally(() => {
+                            window.location.replace("{{ route('login') }}?idle=1");
+                        });
+
+                        // Fallback cepat: jika fetch tertunda, paksa redirect dalam 800ms
+                        setTimeout(() => {
+                            window.location.replace("{{ route('login') }}?idle=1");
+                        }, 800);
+                    },
+
+                    formatCountdown(s) {
+                        const m = Math.floor(s / 60).toString().padStart(2, '0');
+                        const sec = (s % 60).toString().padStart(2, '0');
+                        return `${m}:${sec}`;
+                    },
+                }));
+            });
+        </script>
+    @endauth
+
 </body>
 
 </html>

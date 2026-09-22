@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Illuminate\Session\TokenMismatchException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,5 +38,18 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Tangkap jika CSRF token kadaluarsa (419)
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
+            return redirect()
+                ->route('login')
+                ->with('status', 'Sesi Anda telah berakhir karena tidak ada aktivitas. Silakan login kembali.');
+        });
+        // Alternatif / pelengkap untuk HTTP Exception 419
+        $exceptions->render(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() === 419) {
+                return redirect()
+                    ->route('login')
+                    ->with('status', 'Sesi Anda telah berakhir. Silakan login kembali.');
+            }
+        });
     })->create();

@@ -32,9 +32,9 @@
         class="min-h-screen bg-slate-200 dark:bg-slate-900 dark:text-gray-300 transition-colors duration-300">
         @include('layouts.navigation')
 
-        <div class="flex flex-col flex-1">
+        <div class="flex flex-col flex-1 min-h-screen">
 
-            <div class="lg:pl-72">
+            <div class="lg:pl-72 flex flex-col flex-1 min-h-screen">
                 <header
                     class="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white/75 dark:bg-slate-800 rounded-bl-xl backdrop-blur-xl shadow-xl border-b border-gray-200 dark:border-gray-700">
                     <!-- Mobile menu button -->
@@ -136,6 +136,8 @@
                         </div>
                     </div>
                 </main>
+
+                @include('layouts.footer')
             </div>
         </div>
     </div>

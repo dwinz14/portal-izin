@@ -19,6 +19,7 @@ use App\Http\Controllers\PublicHolidayController;
 use App\Http\Controllers\QuotaController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\UserActivityController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -99,9 +100,12 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::post('/users/reset-passwords', [MasterUserController::class, 'resetAllPasswords'])
         ->name('users.resetAllPasswords');
     Route::delete('/destroy-all', [MasterUserController::class, 'destroyAll'])->name('users.destroyAll');
-    Route::get('user-activity', [UserManagementController::class, 'index'])->name('user-activity.index');
+    // Monitoring Aktivitas Pengguna
+    Route::get('user-activity',        [UserActivityController::class,  'index'])->name('user-activity.index');
+    Route::get('user-activity/{user}', [UserActivityController::class,  'show'])->name('user-activity.show');
     Route::patch('user-activity/{id}/approve', [UserManagementController::class, 'approve'])->name('user-activity.approve');
-    Route::patch('user-activity/{id}/reject', [UserManagementController::class, 'reject'])->name('user-activity.reject');
+    Route::patch('user-activity/{id}/reject',  [UserManagementController::class, 'reject'])->name('user-activity.reject');
+    Route::get('user-management', [UserManagementController::class, 'index'])->name('user-management.index');
 });
 
 // route rekap cuti

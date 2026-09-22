@@ -144,13 +144,13 @@ return [
                 'admin.divisions*',
                 'admin.positions*',
                 'admin.leave-types*',
-                'admin.user-activity*',
+                'admin.user-management*',
             ],
             'children' => [
                 [
                     'name' => 'Master User',
                     'route' => 'admin.users.index',
-                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>',
+                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>',
                     'roles' => ['super_admin'],
                     'active_pattern' => 'admin.users*',
                 ],
@@ -171,7 +171,7 @@ return [
                 [
                     'name' => 'Master Jabatan',
                     'route' => 'admin.positions.index',
-                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>',
+                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5V4H2v16h5m10 0v-5H7v5m10 0H7M6 8h.01M10 8h.01M14 8h.01M18 8h.01" /></svg>',
                     'roles' => ['super_admin'],
                     'active_pattern' => 'admin.positions*',
                 ],
@@ -183,13 +183,22 @@ return [
                     'active_pattern' => 'admin.leave-types*',
                 ],
                 [
-                    'name' => 'Aktivitas Pengguna',
-                    'route' => 'admin.user-activity.index',
-                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14m8 0h2a2 2 0 002-2v-7a2 2 0 00-2-2h-2a2 2 0 00-2 2v9" /></svg>',
+                    'name' => 'Manajemen User',
+                    'route' => 'admin.user-management.index',
+                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>',
                     'roles' => ['super_admin'],
-                    'active_pattern' => 'admin.user-activity*',
+                    'active_pattern' => 'admin.user-management*',
                 ],
             ],
+        ],
+
+        [
+            'type' => 'item',
+            'name' => 'Aktivitas Pengguna',
+            'route' => 'admin.user-activity.index',
+            'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0H5a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14m8 0h2a2 2 0 002-2v-7a2 2 0 00-2-2h-2a2 2 0 00-2 2v9" /></svg>',
+            'roles' => ['super_admin'],
+            'active_pattern' => 'admin.user-activity*',
         ],
 
         // -----------------------------------------------------------------

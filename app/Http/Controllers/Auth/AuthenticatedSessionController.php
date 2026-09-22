@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Services\ActivityLogger;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -59,6 +60,7 @@ class AuthenticatedSessionController extends Controller
         //     'staff' => redirect('/staff/dashboard'),
         //     default => redirect('/dashboard'),
         // };
+        ActivityLogger::log('auth.login', 'Login berhasil ke sistem');
         return redirect('/dashboard');
     }
 
@@ -67,6 +69,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        ActivityLogger::log('auth.logout', 'Keluar dari sistem');
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

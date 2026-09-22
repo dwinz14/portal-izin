@@ -8,6 +8,7 @@ use App\Services\LeaveQuotaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogger;
 
 class UserManagementController extends Controller
 {
@@ -109,6 +110,13 @@ class UserManagementController extends Controller
             ]);
         });
 
+        ActivityLogger::log(
+            'admin.user_approved',
+            'Menyetujui pendaftaran ' . ucwords($user->name) . ' (' . $user->nik . ')',
+            $user,
+            ['user_nik' => $user->nik, 'user_role' => $user->role]
+        );
+
         return redirect()->back()->with('success', 'User berhasil disetujui dan kuota cuti telah digenerate.');
     }
 
@@ -133,6 +141,12 @@ class UserManagementController extends Controller
             $user->delete();
         });
 
+        ActivityLogger::log(
+            'admin.user_rejected',
+            'Menolak pendaftaran ' . ucwords($user->name) . ' (' . $user->nik . ')',
+            null,   // tidak bisa set subject karena user akan dihapus
+            ['user_name' => $user->name, 'user_nik' => $user->nik, 'user_role' => $user->role]
+        );
         return redirect()->back()->with('success', 'User berhasil ditolak.');
     }
 }

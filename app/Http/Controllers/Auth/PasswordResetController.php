@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
+use App\Services\ActivityLogger;
 
 class PasswordResetController extends Controller
 {
@@ -164,6 +165,7 @@ class PasswordResetController extends Controller
         $user = User::findOrFail(Session::get('reset_user_id'));
         $user->update(['password' => Hash::make($request->password)]);
 
+        ActivityLogger::logAs($user, 'auth.password_reset', 'Mereset password via OTP');
         Session::forget(['reset_nik', 'reset_verified', 'reset_user_id', 'reset_delivery']);
 
         return redirect()->route('login')

@@ -12,6 +12,7 @@ use App\Models\UserLeaveBalance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\ActivityLogger;
 
 class QuotaController extends Controller
 {
@@ -287,6 +288,13 @@ class QuotaController extends Controller
         if ($jointLeaveCount > 0) {
             $message .= " Kuota cuti tahunan dikurangi {$jointLeaveCount} hari cuti bersama.";
         }
+
+        ActivityLogger::log(
+            'admin.quota_generated',
+            "Generate kuota cuti tahunan untuk tahun {$year}",
+            null,
+            ['tahun' => $year]
+        );
 
         return back()->with('success', $message);
     }

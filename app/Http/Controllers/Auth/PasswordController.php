@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Services\ActivityLogger;
 
 class PasswordController extends Controller
 {
@@ -38,9 +39,10 @@ class PasswordController extends Controller
         ]);
 
         if ($wasForced) {
+            ActivityLogger::log('auth.password_changed', 'Mengganti password wajib (first login)');
             return redirect()->route('dashboard')->with('success', 'Password berhasil diupdate. Selamat datang kembali!');
         }
-
+        ActivityLogger::log('auth.password_changed', 'Memperbarui password dari halaman profil');
         return back()->with('success', 'password berhasil diupdate');
     }
 }

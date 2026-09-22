@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogger;
 
 class LeaveController extends Controller
 {
@@ -225,6 +226,21 @@ class LeaveController extends Controller
                 'is_mendadak' => ! $isSickLeave && \Carbon\Carbon::parse($request->start_date)->lt(\Carbon\Carbon::today()->addWeek()),
             ]);
 
+            // Log setelah leave berhasil dibuat
+            ActivityLogger::log(
+                'leave.submitted',
+                "Mengajukan {$leaveType->name} {$leave->total_hari} hari kerja (" .
+                    \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') . ' s/d ' .
+                    \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') . ')',
+                $leave,
+                [
+                    'jenis_cuti' => $leaveType->name,
+                    'total_hari' => $leave->total_hari,
+                    'start_date' => $leave->start_date,
+                    'end_date'   => $leave->end_date,
+                ]
+            );
+
             // Kasus khusus: role direksi -> langsung disetujui
             if ($user->role === 'direksi') {
                 $leave->update(['status_final' => 'approved']);
@@ -357,6 +373,19 @@ class LeaveController extends Controller
 
     public function destroy(Leave $leave)
     {
+        ActivityLogger::log(
+            'leave.cancelled',
+            "Membatalkan pengajuan {$leave->leaveType?->name} (" .
+                \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') . ' s/d ' .
+                \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') . ')',
+            $leave,
+            [
+                'jenis_cuti' => $leave->leaveType?->name,
+                'start_date' => $leave->start_date,
+                'end_date'   => $leave->end_date,
+            ]
+        );
+
         $leave->delete();
 
         return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dihapus.');
@@ -431,6 +460,20 @@ class LeaveController extends Controller
             $this->finalApproveLeave($leave);
         }
 
+        ActivityLogger::log(
+            'leave.revision_accepted',
+            'Menerima revisi tanggal cuti dari ' . ucwords($approval->approver?->name ?? 'atasan') .
+                ' — ' . \Carbon\Carbon::parse($approval->revised_start_date)->format('d/m/Y') .
+                ' s/d ' . \Carbon\Carbon::parse($approval->revised_end_date)->format('d/m/Y'),
+            $leave,
+            [
+                'new_start'  => $approval->revised_start_date,
+                'new_end'    => $approval->revised_end_date,
+                'new_hari'   => $approval->revised_total_hari,
+                'dari_atasan' => $approval->approver?->name,
+            ]
+        );
+
         return redirect()->route('cuti.index')->with('success', 'Revisi tanggal telah diterima dan cuti disetujui.');
     }
 
@@ -471,6 +514,12 @@ class LeaveController extends Controller
         $approver = User::find($approval->approver_id);
         $approver->notify(new RevisionRejected($leave, Auth::user()->name));
 
+        ActivityLogger::log(
+            'leave.revision_rejected',
+            'Menolak revisi tanggal cuti dari ' . ucwords($approval->approver?->name ?? 'atasan'),
+            $leave,
+            ['dari_atasan' => $approval->approver?->name]
+        );
         return redirect()->route('cuti.index')->with('error', 'Revisi tanggal ditolak. Pengajuan cuti dibatalkan.');
     }
 

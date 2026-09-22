@@ -10,6 +10,7 @@ use App\Notifications\AttendanceRequestSubmitted;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogger;
 
 class AttendanceRequestController extends Controller
 {
@@ -76,6 +77,17 @@ class AttendanceRequestController extends Controller
 
             $attendanceRequest->approver?->notify(new AttendanceRequestSubmitted($attendanceRequest));
 
+            ActivityLogger::log(
+                'attendance.submitted',
+                'Mengajukan ' . $attendanceRequest->type_label .
+                    ' pada ' . \Carbon\Carbon::parse($attendanceRequest->date)->format('d/m/Y'),
+                $attendanceRequest,
+                [
+                    'type' => $attendanceRequest->type_label,
+                    'date' => $attendanceRequest->date,
+                ]
+            );
+
             return redirect()
                 ->route('kehadiran.index')
                 ->with('success', 'Pengajuan kehadiran berhasil dikirim.');
@@ -86,6 +98,14 @@ class AttendanceRequestController extends Controller
     {
         abort_unless($kehadiran->user_id === Auth::id(), 403);
         abort_unless($kehadiran->status === AttendanceRequest::STATUS_PENDING, 400);
+
+        ActivityLogger::log(
+            'attendance.cancelled',
+            'Membatalkan pengajuan ' . $kehadiran->type_label .
+                ' pada ' . \Carbon\Carbon::parse($kehadiran->date)->format('d/m/Y'),
+            $kehadiran,
+            ['type' => $kehadiran->type_label, 'date' => $kehadiran->date]
+        );
 
         $kehadiran->delete();
 
@@ -103,16 +123,16 @@ class AttendanceRequestController extends Controller
         $approverList = collect();
 
         $approverList = $approverList->merge(
-            Cache::remember('direksi_users', 300, fn () => User::select('id', 'name', 'role')->where('role', 'direksi')->get())
+            Cache::remember('direksi_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'direksi')->get())
         );
 
         $approverList = $approverList->merge(
-            Cache::remember('hrd_users', 300, fn () => User::select('id', 'name', 'role')->where('role', 'hrd')->get())
+            Cache::remember('hrd_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'hrd')->get())
         );
 
         if ($user->role !== 'hrd') {
             $approverList = $approverList->merge(
-                Cache::remember("atasan_{$user->office_id}", 300, fn () => User::select('id', 'name', 'role')
+                Cache::remember("atasan_{$user->office_id}", 300, fn() => User::select('id', 'name', 'role')
                     ->where('office_id', $user->office_id)
                     ->whereIn('role', ['kabag-pincab', 'kasie'])
                     ->where('id', '!=', $user->id)

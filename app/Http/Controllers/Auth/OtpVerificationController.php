@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
+use App\Services\ActivityLogger;
 
 class OtpVerificationController extends Controller
 {
@@ -95,6 +96,7 @@ class OtpVerificationController extends Controller
             ]);
         });
 
+        ActivityLogger::logAs($user, 'auth.otp_verified', 'Verifikasi OTP berhasil — akun aktif');
         Session::forget(['verification_user_id', 'verification_email', 'verification_delivery']);
 
         return redirect()->route('login')

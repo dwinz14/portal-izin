@@ -15,6 +15,7 @@ use App\Services\LeaveApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Services\ActivityLogger;
 
 class ApprovalController extends Controller
 {
@@ -93,6 +94,19 @@ class ApprovalController extends Controller
             $this->finalApprove($leave);
         }
 
+        ActivityLogger::log(
+            'approval.leave_approved',
+            'Menyetujui cuti ' . ucwords($employee->name) .
+                ' — ' . ($leave->leaveType?->name ?? '') . ' (' . $leave->total_hari . ' hari)',
+            $leave,
+            [
+                'pemohon'    => $employee->name,
+                'jenis_cuti' => $leave->leaveType?->name,
+                'total_hari' => $leave->total_hari,
+                'step'       => $approval->step,
+            ]
+        );
+
         return back()->with('success', 'Approval disetujui.');
     }
 
@@ -143,6 +157,21 @@ class ApprovalController extends Controller
             "Revisi tanggal: {$request->revised_start_date} s/d {$request->revised_end_date} ({$revisedTotalHari} hari)"
         ));
 
+        ActivityLogger::log(
+            'approval.revision_requested',
+            'Meminta revisi tanggal cuti ' . ucwords($approval->leave->user->name) .
+                ' — usulan ' . \Carbon\Carbon::parse($request->revised_start_date)->format('d/m/Y') .
+                ' s/d ' . \Carbon\Carbon::parse($request->revised_end_date)->format('d/m/Y') .
+                ' (' . $revisedTotalHari . ' hari)',
+            $approval->leave,
+            [
+                'pemohon'       => $approval->leave->user->name,
+                'revised_start' => $request->revised_start_date,
+                'revised_end'   => $request->revised_end_date,
+                'revised_hari'  => $revisedTotalHari,
+            ]
+        );
+
         return back()->with('success', 'Permintaan revisi tanggal telah dikirim ke pemohon.');
     }
 
@@ -165,6 +194,18 @@ class ApprovalController extends Controller
 
         // Kirim notifikasi ke pemohon cuti
         $approval->leave->user->notify(new LeaveRequestRejected($approval->leave, Auth::user()->name, $request->input('catatan')));
+
+        ActivityLogger::log(
+            'approval.leave_rejected',
+            'Menolak cuti ' . ucwords($approval->leave->user->name) .
+                ' — ' . ($approval->leave->leaveType?->name ?? ''),
+            $approval->leave,
+            [
+                'pemohon'    => $approval->leave->user->name,
+                'jenis_cuti' => $approval->leave->leaveType?->name,
+                'catatan'    => $request->input('catatan'),
+            ]
+        );
 
         return back()->with('success', 'Approval ditolak.');
     }

@@ -7,6 +7,7 @@ use App\Notifications\AttendanceRequestApproved;
 use App\Notifications\AttendanceRequestRejected;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ActivityLogger;
 
 class AttendanceApprovalController extends Controller
 {
@@ -49,6 +50,19 @@ class AttendanceApprovalController extends Controller
 
         $attendanceRequest->user?->notify(new AttendanceRequestApproved($attendanceRequest, Auth::user()->name));
 
+        ActivityLogger::log(
+            'approval.attendance_approved',
+            'Menyetujui ' . $attendanceRequest->type_label .
+                ' — ' . ucwords($attendanceRequest->user?->name ?? '') .
+                ' (' . \Carbon\Carbon::parse($attendanceRequest->date)->format('d/m/Y') . ')',
+            $attendanceRequest,
+            [
+                'pemohon' => $attendanceRequest->user?->name,
+                'type'    => $attendanceRequest->type_label,
+                'date'    => $attendanceRequest->date,
+            ]
+        );
+
         return back()->with('success', 'Pengajuan kehadiran disetujui.');
     }
 
@@ -70,6 +84,20 @@ class AttendanceApprovalController extends Controller
         ]);
 
         $attendanceRequest->user?->notify(new AttendanceRequestRejected($attendanceRequest, Auth::user()->name));
+
+        ActivityLogger::log(
+            'approval.attendance_rejected',
+            'Menolak ' . $attendanceRequest->type_label .
+                ' — ' . ucwords($attendanceRequest->user?->name ?? '') .
+                ' (' . \Carbon\Carbon::parse($attendanceRequest->date)->format('d/m/Y') . ')',
+            $attendanceRequest,
+            [
+                'pemohon' => $attendanceRequest->user?->name,
+                'type'    => $attendanceRequest->type_label,
+                'date'    => $attendanceRequest->date,
+                'alasan'  => $request->rejection_reason,
+            ]
+        );
 
         return back()->with('success', 'Pengajuan kehadiran ditolak.');
     }

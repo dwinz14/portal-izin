@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Services\ActivityLogger;
 
 class ProfileController extends Controller
 {
@@ -53,6 +54,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        ActivityLogger::log('profile.updated', 'Memperbarui informasi profil');
         return Redirect::route('profile.edit')->with('success', 'profile berhasil diupdate');
     }
 

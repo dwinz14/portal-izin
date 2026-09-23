@@ -8,7 +8,7 @@
                 <span>&copy; {{ date('Y') }}</span>
                 <span
                     class="font-semibold text-gray-700 dark:text-gray-200 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-                    JustBoyz
+                    Lil/Slamet
                 </span>
                 <span class="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
                 <span class="text-gray-500 dark:text-gray-400">All rights reserved.</span>

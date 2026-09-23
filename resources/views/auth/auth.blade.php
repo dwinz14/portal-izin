@@ -31,7 +31,7 @@
 
             <div class="mb-8">
                 <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Selamat
-                    Datang Kembali</h2>
+                    Datang</h2>
                 <p class="text-sm text-slate-500 dark:text-slate-400">Silakan masuk dengan akun anda</p>
             </div>
 

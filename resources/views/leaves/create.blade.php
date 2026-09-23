@@ -24,8 +24,7 @@
         </div>
     </x-slot>
 
-    <div class="py-6 px-4 sm:px-6 lg:px-8 bg-gray-50/50 dark:bg-gray-900/50 min-h-screen flex justify-center"
-        x-data="leaveForm()">
+    <div class="py-6 px-4 sm:px-6 lg:px-8 min-h-screen flex justify-center" x-data="leaveForm()">
         <div class="w-full max-w-3xl"> {{-- Dikurangi dari max-w-4xl ke max-w-3xl agar lebih proporsional --}}
 
             {{-- Wrapper Utama --}}
@@ -244,13 +243,13 @@
                                     <span class="font-bold text-gray-800 dark:text-gray-200">Indikator
                                         Tanggal:</span>
                                     <span class="flex items-center gap-1"><span
-                                            class="w-2.5 h-2.5 rounded-full bg-orange-100 border border-orange-300 dark:bg-orange-900/40 dark:border-orange-700"></span>
+                                            class="w-2.5 h-2.5 rounded-full bg-orange-200 border border-orange-300"></span>
                                         Zona Mendadak</span>
                                     <span class="flex items-center gap-1"><span
-                                            class="w-2.5 h-2.5 rounded-full bg-red-50 border border-red-200 dark:bg-red-900/30 dark:border-red-800"></span>
+                                            class="w-2.5 h-2.5 rounded-full bg-red-100 border border-red-200"></span>
                                         Libur Nasional</span>
                                     <span class="flex items-center gap-1"><span
-                                            class="w-2.5 h-2.5 rounded-full bg-amber-50 border border-amber-200 dark:bg-amber-900/30 dark:border-amber-800"></span>
+                                            class="w-2.5 h-2.5 rounded-full bg-amber-100 border border-amber-200"></span>
                                         Cuti Bersama</span>
                                 </div>
 

@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script>
-        (function () {
+        (function() {
             var theme = localStorage.getItem('theme');
             if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -44,7 +44,7 @@
             </div>
 
             <!-- Content Container -->
-            <div class="relative z-10 w-full max-w-lg px-8 xl:px-12">
+            <div class="relative z-10 w-full max-w-xl px-8 xl:px-12">
                 <!-- Brand Element -->
                 <div class="mb-10 text-center lg:text-left">
                     <a href="/"
@@ -57,7 +57,7 @@
                     </h1>
 
                     <p class="text-lg text-slate-300 leading-relaxed font-medium">
-                        Sistem Informasi Manajemen Izin Karyawan<br>
+                        Sistem Informasi Manajemen Izin/Cuti Karyawan<br>
                         <span class="text-white font-semibold">PT BPR Artha Pamenang</span>
                     </p>
                 </div>
@@ -96,9 +96,12 @@
             <!-- Header with Theme Toggle -->
             <div class="flex items-center justify-between p-6 lg:p-8">
                 <!-- Mobile Logo -->
-                <a href="/" class="lg:hidden flex items-center gap-3">
-                    <x-application-logo class="w-10 h-10 text-primary-600 dark:text-primary-400" />
-                    <span class="font-bold text-xl tracking-tight text-slate-900 dark:text-white">SIMIKA</span>
+                <a href="/" class="lg:hidden flex items-center gap-2.5">
+                    <x-application-logo class="w-9 h-9 text-primary-600 dark:text-primary-400 flex-shrink-0" />
+                    <h1
+                        class="text-xl sm:text-2xl font-extrabold tracking-tight text-primary-500 dark:text-primary-400 drop-shadow-sm leading-none">
+                        SI<span class="text-slate-900 dark:text-white">MIKA</span>
+                    </h1>
                 </a>
 
                 <div class="ml-auto">

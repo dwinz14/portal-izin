@@ -35,7 +35,7 @@ class AttendanceRequestController extends Controller
 
     public function store(StoreAttendanceRequest $request)
     {
-        $user = Auth::user();
+        $user        = Auth::user();
         $approverList = $this->getApproverList($user);
 
         if (! $approverList->pluck('id')->contains((int) $request->approver_id)) {
@@ -63,16 +63,38 @@ class AttendanceRequestController extends Controller
                 $proofImagePath = $request->file('proof_image')->store('attendance_proofs', 'public');
             }
 
+            $isUpdateAttendance = $request->type === AttendanceRequest::TYPE_UPDATE_ATTENDANCE;
+            $updateType         = $isUpdateAttendance ? $request->update_type : null;
+
+            // Tentukan start_time dan end_time berdasarkan update_type
+            $startTime = null;
+            $endTime   = null;
+
+            if ($isUpdateAttendance) {
+                $startTime = $updateType !== AttendanceRequest::UPDATE_TYPE_CHECKOUT_ONLY
+                    ? $request->start_time
+                    : null;
+
+                $endTime = in_array($updateType, [
+                    AttendanceRequest::UPDATE_TYPE_BOTH,
+                    AttendanceRequest::UPDATE_TYPE_CHECKOUT_ONLY,
+                ]) ? $request->end_time : null;
+            } else {
+                $startTime = $request->start_time;
+                $endTime   = $request->end_time;
+            }
+
             $attendanceRequest = AttendanceRequest::create([
-                'user_id' => $user->id,
+                'user_id'     => $user->id,
                 'approver_id' => $request->approver_id,
-                'type' => $request->type,
-                'date' => $request->date,
-                'start_time' => $request->start_time,
-                'end_time' => $request->end_time,
-                'reason' => $request->reason,
+                'type'        => $request->type,
+                'update_type' => $updateType,
+                'date'        => $request->date,
+                'start_time'  => $startTime,
+                'end_time'    => $endTime,
+                'reason'      => $request->reason,
                 'proof_image' => $proofImagePath,
-                'status' => AttendanceRequest::STATUS_PENDING,
+                'status'      => AttendanceRequest::STATUS_PENDING,
             ]);
 
             $attendanceRequest->approver?->notify(new AttendanceRequestSubmitted($attendanceRequest));
@@ -80,11 +102,13 @@ class AttendanceRequestController extends Controller
             ActivityLogger::log(
                 'attendance.submitted',
                 'Mengajukan ' . $attendanceRequest->type_label .
+                    ($updateType ? ' (' . $attendanceRequest->update_type_label . ')' : '') .
                     ' pada ' . \Carbon\Carbon::parse($attendanceRequest->date)->format('d/m/Y'),
                 $attendanceRequest,
                 [
-                    'type' => $attendanceRequest->type_label,
-                    'date' => $attendanceRequest->date,
+                    'type'        => $attendanceRequest->type_label,
+                    'update_type' => $attendanceRequest->update_type_label,
+                    'date'        => $attendanceRequest->date,
                 ]
             );
 

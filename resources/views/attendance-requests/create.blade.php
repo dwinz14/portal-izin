@@ -171,6 +171,40 @@
                             <span>1. Waktu Kehadiran</span>
                         </div>
 
+                        {{-- Pilihan Update Type (hanya muncul untuk update_attendance) --}}
+                        <div x-show="type === 'update_attendance'" x-transition>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Bagian Absensi yang Diupdate <span class="text-red-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                @foreach (\App\Models\AttendanceRequest::updateTypeLabels() as $value => $label)
+                                    <label
+                                        class="relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200"
+                                        :class="updateType === '{{ $value }}'
+                                            ?
+                                            'border-primary-600 bg-primary-50/50 dark:bg-primary-950/30 dark:border-primary-500 ring-2 ring-primary-500/10' :
+                                            'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-gray-300 dark:hover:border-slate-600'">
+                                        <input type="radio" name="update_type" value="{{ $value }}"
+                                            x-model="updateType" class="sr-only">
+                                        <div class="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
+                                            :class="updateType === '{{ $value }}'
+                                                ?
+                                                'border-primary-600 bg-primary-600' :
+                                                'border-gray-300 dark:border-slate-600'">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-white"
+                                                x-show="updateType === '{{ $value }}'"></div>
+                                        </div>
+                                        <span
+                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ $label }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            @error('update_type')
+                                <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
+                                    {{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {{-- Tanggal --}}
                             <div>
@@ -178,45 +212,35 @@
                                     class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                     Tanggal Pengajuan <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <input type="date" id="date" name="date"
-                                        value="{{ old('date', now()->format('Y-m-d')) }}" required
-                                        class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition" />
-                                </div>
+                                <input type="date" id="date" name="date"
+                                    value="{{ old('date', now()->format('Y-m-d')) }}" required
+                                    class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition" />
                                 @error('date')
                                     <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
                                         {{ $message }}</p>
                                 @enderror
                             </div>
 
-                            {{-- Waktu Mulai / Jam Tiba --}}
-                            <div>
-                                <label for="start_time"
-                                    class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                            {{-- Jam Check-in / Waktu Mulai --}}
+                            <div x-show="showStartTime" x-transition>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                     <span x-text="startTimeLabel"></span> <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <input type="time" id="start_time" name="start_time" x-model="startTime"
-                                        required
-                                        class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition" />
-                                </div>
+                                <x-time-picker name="start_time" id="start_time" value="{{ old('start_time', '') }}"
+                                    x-model-key="startTime" />
                                 @error('start_time')
                                     <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
                                         {{ $message }}</p>
                                 @enderror
                             </div>
 
-                            {{-- Waktu Selesai (Conditional) --}}
+                            {{-- Jam Check-out / Waktu Selesai --}}
                             <div x-show="showEndTime" x-transition>
-                                <label for="end_time"
-                                    class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                                     <span x-text="endTimeLabel"></span> <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <input type="time" id="end_time" name="end_time" x-model="endTime"
-                                        :required="showEndTime"
-                                        class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition" />
-                                </div>
+                                <x-time-picker name="end_time" id="end_time" value="{{ old('end_time', '') }}"
+                                    x-model-key="endTime" />
                                 @error('end_time')
                                     <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
                                         {{ $message }}</p>
@@ -264,7 +288,10 @@
                             {{-- Bukti Pendukung / Foto --}}
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                                    Bukti Pendukung / Foto (Opsional)
+                                    Bukti Pendukung / Foto
+                                    <span x-show="type === 'update_attendance'" class="text-red-500"> *</span>
+                                    <span x-show="type !== 'update_attendance'"
+                                        class="text-gray-400 font-normal">(Opsional)</span>
                                 </label>
 
                                 <div class="relative">
@@ -398,44 +425,55 @@
         function attendanceForm() {
             return {
                 type: @json(old('type', '')),
+                updateType: @json(old('update_type', '')),
                 startTime: @json(old('start_time', '')),
                 endTime: @json(old('end_time', '')),
                 reason: @json(old('reason', '')),
                 imagePreview: null,
                 isSubmitting: false,
 
-                get showEndTime() {
-                    return this.type === 'leave_during_work' || this.type === 'update_attendance';
+                // Tampilkan start_time kecuali update_attendance + checkout_only
+                get showStartTime() {
+                    if (this.type !== 'update_attendance') return true;
+                    return this.updateType !== 'checkout_only';
                 },
+
+                // Tampilkan end_time jika: leave_during_work, atau update_attendance + both/checkout_only
+                get showEndTime() {
+                    if (this.type === 'leave_during_work') return true;
+                    if (this.type === 'update_attendance') {
+                        return this.updateType === 'both' || this.updateType === 'checkout_only';
+                    }
+                    return false;
+                },
+
                 get typeInfo() {
                     switch (this.type) {
                         case 'late_arrival':
                             return {
-                                title: 'Datang Terlambat',
-                                    desc:
+                                title: 'Datang Terlambat', desc:
                                     'Pengajuan izin saat tiba di kantor melebihi jam operasional kerja yang ditentukan.'
                             };
                         case 'early_departure':
                             return {
-                                title: 'Pulang Lebih Awal',
-                                    desc: 'Pengajuan izin untuk meninggalkan kantor sebelum jam pulang kerja berakhir.'
+                                title: 'Pulang Lebih Awal', desc:
+                                    'Pengajuan izin untuk meninggalkan kantor sebelum jam pulang kerja berakhir.'
                             };
                         case 'leave_during_work':
                             return {
-                                title: 'Meninggalkan Pekerjaan',
-                                    desc:
+                                title: 'Meninggalkan Pekerjaan', desc:
                                     'Pengajuan izin keluar kantor sementara pada jam kerja dan kembali bekerja di hari yang sama.'
                             };
                         case 'update_attendance':
                             return {
-                                title: 'Update Absensi',
-                                    desc:
+                                title: 'Update Absensi', desc:
                                     'Koreksi log catatan jam check-in atau check-out karena kendala sistem presensi.'
                             };
                         default:
                             return null;
                     }
                 },
+
                 get startTimeLabel() {
                     switch (this.type) {
                         case 'late_arrival':
@@ -450,6 +488,7 @@
                             return 'Waktu Mulai';
                     }
                 },
+
                 get endTimeLabel() {
                     switch (this.type) {
                         case 'leave_during_work':
@@ -460,6 +499,7 @@
                             return 'Waktu Selesai';
                     }
                 },
+
                 handleImageUpload(event) {
                     const file = event.target.files[0];
                     if (file) {
@@ -476,11 +516,24 @@
                         reader.readAsDataURL(file);
                     }
                 },
+
                 removeImage() {
                     this.imagePreview = null;
                     const input = document.getElementById('proof_image');
                     if (input) input.value = '';
-                }
+                },
+
+                // Inisialisasi: dengarkan event time-changed dari x-time-picker anak
+                init() {
+                    this.$el.addEventListener('time-changed', (e) => {
+                        const {
+                            key,
+                            value
+                        } = e.detail || {};
+                        if (key === 'startTime') this.startTime = value;
+                        if (key === 'endTime') this.endTime = value;
+                    });
+                },
             };
         }
     </script>

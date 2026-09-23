@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\OtpVerificationController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\NikLookupController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -13,6 +14,15 @@ Route::middleware('guest')->group(function () {
     // ── Registrasi ──────────────────────────────────────────────────────────
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store']);
+
+    // NIK Lookup — hanya bisa diakses tamu (belum login), throttle 30 request/menit
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::get('/register/lookup-nik', [NikLookupController::class, 'lookup'])
+            ->name('register.lookup-nik');
+
+        Route::get('/register/validate-nik', [NikLookupController::class, 'validate'])
+            ->name('register.validate-nik');
+    });
 
     // ── Verifikasi OTP setelah register (session-based, tanpa auth) ─────────
     Route::get('register/verify',        [OtpVerificationController::class, 'showVerify'])->name('register.verify');

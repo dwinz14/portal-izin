@@ -196,26 +196,35 @@
                     x-transition:leave-start="opacity-100 translate-x-0"
                     x-transition:leave-end="opacity-0 -translate-x-8" class="space-y-5 pt-4">
 
-                    <!-- NIK -->
-                    <div>
+                    <!-- Hidden PIN (auto-filled dari DB karyawan) -->
+                    <input type="hidden" id="pin_register" name="pin" value="{{ old('pin') }}">
+
+                    <!-- NIK dengan Autocomplete -->
+                    <div class="relative">
                         <x-input-label for="nik_register" :value="__('Nomor Induk Karyawan (NIK)')"
                             class="mb-1.5 text-slate-700 dark:text-slate-300 font-medium" />
                         <x-text-input id="nik_register"
                             class="block w-full px-4 py-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary-500 focus:ring-primary-500/20 rounded-xl transition-all duration-200 uppercase shadow-sm"
-                            type="text" name="nik" :value="old('nik')" required autocomplete="nik"
-                            placeholder="Contoh: AP123456789" maxlength="11" />
+                            type="text" name="nik" :value="old('nik')" required autocomplete="off"
+                            placeholder="Ketik NIK untuk mencari..." />
                         <x-input-error :messages="$errors->get('nik')" class="mt-2" />
                         <div id="nik-validation" class="mt-2 text-xs font-medium" style="display: none;"></div>
+
+                        <!-- Dropdown hasil autocomplete -->
+                        <div id="nik-dropdown"
+                            class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg"
+                            style="display: none;">
+                        </div>
                     </div>
 
-                    <!-- Name -->
+                    <!-- Name (readonly, auto-filled) -->
                     <div>
                         <x-input-label for="name" :value="__('Nama Lengkap')"
                             class="mb-1.5 text-slate-700 dark:text-slate-300 font-medium" />
                         <x-text-input id="name"
-                            class="block w-full px-4 py-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary-500 focus:ring-primary-500/20 rounded-xl transition-all duration-200 shadow-sm"
-                            type="text" name="name" :value="old('name')" required autocomplete="name"
-                            placeholder="Sesuai KTP / Identitas Resmi" />
+                            class="block w-full px-4 py-3 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:border-primary-500 focus:ring-primary-500/20 rounded-xl transition-all duration-200 shadow-sm bg-slate-50 dark:bg-slate-800/70"
+                            type="text" name="name" :value="old('name')" required autocomplete="off"
+                            placeholder="Terisi otomatis setelah memilih NIK" readonly />
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
 
@@ -463,8 +472,80 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // NIK Validation Logic
+            // NIK Autocomplete Logic
             const nikInput = document.getElementById('nik_register');
+            const nikDropdown = document.getElementById('nik-dropdown');
+            const nameInput = document.getElementById('name');
+            const pinInput = document.getElementById('pin_register');
+            const nikValidation = document.getElementById('nik-validation');
+
+            let nikLookupTimeout = null;
+            let nikVerified = false;
+
+            function setNikStatus(type, message) {
+                nikValidation.style.display = 'flex';
+                const icons = {
+                    success: '<svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>',
+                    error: '<svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>',
+                    loading: '<svg class="w-4 h-4 mr-1.5 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>',
+                    warning: '<svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>',
+                };
+                const colors = {
+                    success: 'mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center',
+                    error: 'mt-2 text-xs font-medium text-red-500 dark:text-red-400 flex items-center',
+                    loading: 'mt-2 text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center',
+                    warning: 'mt-2 text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center',
+                };
+                nikValidation.className = colors[type];
+                nikValidation.innerHTML = (icons[type] || '') + '<span>' + message + '</span>';
+            }
+
+            function resetNikField() {
+                nikVerified = false;
+                nameInput.value = '';
+                nameInput.readOnly = true;
+                pinInput.value = '';
+            }
+
+            function showDropdown(results) {
+                nikDropdown.innerHTML = '';
+                if (results.length === 0) {
+                    nikDropdown.style.display = 'none';
+                    return;
+                }
+                results.forEach(function(item) {
+                    const div = document.createElement('div');
+                    div.className =
+                        'px-4 py-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-slate-100 dark:border-slate-700/40 last:border-0';
+                    div.innerHTML =
+                        '<span class="block text-sm font-semibold text-slate-800 dark:text-slate-200">' +
+                        item.nik + '</span>' +
+                        '<span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">' + item
+                        .nama + '</span>';
+                    div.addEventListener('mousedown', function(e) {
+                        e.preventDefault(); // cegah blur sebelum click teregister
+                        selectPegawai(item);
+                    });
+                    nikDropdown.appendChild(div);
+                });
+                nikDropdown.style.display = 'block';
+            }
+
+            function selectPegawai(item) {
+                nikInput.value = item.nik;
+                nameInput.value = item.nama;
+                pinInput.value = item.pin;
+                nikVerified = true;
+                nikDropdown.style.display = 'none';
+
+                if (item.sudah_terdaftar) {
+                    setNikStatus('warning', 'NIK ini sudah terdaftar di portal cuti.');
+                    nikVerified = false;
+                } else {
+                    setNikStatus('success', 'NIK ditemukan: ' + item.nama);
+                }
+            }
+
             if (nikInput) {
                 nikInput.addEventListener('input', function() {
                     const start = this.selectionStart;
@@ -472,42 +553,65 @@
                     this.value = this.value.toUpperCase();
                     this.setSelectionRange(start, end);
 
-                    const nik = this.value;
-                    const validationDiv = document.getElementById('nik-validation');
+                    resetNikField();
 
-                    if (nik.trim() === '') {
-                        validationDiv.style.display = 'none';
+                    const keyword = this.value.trim();
+
+                    if (keyword.length < 3) {
+                        nikDropdown.style.display = 'none';
+                        nikValidation.style.display = 'none';
                         return;
                     }
 
-                    validationDiv.style.display = 'flex';
+                    setNikStatus('loading', 'Mencari data karyawan...');
+                    clearTimeout(nikLookupTimeout);
 
-                    if (/^AP\d{9}$/.test(nik)) {
-                        validationDiv.innerHTML =
-                            '<svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>Format NIK valid</span>';
-                        validationDiv.className =
-                            'mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center';
-                    } else {
-                        validationDiv.innerHTML =
-                            '<svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg><span>Format harus: AP + 9 digit angka</span>';
-                        validationDiv.className =
-                            'mt-2 text-xs font-medium text-red-500 dark:text-red-400 flex items-center';
-                    }
+                    nikLookupTimeout = setTimeout(function() {
+                        fetch('/register/lookup-nik?q=' + encodeURIComponent(keyword))
+                            .then(function(res) {
+                                return res.json();
+                            })
+                            .then(function(data) {
+                                if (data.error) {
+                                    setNikStatus('error', data.error);
+                                    nikDropdown.style.display = 'none';
+                                    return;
+                                }
+                                if (!data.found || data.data.length === 0) {
+                                    setNikStatus('error',
+                                        'NIK tidak ditemukan di data karyawan.');
+                                    nikDropdown.style.display = 'none';
+                                    return;
+                                }
+                                nikValidation.style.display = 'none';
+                                showDropdown(data.data);
+                            })
+                            .catch(function() {
+                                setNikStatus('error',
+                                    'Layanan pencarian tidak tersedia sementara.');
+                                nikDropdown.style.display = 'none';
+                            });
+                    }, 400); // debounce 400ms
                 });
 
-                nikInput.addEventListener('paste', function(e) {
-                    setTimeout(() => {
-                        this.value = this.value.toUpperCase();
+                nikInput.addEventListener('paste', function() {
+                    setTimeout(function() {
+                        nikInput.value = nikInput.value.toUpperCase();
+                        nikInput.dispatchEvent(new Event('input'));
                     }, 0);
                 });
 
+                // Tutup dropdown saat klik di luar
+                document.addEventListener('click', function(e) {
+                    if (!nikInput.contains(e.target) && !nikDropdown.contains(e.target)) {
+                        nikDropdown.style.display = 'none';
+                    }
+                });
+
                 nikInput.addEventListener('blur', function() {
-                    const nikPattern = /^[A-Z]{2}[0-9]{9}$/;
-                    const value = this.value.trim();
-                    if (value && !nikPattern.test(value)) {
-                        this.setCustomValidity('Format NIK harus AP diikuti 9 angka (Contoh: AP123456789)');
-                    } else {
-                        this.setCustomValidity('');
+                    // Jika NIK diisi manual tapi tidak dipilih dari dropdown
+                    if (!nikVerified && this.value.trim().length > 0) {
+                        setNikStatus('error', 'Pilih NIK dari daftar yang muncul.');
                     }
                 });
             }

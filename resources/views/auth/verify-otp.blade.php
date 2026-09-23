@@ -23,7 +23,7 @@
                         d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
             </div>
-            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Verifikasi Email</h2>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Verifikasi Akun</h2>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
                 @php $channels = $delivery['channels'] ?? ['email']; @endphp
 

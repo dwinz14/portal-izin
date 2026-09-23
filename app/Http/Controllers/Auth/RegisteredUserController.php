@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\PegawaiExternal;
 use App\Models\User;
 use App\Services\OtpService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -24,31 +27,31 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $input = $request->all();
-        $input['nik']                  = strtoupper(trim($input['nik'] ?? ''));
-        $input['name']                 = strtolower(trim($input['name'] ?? ''));
-        $input['email']                = strtolower(trim($input['email'] ?? ''));
-        $input['phone'] = (isset($input['phone']) && $input['phone'] !== '') ? preg_replace('/\s+/', '', $input['phone']) : null;
-        $input['gender']               = trim($input['gender'] ?? '');
-        $input['role']                 = trim($input['role'] ?? '');
-        $input['division_id']          = $input['division_id'] ?? null;
-        $input['position_id']          = $input['position_id'] ?? null;
-        $input['office_id']            = $input['office_id'] ?? null;
-        $input['password']             = $input['password'] ?? '';
+        $input                          = $request->all();
+        $input['nik']                   = strtoupper(trim($input['nik'] ?? ''));
+        $input['name']                  = strtolower(trim($input['name'] ?? ''));
+        $input['email']                 = strtolower(trim($input['email'] ?? ''));
+        $input['phone']                 = (isset($input['phone']) && $input['phone'] !== '') ? preg_replace('/\s+/', '', $input['phone']) : null;
+        $input['gender']                = trim($input['gender'] ?? '');
+        $input['role']                  = trim($input['role'] ?? '');
+        $input['division_id']           = $input['division_id'] ?? null;
+        $input['position_id']           = $input['position_id'] ?? null;
+        $input['office_id']             = $input['office_id'] ?? null;
+        $input['password']              = $input['password'] ?? '';
         $input['password_confirmation'] = $input['password_confirmation'] ?? '';
 
         $validator = Validator::make($input, [
-            'nik'   => ['required', 'string', 'size:11', 'regex:/^AP\d{9}$/', 'unique:' . User::class],
-            'name'  => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
-            'gender' => ['required', 'in:L,P'],
-            'role'   => ['required', 'in:super_admin,hrd,direksi,kabag-pincab,kasie,staff'],
+            'nik'                 => ['required', 'string', 'size:11', 'regex:/^AP\d{9}$/', 'unique:' . User::class],
+            'name'                => ['required', 'string', 'max:255', 'regex:/^[a-zA-Z\s]+$/'],
+            'email'               => ['required', 'string', 'email', 'max:255', 'unique:' . User::class],
+            'gender'              => ['required', 'in:L,P'],
+            'role'                => ['required', 'in:super_admin,hrd,direksi,kabag-pincab,kasie,staff'],
             'division_id'         => ['nullable', 'exists:divisions,id'],
             'position_id'         => ['nullable', 'exists:positions,id'],
             'office_id'           => ['nullable', 'exists:offices,id'],
             'tanggal_aktif_kerja' => ['required', 'date', 'before_or_equal:today'],
-            'phone' => ['nullable', 'string', 'regex:/^(\+62|62|0)[0-9]{8,13}$/'],
-            'password' => [
+            'phone'               => ['nullable', 'string', 'regex:/^(\+62|62|0)[0-9]{8,13}$/'],
+            'password'            => [
                 'required',
                 'confirmed',
                 'min:8',
@@ -57,18 +60,41 @@ class RegisteredUserController extends Controller
                 'regex:/[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?]/',
             ],
         ], [
-            'name.regex'     => 'Nama hanya boleh berisi huruf dan spasi.',
-            'password.regex' => 'Password harus dimulai huruf besar, mengandung angka dan karakter khusus.',
-            'nik.regex'      => 'Format NIK tidak valid. Harus diawali "AP" diikuti 9 digit angka.',
+            'name.regex'                          => 'Nama hanya boleh berisi huruf dan spasi.',
+            'password.regex'                      => 'Password harus dimulai huruf besar, mengandung angka dan karakter khusus.',
+            'nik.regex'                           => 'Format NIK tidak valid. Harus diawali "AP" diikuti 9 digit angka.',
             'tanggal_aktif_kerja.before_or_equal' => 'Tanggal aktif kerja tidak boleh melebihi hari ini.',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->route('register')->withErrors($validator)->withInput();
+            return redirect()->route('register')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Validasi NIK ke DB karyawan (layer kedua — backend guard)
+        try {
+            $pegawai = PegawaiExternal::findByNik($input['nik']);
+
+            if (! $pegawai) {
+                return redirect()->route('register')
+                    ->withErrors(['nik' => 'NIK tidak ditemukan di data karyawan. Hubungi HRD jika merasa ini keliru.'])
+                    ->withInput();
+            }
+
+            // Ambil pin dari DB karyawan untuk disimpan
+            $pinKaryawan = $pegawai->pegawai_pin;
+        } catch (\Exception $e) {
+            Log::error('Register - DB karyawan tidak bisa diakses: ' . $e->getMessage());
+
+            return redirect()->route('register')
+                ->withErrors(['nik' => 'Layanan verifikasi karyawan sedang tidak tersedia. Coba beberapa saat lagi.'])
+                ->withInput();
         }
 
         $user = User::create([
             'nik'                 => $input['nik'],
+            'pin'                 => $pinKaryawan,
             'name'                => $input['name'],
             'email'               => $input['email'],
             'phone'               => $input['phone'],
@@ -84,12 +110,10 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        // Kirim OTP verifikasi email
         $delivery = $this->otpService->send($user, 'verify_email');
 
-        // Simpan session untuk halaman verifikasi (tanpa auto-login)
-        Session::put('verification_user_id',  $user->id);
-        Session::put('verification_email',    $user->email);
+        Session::put('verification_user_id', $user->id);
+        Session::put('verification_email', $user->email);
         Session::put('verification_delivery', $delivery ?: [
             'channels' => ['email'],
             'masked'   => $this->otpService->maskEmail($user->email),

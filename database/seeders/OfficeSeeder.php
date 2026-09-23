@@ -15,7 +15,7 @@ class OfficeSeeder extends Seeder
     {
         DB::table('offices')->insert([
             ['nama_kantor' => 'pusat', 'created_at' => now(), 'updated_at' => now()],
-            ['nama_kantor' => 'pare', 'created_at' => now(), 'updated_at' => now()],
+            ['nama_kantor' => 'cabang utama', 'created_at' => now(), 'updated_at' => now()],
             ['nama_kantor' => 'gurah', 'created_at' => now(), 'updated_at' => now()],
             ['nama_kantor' => 'sambi', 'created_at' => now(), 'updated_at' => now()],
             ['nama_kantor' => 'kediri', 'created_at' => now(), 'updated_at' => now()],

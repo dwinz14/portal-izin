@@ -61,38 +61,12 @@
                         <span class="text-white font-semibold">PT BPR Artha Pamenang</span>
                     </p>
                 </div>
-
-                <!-- Trust/Feature Badges (Enterprise feel) -->
-                {{-- <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12 border-t border-white/10 pt-10">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center border border-primary-500/30">
-                            <svg class="w-5 h-5 text-primary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-medium text-sm mb-1">Keamanan Data</h3>
-                            <p class="text-xs text-slate-400 leading-relaxed">Akses tersertifikasi & terenkripsi</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary-500/20 flex items-center justify-center border border-primary-500/30">
-                            <svg class="w-5 h-5 text-primary-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-white font-medium text-sm mb-1">Proses Efisien</h3>
-                            <p class="text-xs text-slate-400 leading-relaxed">Pengajuan izin cepat & terpantau</p>
-                        </div>
-                    </div>
-                </div> --}}
             </div>
         </div>
 
         <!-- Right Panel - Form Container -->
         <div
-            class="w-full lg:w-7/12 xl:w-1/2 flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300 relative shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.1)] z-20">
+            class="w-full lg:w-7/12 xl:w-1/2 flex flex-col flex-1 bg-white dark:bg-slate-900 transition-colors duration-300 relative shadow-[-20px_0_40px_-10px_rgba(0,0,0,0.1)] z-20">
             <!-- Header with Theme Toggle -->
             <div class="flex items-center justify-between p-6 lg:p-8">
                 <!-- Mobile Logo -->
@@ -115,6 +89,7 @@
                     {{ $slot }}
                 </div>
             </div>
+            @include('layouts.footer')
         </div>
     </div>
 </body>

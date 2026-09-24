@@ -37,7 +37,7 @@ class LeaveReplacementController extends Controller
                     ->where('approver_id', Auth::id())
                     ->where('status', 'approved');
             })
-            ->orderBy('start_date')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('replacements.manage', compact('leaves'));

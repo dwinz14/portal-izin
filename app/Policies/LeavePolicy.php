@@ -4,6 +4,8 @@ namespace App\Policies;
 
 use App\Models\Leave;
 use App\Models\User;
+use App\Models\Approval;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\Response;
 
 class LeavePolicy
@@ -58,5 +60,25 @@ class LeavePolicy
     {
         return $user->id === $leave->user_id
             && $leave->is_revision_pending === true;
+    }
+
+    /**
+     * Hanya atasan (approver step-2) yang final approve cuti ini yang boleh mengganti user pengganti
+     */
+    public function changePengganti(User $user, Leave $leave): bool
+    {
+        if ($leave->status_final !== 'approved' || !$leave->pengganti_id) {
+            return false;
+        }
+
+        if (Carbon::today()->gt(Carbon::parse($leave->end_date))) {
+            return false;
+        }
+
+        return Approval::where('leave_id', $leave->id)
+            ->where('step', 2)
+            ->where('approver_id', $user->id)
+            ->where('status', 'approved')
+            ->exists();
     }
 }

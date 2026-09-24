@@ -72,4 +72,9 @@ class Leave extends Model
     {
         return $this->belongsTo(Approval::class, 'revision_by_approval_id');
     }
+
+    public function penggantiChanges()
+    {
+        return $this->hasMany(LeavePenggantiChange::class)->latest();
+    }
 }

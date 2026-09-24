@@ -95,6 +95,7 @@ class ActivityLogger
             'approval.leave_approved'      => ['category' => 'approval',   'color' => 'green'],
             'approval.leave_rejected'      => ['category' => 'approval',   'color' => 'red'],
             'approval.revision_requested'  => ['category' => 'approval',   'color' => 'amber'],
+            'approval.pengganti_changed'   => ['category' => 'approval',   'color' => 'amber'],
             'approval.attendance_approved' => ['category' => 'approval',   'color' => 'green'],
             'approval.attendance_rejected' => ['category' => 'approval',   'color' => 'red'],
             'attendance.submitted'         => ['category' => 'attendance', 'color' => 'purple'],

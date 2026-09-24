@@ -72,6 +72,7 @@ return [
             'active_pattern' => [
                 'approval.index*',
                 'approval-kehadiran.index*',
+                'cuti.replacement.index*',
             ],
             'children' => [
                 [
@@ -92,6 +93,13 @@ return [
                     'active_pattern' => 'approval-kehadiran.index*',
                     'badge_count' => 0,
                     'badge_tone' => 'danger',
+                ],
+                [
+                    'name' => 'Ubah Pengganti',
+                    'route' => 'cuti.replacement.index',
+                    'icon' => '<svg class="h-4 w-4 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3-3m-3 3l3 3m10 3v1a4 4 0 01-4 4h-4m0 0l3 3m-3-3l3-3" /></svg>',
+                    'roles' => ['direksi', 'hrd', 'kabag-pincab', 'kasie'],
+                    'active_pattern' => 'cuti.replacement.index*',
                 ],
             ],
         ],

@@ -21,9 +21,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ActivityLogger;
+use App\Services\LeaveOverlapChecker;
 
 class LeaveController extends Controller
 {
+    public function __construct(protected LeaveOverlapChecker $overlapChecker) {}
+
     public function index()
     {
         $leaves = Leave::with('approvals.approver')
@@ -181,27 +184,27 @@ class LeaveController extends Controller
         }
 
         // Cek apakah user masih punya pengajuan aktif
-        if ($this->hasActivePending($user->id)) {
+        if ($this->overlapChecker->hasActivePending($user->id)) {
             return back()->withErrors(['msg' => 'Anda masih memiliki pengajuan cuti yang sedang diproses. Selesaikan terlebih dahulu sebelum mengajukan yang baru.']);
         }
 
         // Cek tumpang tindih cuti dengan user sendiri
-        if ($this->hasOverlapLeave($user->id, $request->start_date, $request->end_date)) {
+        if ($this->overlapChecker->hasOverlapLeave($user->id, $request->start_date, $request->end_date)) {
             return back()->withErrors(['msg' => 'Tanggal yang dipilih bertabrakan dengan cuti yang sudah disetujui.']);
         }
 
         // Cek tumpang tindih cuti dengan pengganti
-        if ($request->pengganti_id && $this->hasReplacementOnLeave($request->pengganti_id, $request->start_date, $request->end_date)) {
+        if ($request->pengganti_id && $this->overlapChecker->hasReplacementOnLeave($request->pengganti_id, $request->start_date, $request->end_date)) {
             return back()->withErrors(['msg' => 'Pengganti yang dipilih sedang mengajukan cuti di tanggal tersebut.']);
         }
 
         // Cek apakah pengganti sudah ditugaskan di cuti lain
-        if ($request->pengganti_id && $this->hasOverlapReplacement($request->pengganti_id, $request->start_date, $request->end_date)) {
+        if ($request->pengganti_id && $this->overlapChecker->hasOverlapReplacement($request->pengganti_id, $request->start_date, $request->end_date)) {
             return back()->withErrors(['msg' => 'Pengganti tersebut sudah ditugaskan pada cuti lain.']);
         }
 
         // Cek apakah user sedang menjadi pengganti untuk cuti orang lain
-        if ($this->hasOverlapReplacement($user->id, $request->start_date, $request->end_date)) {
+        if ($this->overlapChecker->hasOverlapReplacement($user->id, $request->start_date, $request->end_date)) {
             return back()->withErrors(['msg' => 'Anda sedang jadi pengganti di tanggal tersebut.']);
         }
 
@@ -332,43 +335,6 @@ class LeaveController extends Controller
 
             return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dibuat.');
         });
-    }
-
-    /**
-     * Cek apakah user memiliki pengajuan dengan status_final pending.
-     */
-    private function hasActivePending(int $userId): bool
-    {
-        return Leave::where('user_id', $userId)
-            ->where('status_final', 'pending')
-            ->exists();
-    }
-
-    private function hasOverlapLeave(int $userId, string $start, string $end): bool
-    {
-        return Leave::where('user_id', $userId)
-            ->where('status_final', 'approved')
-            ->where('start_date', '<=', $end)
-            ->where('end_date', '>=', $start)
-            ->exists();
-    }
-
-    private function hasReplacementOnLeave(int $replacementId, string $start, string $end): bool
-    {
-        return Leave::where('user_id', $replacementId)
-            ->whereNotIn('status_final', ['rejected'])
-            ->where('start_date', '<=', $end)
-            ->where('end_date', '>=', $start)
-            ->exists();
-    }
-
-    private function hasOverlapReplacement($replacementId, $start, $end)
-    {
-        return Leave::where('pengganti_id', $replacementId)
-            ->whereNotIn('status_final', ['rejected'])
-            ->where('start_date', '<=', $end)
-            ->where('end_date', '>=', $start)
-            ->exists();
     }
 
     public function destroy(Leave $leave)

@@ -20,6 +20,7 @@ use App\Http\Controllers\QuotaController;
 use App\Http\Controllers\RekapController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\UserActivityController;
+use App\Http\Controllers\LeaveReplacementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,6 +42,10 @@ Route::middleware(['auth'])->group(function () {
             ->only(['index', 'create', 'store', 'destroy']); // tambah edit/update/destroy kalau perlu
         Route::patch('/{leave}/accept-revision', [LeaveController::class, 'acceptRevision'])->name('accept-revision');
         Route::patch('/{leave}/reject-revision', [LeaveController::class, 'rejectRevision'])->name('reject-revision');
+        // Ganti pengganti (oleh atasan, setelah cuti final approved)
+        Route::get('/pengganti/kelola', [LeaveReplacementController::class, 'index'])->name('replacement.index');
+        Route::get('/{leave}/pengganti/eligible', [LeaveReplacementController::class, 'eligiblePengganti'])->name('replacement.eligible');
+        Route::patch('/{leave}/replace-pengganti', [LeaveReplacementController::class, 'update'])->name('replace-pengganti');
     });
 
     Route::get('cuti/{leave}/print', [LeavePrintController::class, 'print'])

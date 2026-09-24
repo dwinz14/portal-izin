@@ -16,12 +16,12 @@ use App\Notifications\LeaveRequestSubmitted;
 use App\Notifications\RevisionAccepted;
 use App\Notifications\RevisionRejected;
 use App\Services\LeaveApprovalService;
+use App\Services\LeaveOverlapChecker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ActivityLogger;
-use App\Services\LeaveOverlapChecker;
 
 class LeaveController extends Controller
 {
@@ -40,15 +40,6 @@ class LeaveController extends Controller
     public function create()
     {
         $user = Auth::user();
-
-        $activePending = Leave::where('user_id', $user->id)
-            ->where('status_final', 'pending')
-            ->exists();
-
-        if ($activePending) {
-            return redirect()->route('cuti.index')
-                ->with('error', 'Anda masih memiliki pengajuan cuti yang sedang diproses. Silakan tunggu hingga selesai.');
-        }
 
         $requiresReplacement = in_array($user->role, ['staff', 'kasie', 'kabag-pincab'], true);
 
@@ -172,25 +163,34 @@ class LeaveController extends Controller
         }
 
         // Cek kuota (jika cuti memiliki batasan kuota)
+        // Catatan: 'remaining' baru dikurangi saat final approved (lihat LeaveApprovalService),
+        // jadi di sini kita juga jumlahkan total_hari dari pengajuan PENDING lain (jenis cuti sama,
+        // tahun berjalan) yang belum ter-deduct dari remaining, supaya user tidak bisa membuat
+        // beberapa pengajuan pending yang total harinya melebihi sisa kuota sebenarnya.
         if ($leaveType->quota > 0) {
             $userLeaveBalance = UserLeaveBalance::where('user_id', $user->id)
                 ->where('leave_type_id', $request->leave_type_id)
                 ->where('year', now()->year)
                 ->first();
 
-            if (! $userLeaveBalance || $userLeaveBalance->remaining < $totalHari) {
-                return back()->withErrors(['msg' => 'Kuota cuti tidak mencukupi untuk jenis cuti ini.'])->withInput();
+            $pendingReserved = Leave::where('user_id', $user->id)
+                ->where('leave_type_id', $request->leave_type_id)
+                ->where('status_final', 'pending')
+                ->whereYear('start_date', now()->year)
+                ->sum('total_hari');
+
+            $availableQuota = ($userLeaveBalance->remaining ?? 0) - $pendingReserved;
+
+            if (! $userLeaveBalance || $availableQuota < $totalHari) {
+                return back()->withErrors(['msg' => 'Kuota cuti tidak mencukupi untuk jenis cuti ini (termasuk yang sudah dipakai di pengajuan lain yang masih pending).'])->withInput();
             }
         }
 
-        // Cek apakah user masih punya pengajuan aktif
-        if ($this->overlapChecker->hasActivePending($user->id)) {
-            return back()->withErrors(['msg' => 'Anda masih memiliki pengajuan cuti yang sedang diproses. Selesaikan terlebih dahulu sebelum mengajukan yang baru.']);
-        }
-
-        // Cek tumpang tindih cuti dengan user sendiri
+        // Cek tumpang tindih cuti dengan user sendiri (mencegah 2 pengajuan di tanggal yang sama,
+        // baik yang sedang pending maupun yang sudah approved — bukan lagi membatasi jumlah
+        // pengajuan pending secara keseluruhan)
         if ($this->overlapChecker->hasOverlapLeave($user->id, $request->start_date, $request->end_date)) {
-            return back()->withErrors(['msg' => 'Tanggal yang dipilih bertabrakan dengan cuti yang sudah disetujui.']);
+            return back()->withErrors(['msg' => 'Tanggal yang dipilih bertabrakan dengan pengajuan cuti Anda yang lain (pending atau sudah disetujui).']);
         }
 
         // Cek tumpang tindih cuti dengan pengganti
@@ -309,13 +309,7 @@ class LeaveController extends Controller
                     'catatan' => 'Auto-approved: pengganti dan atasan adalah orang yang sama.',
                 ]);
 
-                // Notifikasi ke atasan (yang juga sebagai pengganti), tetapi sekarang atasan menjadi approver step2
-                // Step2 sudah ada jika $approvers berisi 1 elemen? Jika pengganti==atasan, $approvers hanya satu elemen.
-                // Jadi perlu dibuat approval step2 sendiri? Dari kode di atas, $approvers hanya satu karena filter->values() akan unik.
-                // Karena itu, kita perlu menambahkan step2 secara manual jika diperlukan. Namun karena sistem approval mengharapkan 2 step,
-                // maka perlu penanganan khusus: jika hanya 1 approver, maka langsung final approve. Atau buat step2 dengan approver yang sama.
-                // Sesuai logika asli di ApprovalController, jika step1 auto-approve, maka atasan tetap menerima notifikasi sebagai step2.
-                // Karena $approvers hanya berisi satu user, kita harus menambahkan step2 untuk user yang sama.
+                // Notifikasi ke atasan (yang juga sebagai pengganti)
                 $step2Exists = $leave->approvals()->where('step', 2)->exists();
                 if (! $step2Exists) {
                     Approval::create([

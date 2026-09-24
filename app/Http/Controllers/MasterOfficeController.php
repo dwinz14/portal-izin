@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Office;
+use App\Models\KantorExternal;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
 class MasterOfficeController extends Controller
@@ -82,5 +84,93 @@ class MasterOfficeController extends Controller
         $office->delete();
 
         return redirect()->route('admin.offices.index')->with('success', 'Kantor berhasil dihapus.');
+    }
+
+    public function sync()
+    {
+        try {
+            $newKantor = KantorExternal::getNewOnly();
+        } catch (\Exception $e) {
+            Log::error('Sync kantor gagal: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.offices.index')
+                ->with('error', 'Koneksi ke database karyawan gagal. Coba beberapa saat lagi.');
+        }
+
+        $offices = Office::query()->paginate(10);
+
+        return view('admin.offices.index', compact('offices', 'newKantor'));
+    }
+
+    public function insertFromExternal(Request $request)
+    {
+        $request->validate([
+            'nama_kantor' => ['required', 'string', 'max:255'],
+        ]);
+
+        $nama = strtoupper(trim($request->nama_kantor));
+
+        $sudahAda = Office::whereRaw('UPPER(TRIM(nama_kantor)) = ?', [$nama])->exists();
+
+        if ($sudahAda) {
+            return redirect()
+                ->route('admin.offices.sync')
+                ->with('error', "Kantor \"{$nama}\" sudah ada di daftar kantor.");
+        }
+
+        try {
+            $valid = KantorExternal::getAllNormalized()
+                ->pluck('nama')
+                ->contains($nama);
+
+            if (! $valid) {
+                return redirect()
+                    ->route('admin.offices.sync')
+                    ->with('error', 'Kantor tidak ditemukan di database karyawan.');
+            }
+        } catch (\Exception $e) {
+            Log::error('Insert kantor external gagal: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.offices.sync')
+                ->with('error', 'Koneksi ke database karyawan gagal saat verifikasi.');
+        }
+
+        // Simpan lowercase — konsisten dengan store() yang sudah ada
+        Office::create(['nama_kantor' => strtolower($nama)]);
+
+        return redirect()
+            ->route('admin.offices.sync')
+            ->with('success', "Kantor \"{$nama}\" berhasil ditambahkan.");
+    }
+
+    public function insertAllFromExternal()
+    {
+        try {
+            $newKantor = KantorExternal::getNewOnly();
+        } catch (\Exception $e) {
+            Log::error('Insert all kantor external gagal: ' . $e->getMessage());
+            return redirect()
+                ->route('admin.offices.sync')
+                ->with('error', 'Koneksi ke database karyawan gagal.');
+        }
+
+        if ($newKantor->isEmpty()) {
+            return redirect()
+                ->route('admin.offices.sync')
+                ->with('info', 'Tidak ada kantor baru yang perlu ditambahkan.');
+        }
+
+        $inserted = 0;
+        foreach ($newKantor as $nama) {
+            $sudahAda = Office::whereRaw('UPPER(TRIM(nama_kantor)) = ?', [$nama])->exists();
+            if (! $sudahAda) {
+                Office::create(['nama_kantor' => strtolower($nama)]);
+                $inserted++;
+            }
+        }
+
+        return redirect()
+            ->route('admin.offices.sync')
+            ->with('success', "{$inserted} kantor baru berhasil ditambahkan.");
     }
 }

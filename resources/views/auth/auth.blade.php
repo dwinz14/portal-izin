@@ -299,22 +299,100 @@
                             placeholder="Pilih Role" />
 
                         <!-- Division -->
-                        <x-select-dropdown name="division_id" label="Divisi" :options="collect(\App\Models\Division::all())
-                            ->map(fn($d) => ['id' => $d->id, 'name' => strtoupper($d->nama_divisi)])
-                            ->toArray()" :selected="old('division_id')"
-                            placeholder="Pilih Divisi" />
+                        <div class="relative" x-data="{
+                            autoFilled: false,
+                            init() {
+                                window.addEventListener('autofill-register', (e) => {
+                                    if (e.detail.division_id) {
+                                        this.autoFilled = true;
+                                        this.$nextTick(() => {
+                                            const el = this.$el.querySelector('[x-data]');
+                                            if (el && el._x_dataStack) {
+                                                const alpineData = el._x_dataStack[0];
+                                                const opt = alpineData.options.find(o => o.id == e.detail.division_id);
+                                                if (opt) alpineData.select(opt);
+                                            }
+                                        });
+                                    } else {
+                                        this.autoFilled = false;
+                                    }
+                                });
+                                window.addEventListener('reset-autofill', () => { this.autoFilled = false; });
+                            }
+                        }">
+                            <x-select-dropdown name="division_id" label="Divisi" :options="collect(\App\Models\Division::all())
+                                ->map(fn($d) => ['id' => $d->id, 'name' => strtoupper($d->nama_divisi)])
+                                ->toArray()" :selected="old('division_id')"
+                                placeholder="Pilih Divisi" />
+                            <span x-show="autoFilled" x-transition
+                                class="absolute top-0 right-0 mt-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                otomatis
+                            </span>
+                        </div>
 
                         <!-- Position -->
-                        <x-select-dropdown name="position_id" label="Jabatan" :options="collect(\App\Models\Position::all())
-                            ->map(fn($p) => ['id' => $p->id, 'name' => strtoupper($p->nama_jabatan)])
-                            ->toArray()" :selected="old('position_id')"
-                            placeholder="Pilih Jabatan" />
+                        <div class="relative" x-data="{
+                            autoFilled: false,
+                            init() {
+                                window.addEventListener('autofill-register', (e) => {
+                                    if (e.detail.position_id) {
+                                        this.autoFilled = true;
+                                        this.$nextTick(() => {
+                                            const el = this.$el.querySelector('[x-data]');
+                                            if (el && el._x_dataStack) {
+                                                const alpineData = el._x_dataStack[0];
+                                                const opt = alpineData.options.find(o => o.id == e.detail.position_id);
+                                                if (opt) alpineData.select(opt);
+                                            }
+                                        });
+                                    } else {
+                                        this.autoFilled = false;
+                                    }
+                                });
+                                window.addEventListener('reset-autofill', () => { this.autoFilled = false; });
+                            }
+                        }">
+                            <x-select-dropdown name="position_id" label="Jabatan" :options="collect(\App\Models\Position::all())
+                                ->map(fn($p) => ['id' => $p->id, 'name' => strtoupper($p->nama_jabatan)])
+                                ->toArray()"
+                                :selected="old('position_id')" placeholder="Pilih Jabatan" />
+                            <span x-show="autoFilled" x-transition
+                                class="absolute top-0 right-0 mt-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                otomatis
+                            </span>
+                        </div>
 
                         <!-- Office -->
-                        <x-select-dropdown name="office_id" label="Kantor Penempatan" :options="collect(\App\Models\Office::all())
-                            ->map(fn($o) => ['id' => $o->id, 'name' => strtoupper($o->nama_kantor)])
-                            ->toArray()"
-                            :selected="old('office_id')" placeholder="Pilih Kantor" />
+                        <div class="relative" x-data="{
+                            autoFilled: false,
+                            init() {
+                                window.addEventListener('autofill-register', (e) => {
+                                    if (e.detail.office_id) {
+                                        this.autoFilled = true;
+                                        this.$nextTick(() => {
+                                            const el = this.$el.querySelector('[x-data]');
+                                            if (el && el._x_dataStack) {
+                                                const alpineData = el._x_dataStack[0];
+                                                const opt = alpineData.options.find(o => o.id == e.detail.office_id);
+                                                if (opt) alpineData.select(opt);
+                                            }
+                                        });
+                                    } else {
+                                        this.autoFilled = false;
+                                    }
+                                });
+                                window.addEventListener('reset-autofill', () => { this.autoFilled = false; });
+                            }
+                        }">
+                            <x-select-dropdown name="office_id" label="Kantor Penempatan" :options="collect(\App\Models\Office::all())
+                                ->map(fn($o) => ['id' => $o->id, 'name' => strtoupper($o->nama_kantor)])
+                                ->toArray()"
+                                :selected="old('office_id')" placeholder="Pilih Kantor" />
+                            <span x-show="autoFilled" x-transition
+                                class="absolute top-0 right-0 mt-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                otomatis
+                            </span>
+                        </div>
                     </div>
 
                     {{-- masa kerja --}}
@@ -505,6 +583,8 @@
                 nameInput.value = '';
                 nameInput.readOnly = true;
                 pinInput.value = '';
+                // Reset badge autofill saat NIK diketik ulang
+                window.dispatchEvent(new CustomEvent('reset-autofill'));
             }
 
             function showDropdown(results) {
@@ -523,8 +603,35 @@
                         '<span class="block text-xs text-slate-500 dark:text-slate-400 mt-0.5">' + item
                         .nama + '</span>';
                     div.addEventListener('mousedown', function(e) {
-                        e.preventDefault(); // cegah blur sebelum click teregister
-                        selectPegawai(item);
+                        e.preventDefault();
+                        nikDropdown.style.display = 'none';
+                        setNikStatus('loading', 'Memverifikasi data karyawan...');
+
+                        fetch('/register/validate-nik?nik=' + encodeURIComponent(item.nik))
+                            .then(function(res) {
+                                return res.json();
+                            })
+                            .then(function(data) {
+                                if (data.error) {
+                                    setNikStatus('error', data.error);
+                                    return;
+                                }
+                                if (!data.valid) {
+                                    setNikStatus('error', 'NIK tidak valid di data karyawan.');
+                                    return;
+                                }
+                                selectPegawai({
+                                    nik: data.data.nik,
+                                    pin: data.data.pin,
+                                    nama: data.data.nama,
+                                    sudah_terdaftar: data.sudah_terdaftar,
+                                    autofill: data.autofill,
+                                });
+                            })
+                            .catch(function() {
+                                setNikStatus('error',
+                                    'Layanan validasi tidak tersedia sementara.');
+                            });
                     });
                     nikDropdown.appendChild(div);
                 });
@@ -541,8 +648,21 @@
                 if (item.sudah_terdaftar) {
                     setNikStatus('warning', 'NIK ini sudah terdaftar di portal cuti.');
                     nikVerified = false;
+                    // Reset autofill badge jika NIK sudah terdaftar
+                    window.dispatchEvent(new CustomEvent('reset-autofill'));
                 } else {
                     setNikStatus('success', 'NIK ditemukan: ' + item.nama);
+
+                    // Trigger autofill dropdown divisi, jabatan, kantor
+                    if (item.autofill) {
+                        window.dispatchEvent(new CustomEvent('autofill-register', {
+                            detail: {
+                                position_id: item.autofill.position_id,
+                                division_id: item.autofill.division_id,
+                                office_id: item.autofill.office_id,
+                            }
+                        }));
+                    }
                 }
             }
 

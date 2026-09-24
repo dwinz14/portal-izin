@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\PegawaiExternal;
+use App\Models\Division;
+use App\Models\Office;
+use App\Models\Position;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -76,6 +79,24 @@ class NikLookupController extends Controller
             // Cek apakah NIK sudah terdaftar di portal cuti
             $sudahTerdaftar = \App\Models\User::where('nik', $nik)->exists();
 
+            // Normalisasi nama dari DB karyawan untuk matching
+            $namaJabatan = strtoupper(trim($pegawai->pembagian1_nama ?? ''));
+            $namaDivisi  = strtoupper(trim($pegawai->pembagian2_nama ?? ''));
+            $namaKantor  = strtoupper(trim($pegawai->pembagian3_nama ?? ''));
+
+            // Matching ke tabel lokal — case-insensitive
+            $position = $namaJabatan
+                ? Position::whereRaw('UPPER(TRIM(nama_jabatan)) = ?', [$namaJabatan])->first()
+                : null;
+
+            $division = $namaDivisi
+                ? Division::whereRaw('UPPER(TRIM(nama_divisi)) = ?', [$namaDivisi])->first()
+                : null;
+
+            $office = $namaKantor
+                ? Office::whereRaw('UPPER(TRIM(nama_kantor)) = ?', [$namaKantor])->first()
+                : null;
+
             return response()->json([
                 'valid'           => true,
                 'sudah_terdaftar' => $sudahTerdaftar,
@@ -83,6 +104,14 @@ class NikLookupController extends Controller
                     'nik'  => $pegawai->pegawai_nip,
                     'pin'  => $pegawai->pegawai_pin,
                     'nama' => $pegawai->pegawai_nama,
+                ],
+                'autofill' => [
+                    'position_id'    => $position?->id,
+                    'position_label' => $position ? strtoupper($position->nama_jabatan) : null,
+                    'division_id'    => $division?->id,
+                    'division_label' => $division ? strtoupper($division->nama_divisi) : null,
+                    'office_id'      => $office?->id,
+                    'office_label'   => $office ? strtoupper($office->nama_kantor) : null,
                 ],
             ]);
         } catch (\Exception $e) {

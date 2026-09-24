@@ -10,7 +10,16 @@
                     Kelola Data Kantor Perusahaan.
                 </p>
             </div>
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+            <div
+                class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center gap-2">
+                <a href="{{ route('admin.offices.sync') }}"
+                    class="inline-flex items-center px-3 py-2 bg-emerald-600 border border-transparent rounded-full font-medium text-xs text-white hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Sync Kantor
+                </a>
                 <a href="{{ route('admin.offices.create') }}"
                     class="inline-flex items-center px-3 py-2 bg-primary-600 border border-transparent rounded-full font-medium text-xs text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,6 +44,122 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        @if (session('error'))
+            <div
+                class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if (session('info'))
+            <div
+                class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200 px-4 py-3 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ session('info') }}
+            </div>
+        @endif
+
+        @isset($newKantor)
+            <div
+                class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-emerald-200 dark:border-emerald-800 overflow-hidden">
+                <div
+                    class="px-5 py-4 border-b border-emerald-100 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-emerald-800 dark:text-emerald-200">Hasil Sinkronisasi</h3>
+                            <p class="text-xs text-emerald-600 dark:text-emerald-400">
+                                {{ $newKantor->count() }} kantor baru ditemukan dari database karyawan.
+                            </p>
+                        </div>
+                    </div>
+                    @if ($newKantor->isNotEmpty())
+                        <form action="{{ route('admin.offices.insertAllFromExternal') }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-full shadow-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                Insert Semua ({{ $newKantor->count() }})
+                            </button>
+                        </form>
+                    @endif
+                </div>
+                @if ($newKantor->isEmpty())
+                    <div class="px-5 py-8 text-center">
+                        <svg class="mx-auto h-10 w-10 text-emerald-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Semua kantor sudah sinkron.</p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Tidak ada kantor baru dari database
+                            karyawan.</p>
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                            <thead class="bg-emerald-50 dark:bg-emerald-950/20">
+                                <tr>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        #</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Nama Kantor (dari DB Karyawan)</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-slate-700/60">
+                                @foreach ($newKantor as $index => $nama)
+                                    <tr class="hover:bg-emerald-50/40 dark:hover:bg-emerald-950/10 transition-colors">
+                                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $index + 1 }}
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                            {{ $nama }}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <form action="{{ route('admin.offices.insertFromExternal') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="nama_kantor" value="{{ $nama }}">
+                                                <button type="submit"
+                                                    class="inline-flex items-center px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1">
+                                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                    </svg>
+                                                    Insert
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        @endisset
 
         <div
             class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">

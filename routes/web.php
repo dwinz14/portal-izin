@@ -95,6 +95,26 @@ Route::middleware('auth')->group(function () {
 
 // route master for super admin
 Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Sync master dari DB karyawan
+    Route::get('positions/sync', [MasterPositionController::class, 'sync'])
+        ->name('positions.sync');
+    Route::post('positions/insert-from-external', [MasterPositionController::class, 'insertFromExternal'])
+        ->name('positions.insertFromExternal');
+    Route::post('positions/insert-all-from-external', [MasterPositionController::class, 'insertAllFromExternal'])
+        ->name('positions.insertAllFromExternal');
+    Route::get('divisions/sync', [DivisionController::class, 'sync'])
+        ->name('divisions.sync');
+    Route::post('divisions/insert-from-external', [DivisionController::class, 'insertFromExternal'])
+        ->name('divisions.insertFromExternal');
+    Route::post('divisions/insert-all-from-external', [DivisionController::class, 'insertAllFromExternal'])
+        ->name('divisions.insertAllFromExternal');
+    Route::get('offices/sync', [MasterOfficeController::class, 'sync'])
+        ->name('offices.sync');
+    Route::post('offices/insert-from-external', [MasterOfficeController::class, 'insertFromExternal'])
+        ->name('offices.insertFromExternal');
+    Route::post('offices/insert-all-from-external', [MasterOfficeController::class, 'insertAllFromExternal'])
+        ->name('offices.insertAllFromExternal');
+
     Route::resource('divisions', DivisionController::class);
     Route::resource('positions', MasterPositionController::class);
     Route::resource('offices', MasterOfficeController::class);

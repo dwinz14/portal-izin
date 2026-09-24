@@ -4,27 +4,21 @@ namespace App\Channels;
 
 use App\DTOs\WhatsAppMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppChannel
 {
-    /**
-     * Dipanggil oleh Laravel Notification system saat via() menyertakan
-     * WhatsAppChannel::class sebagai salah satu channel.
-     */
     public function send(mixed $notifiable, Notification $notification): void
     {
-        // 1. Cek master switch — jika disabled, skip tanpa error
         if (! config('whatsapp.enabled', false)) {
             return;
         }
 
-        // 2. Pastikan notifikasi punya method toWhatsApp()
         if (! method_exists($notification, 'toWhatsApp')) {
             return;
         }
 
-        // 3. Ambil nomor WA penerima (memanggil routeNotificationForWhatsApp di User)
         $recipient = $notifiable->routeNotificationFor('whatsapp', $notification);
 
         if (empty($recipient)) {
@@ -32,10 +26,8 @@ class WhatsAppChannel
             return;
         }
 
-        // 4. Ambil pesan dari notifikasi
         $message = $notification->toWhatsApp($notifiable);
 
-        // Dukung return berupa string langsung (bukan hanya WhatsAppMessage)
         if (is_string($message)) {
             $message = WhatsAppMessage::create($message);
         }
@@ -45,7 +37,37 @@ class WhatsAppChannel
             return;
         }
 
-        // 5. Kirim via Manager → Driver yang aktif
+        // Rate limiting: pastikan jeda antar pengiriman
+        $this->throttle();
+
         app('whatsapp')->driver()->send($recipient, $message);
+    }
+
+    /**
+     * Throttle pengiriman menggunakan atomic lock.
+     * Setiap pengiriman mengunci slot selama $delay detik.
+     * Job berikutnya menunggu slot bebas sebelum kirim.
+     */
+    private function throttle(): void
+    {
+        $delay     = config('whatsapp.rate_limit.delay_between_messages', 5);
+        $lockKey   = 'whatsapp_send_lock';
+        $lockTtl   = $delay + 5; // TTL sedikit lebih panjang dari delay sebagai safety net
+
+        // Tunggu sampai lock bebas, lalu ambil dan tahan selama $delay detik
+        $waited = 0;
+        while (! Cache::add($lockKey, 1, $lockTtl)) {
+            sleep(1);
+            $waited++;
+
+            // Safety: jangan tunggu lebih dari 60 detik
+            if ($waited >= 60) {
+                Log::warning('[WhatsApp] Throttle timeout setelah 60 detik menunggu.');
+                break;
+            }
+        }
+
+        // Tahan lock selama delay agar job berikutnya menunggu
+        Cache::put($lockKey, 1, $delay);
     }
 }

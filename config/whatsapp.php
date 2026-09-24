@@ -45,7 +45,13 @@ return [
             'api_key'  => env('WA_WEBJS_API_KEY', ''),
             'timeout'  => (int) env('WA_WEBJS_TIMEOUT', 15),
         ],
+    ],
 
+    // rate limiter antar chat wa
+    'rate_limit' => [
+        'delay_between_messages' => (int) env('WA_DELAY_BETWEEN_MESSAGES', 3),
+        'retry_after'            => (int) env('WA_RETRY_AFTER', 90),
+        'max_attempts'           => (int) env('WA_MAX_ATTEMPTS', 3),
     ],
 
 ];

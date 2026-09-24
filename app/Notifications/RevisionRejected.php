@@ -14,6 +14,12 @@ class RevisionRejected extends Notification implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    /** Maksimal percobaan kirim */
+    public int $tries     = 3;
+
+    /** Jeda retry eksponensial jika gagal: 60s → 120s → 300s */
+    public array $backoff = [60, 120, 300];
+
     public function __construct(
         public Leave  $leave,
         public string $employeeName,

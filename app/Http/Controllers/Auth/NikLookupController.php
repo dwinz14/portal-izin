@@ -97,6 +97,22 @@ class NikLookupController extends Controller
                 ? Office::whereRaw('UPPER(TRIM(nama_kantor)) = ?', [$namaKantor])->first()
                 : null;
 
+            // Normalisasi tanggal — pastikan format Y-m-d untuk input type="date"
+            $tglMulaiKerja = null;
+            if (! empty($pegawai->tgl_mulai_kerja)) {
+                try {
+                    $tglMulaiKerja = \Carbon\Carbon::parse($pegawai->tgl_mulai_kerja)
+                        ->format('Y-m-d');
+
+                    // Guard: tanggal tidak boleh di masa depan
+                    if ($tglMulaiKerja > now()->format('Y-m-d')) {
+                        $tglMulaiKerja = null;
+                    }
+                } catch (\Exception $e) {
+                    $tglMulaiKerja = null;
+                }
+            }
+
             return response()->json([
                 'valid'           => true,
                 'sudah_terdaftar' => $sudahTerdaftar,
@@ -112,6 +128,7 @@ class NikLookupController extends Controller
                     'division_label' => $division ? strtoupper($division->nama_divisi) : null,
                     'office_id'      => $office?->id,
                     'office_label'   => $office ? strtoupper($office->nama_kantor) : null,
+                    'tgl_mulai_kerja'   => $tglMulaiKerja,
                 ],
             ]);
         } catch (\Exception $e) {

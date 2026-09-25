@@ -45,6 +45,7 @@ class PegawaiExternal extends Model
             'pegawai.pegawai_pin',
             'pegawai.pegawai_nip',
             'pegawai.pegawai_nama',
+            'pegawai.tgl_mulai_kerja',
             'pembagian1.pembagian1_nama',
             'pembagian2.pembagian2_nama',
             'pembagian3.pembagian3_nama',

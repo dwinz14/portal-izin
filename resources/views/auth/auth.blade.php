@@ -396,9 +396,31 @@
                     </div>
 
                     {{-- masa kerja --}}
-                    <div>
+                    <div class="relative" x-data="{
+                        autoFilled: false,
+                        init() {
+                            window.addEventListener('autofill-register', (e) => {
+                                if (e.detail.tgl_mulai_kerja) {
+                                    this.autoFilled = true;
+                                    const input = document.getElementById('tanggal_aktif_kerja');
+                                    if (input) input.value = e.detail.tgl_mulai_kerja;
+                                } else {
+                                    this.autoFilled = false;
+                                }
+                            });
+                            window.addEventListener('reset-autofill', () => {
+                                this.autoFilled = false;
+                                const input = document.getElementById('tanggal_aktif_kerja');
+                                if (input) input.value = '';
+                            });
+                        }
+                    }">
                         <x-input-label for="tanggal_aktif_kerja" value="Tanggal Aktif Bekerja"
                             class="mb-1.5 text-slate-700 dark:text-slate-300 font-medium" />
+                        <span x-show="autoFilled" x-transition
+                            class="absolute top-0 right-0 mt-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                            otomatis
+                        </span>
                         <div class="relative group">
                             <div
                                 class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400 group-focus-within:text-primary-500 transition-colors">
@@ -653,13 +675,14 @@
                 } else {
                     setNikStatus('success', 'NIK ditemukan: ' + item.nama);
 
-                    // Trigger autofill dropdown divisi, jabatan, kantor
+                    // Trigger autofill dropdown divisi, jabatan, kantor, dan tanggal
                     if (item.autofill) {
                         window.dispatchEvent(new CustomEvent('autofill-register', {
                             detail: {
                                 position_id: item.autofill.position_id,
                                 division_id: item.autofill.division_id,
                                 office_id: item.autofill.office_id,
+                                tgl_mulai_kerja: item.autofill.tgl_mulai_kerja,
                             }
                         }));
                     }

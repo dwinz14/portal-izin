@@ -3,14 +3,28 @@
 namespace App\Exports;
 
 use App\Models\Leave;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class RekapCutiExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoSize, WithChunkReading
+class RekapCutiExport implements
+    FromQuery,
+    WithMapping,
+    WithHeadings,
+    ShouldAutoSize,
+    WithChunkReading,
+    WithColumnFormatting,
+    WithStyles,
+    WithEvents
 {
     protected $filters;
 
@@ -22,13 +36,17 @@ class RekapCutiExport implements FromQuery, WithMapping, WithHeadings, ShouldAut
         $this->filters = $filters;
     }
 
-    /**
-     * Query builder -> FromQuery akan meng-stream hasilnya (lebih hemat memory).
-     */
     public function query()
     {
         $q = Leave::query()
-            ->with(['user.position', 'user.office', 'approvalHistories.approver', 'leaveType']);
+            ->with([
+                'user.position',
+                'user.office',
+                'pengganti:id,name',
+                'approvalHistories.approver:id,name',
+                'approvals.approver:id,name',
+                'leaveType',
+            ]);
 
         // filter position (berdasarkan user->position di leave->user)
         if (!empty($this->filters['position_id'])) {
@@ -79,7 +97,9 @@ class RekapCutiExport implements FromQuery, WithMapping, WithHeadings, ShouldAut
      */
     public function map($leave): array
     {
-        $lastApproval = $leave->approvalHistories()->latest()->first();
+        // Pakai koleksi yang sudah di-eager-load (bukan query ulang) supaya tidak N+1.
+        $lastApproval = $leave->approvalHistories->sortByDesc('created_at')->first();
+        $atasanStep2  = $leave->approvals->firstWhere('step', 2);
 
         return [
             $leave->user->nik ?? '-',
@@ -87,12 +107,14 @@ class RekapCutiExport implements FromQuery, WithMapping, WithHeadings, ShouldAut
             strtoupper($leave->user->position->nama_jabatan ?? '-'),
             strtoupper($leave->user->office->nama_kantor ?? '-'),
             $leave->leaveType->name ?? '-',
-            $leave->start_date,
-            $leave->end_date,
+            $leave->pengganti ? ucwords($leave->pengganti->name) : '-',
+            Carbon::parse($leave->start_date),
+            Carbon::parse($leave->end_date),
             $leave->total_hari,
+            $leave->is_mendadak ? 'Ya' : 'Tidak',
             strtoupper($leave->status_final ?? 'pending'),
-            ucwords(optional($leave->approvals()->where('step', 2)->first()?->approver)->name ?? '-'),
-            $lastApproval ? $lastApproval->created_at->format('Y-m-d H:i:s') : '-',
+            ucwords(optional($atasanStep2?->approver)->name ?? '-'),
+            $lastApproval ? Carbon::parse($lastApproval->created_at) : null,
             $leave->alasan ?? '-',
         ];
     }
@@ -108,13 +130,60 @@ class RekapCutiExport implements FromQuery, WithMapping, WithHeadings, ShouldAut
             'Jabatan',
             'Kantor',
             'Jenis Cuti',
+            'Pengganti',
             'Tanggal Mulai',
             'Tanggal Selesai',
             'Total Hari',
+            'Mendadak?',
             'Status Akhir',
-            'Approver Terakhir',
-            'Waktu Approver',
+            'Atasan (Approver)',
+            'Waktu Approval Terakhir',
             'Alasan',
+        ];
+    }
+
+    /**
+     * Format kolom tanggal sebagai tipe Date asli di Excel (bukan teks biasa),
+     * supaya HRD bisa sort/filter/hitung selisih tanggal langsung di Excel
+     * tanpa perlu convert format dulu.
+     */
+    public function columnFormats(): array
+    {
+        return [
+            'G' => NumberFormat::FORMAT_DATE_DDMMYYYY,
+            'H' => NumberFormat::FORMAT_DATE_DDMMYYYY,
+            'M' => 'DD/MM/YYYY HH:MM',
+        ];
+    }
+
+    /**
+     * Header tabel dibold + diberi warna, biar jelas beda dari baris data.
+     */
+    public function styles(Worksheet $sheet): array
+    {
+        return [
+            1 => [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => [
+                    'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '1D4ED8'],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Freeze baris header + aktifkan AutoFilter, supaya HRD bisa langsung
+     * filter/sort tiap kolom begitu file dibuka, tanpa setup manual.
+     */
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $sheet->freezePane('A2');
+                $sheet->setAutoFilter($sheet->calculateWorksheetDimension());
+            },
         ];
     }
 

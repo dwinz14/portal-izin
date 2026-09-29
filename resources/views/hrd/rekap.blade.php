@@ -147,6 +147,7 @@
                             <th class="px-3 py-3 text-left w-28 whitespace-nowrap">Jabatan</th>
                             <th class="px-3 py-3 text-left w-40 whitespace-nowrap">Tanggal Cuti</th>
                             <th class="px-3 py-3 text-left w-28 whitespace-nowrap">Jenis</th>
+                            <th class="px-3 py-3 text-left w-28 whitespace-nowrap">Pengganti</th>
                             <th class="px-3 py-3 text-left w-32">Alasan</th>
                             <th class="px-3 py-3 text-center w-20 whitespace-nowrap">Bukti</th>
                             <th class="px-2 py-2 text-center w-24 whitespace-nowrap">Status</th>
@@ -175,6 +176,9 @@
                                             ⚡ Mendadak
                                         </span>
                                     @endif
+                                </td>
+                                <td class="px-3 py-3 text-gray-600 dark:text-gray-400 truncate">
+                                    {{ $leave->pengganti ? Str::title($leave->pengganti->name) : '-' }}
                                 </td>
                                 <td class="px-3 py-3 max-w-[150px]">
                                     <div class="text-gray-900 dark:text-gray-100 truncate">
@@ -220,13 +224,13 @@
                                 </td>
                                 <td class="px-3 py-3 max-w-xs">
                                     <div class="text-gray-600 dark:text-gray-400 whitespace-normal break-words">
-                                        {{ Str::title(optional($leave->approvals()->where('step', 2)->first()?->approver)->name ?? '-') }}
+                                        {{ Str::title(optional($leave->approvals->firstWhere('step', 2)?->approver)->name ?? '-') }}
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="px-4 py-14 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="9" class="px-4 py-14 text-center text-gray-500 dark:text-gray-400">
                                     <div class="flex flex-col items-center justify-center gap-2">
                                         <svg class="w-14 h-14 text-gray-300 dark:text-gray-600"
                                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"

@@ -21,6 +21,7 @@ use App\Http\Controllers\RekapController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\UserActivityController;
 use App\Http\Controllers\LeaveReplacementController;
+use App\Http\Controllers\LeaveMonitoringController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -141,6 +142,8 @@ Route::middleware(['auth', 'role:hrd,super_admin'])->group(function () {
         Route::get('rekap/export', [\App\Http\Controllers\RekapController::class, 'export'])->name('rekap.export');
         Route::get('kehadiran', [AttendanceReportController::class, 'index'])->name('kehadiran.index');
         Route::get('kehadiran/export', [AttendanceReportController::class, 'export'])->name('kehadiran.export');
+        Route::get('monitoring', [LeaveMonitoringController::class, 'index'])->name('monitoring.index');
+        Route::get('monitoring/{user}', [LeaveMonitoringController::class, 'show'])->name('monitoring.show');
     });
     // database maintenance
     Route::prefix('database')->name('database.')->group(function () {

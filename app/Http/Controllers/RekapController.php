@@ -46,6 +46,7 @@ class RekapController extends Controller
             'id',
             'user_id',
             'leave_type_id',
+            'pengganti_id',
             'start_date',
             'end_date',
             'total_hari',
@@ -59,7 +60,9 @@ class RekapController extends Controller
                 'user:id,name,position_id,office_id',
                 'user.position:id,nama_jabatan',
                 'user.office:id,nama_kantor',
-                'leaveType:id,name'
+                'leaveType:id,name',
+                'pengganti:id,name',
+                'approvals.approver:id,name',
             ]);
 
         // Apply filters

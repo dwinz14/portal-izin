@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             $message = is_null($user->email_verified_at)
-                ? 'Akun belum diverifikasi. Cek email Anda dan masukkan kode OTP yang dikirim saat pendaftaran.'
+                ? 'Akun belum diverifikasi. Cek dan masukkan kode OTP yang dikirim saat pendaftaran.'
                 : 'Akun Anda tidak memiliki akses. Hubungi administrator.';
 
             return redirect()->route('login')->withErrors(['nik' => $message]);

@@ -6,6 +6,7 @@
     'placeholder' => 'Pilih...',
     'disabled' => false,
     'searchable' => false,
+    'required' => false,
 ])
 
 <div x-data="dropdownSelect({
@@ -15,7 +16,12 @@
     searchable: @js($searchable),
 })" @click.away="open = false" x-cloak class="relative w-full">
 
-    <x-input-label :for="$name" :value="$label" class="mb-2 font-medium text-gray-800 dark:text-gray-200" />
+    <x-input-label :for="$name" class="mb-2 font-medium text-gray-800 dark:text-gray-200">
+        {{ $label }}
+        @if ($required)
+            <span class="text-rose-500 font-bold ml-0.5" title="Wajib diisi">*</span>
+        @endif
+    </x-input-label>
 
     <!-- Hidden input for form -->
     <input type="hidden" name="{{ $name }}" x-model="selectedValue">

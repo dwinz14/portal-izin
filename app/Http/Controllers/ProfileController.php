@@ -46,16 +46,35 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $user->loadMissing(['position', 'division', 'office']);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $before = [
+            'position_id' => ['id' => $user->position_id, 'label' => $user->position->nama_jabatan ?? null],
+            'division_id' => ['id' => $user->division_id, 'label' => $user->division->nama_divisi ?? null],
+            'office_id'   => ['id' => $user->office_id,   'label' => $user->office->nama_kantor ?? null],
+        ];
+
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        $user->save();
 
         ActivityLogger::log('profile.updated', 'Memperbarui informasi profil');
-        return Redirect::route('profile.edit')->with('success', 'profile berhasil diupdate');
+
+        // Refresh relasi supaya label "sesudah" akurat (bukan cache sebelum fill()).
+        $user->load(['position', 'division', 'office']);
+
+        ActivityLogger::logRelationChanges($user, $before, [
+            'position_id' => ['label' => 'jabatan', 'relation' => 'position', 'column' => 'nama_jabatan', 'event' => 'profile.position_changed'],
+            'division_id' => ['label' => 'divisi',  'relation' => 'division', 'column' => 'nama_divisi',  'event' => 'profile.division_changed'],
+            'office_id'   => ['label' => 'kantor',   'relation' => 'office',   'column' => 'nama_kantor',  'event' => 'profile.office_changed'],
+        ]);
+
+        return Redirect::route('profile.edit')->with('success', 'Profil berhasil diupdate.');
     }
 
     /**

@@ -37,6 +37,7 @@ class ProfileUpdateRequest extends FormRequest
             ],
 
             'position_id' => ['nullable', 'exists:positions,id'],
+            'division_id' => ['nullable', 'exists:divisions,id'],
             'office_id'   => ['nullable', 'exists:offices,id'],
         ];
     }

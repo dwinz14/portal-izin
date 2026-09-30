@@ -19,8 +19,8 @@
 
         <div>
             <x-input-label for="nik" :value="__('NIK')" />
-            <x-text-input id="nik" name="nik" type="text" class="mt-1 block w-full" :value="old('nik', $user->nik)" required
-                autofocus autocomplete="nik" />
+            <x-text-input id="nik" name="nik" type="text" class="mt-1 block w-full" :value="old('nik', $user->nik)"
+                required autofocus autocomplete="nik" />
             <x-input-error class="mt-2" :messages="$errors->get('nik')" />
         </div>
 
@@ -33,27 +33,27 @@
 
         <div>
             <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)"
-                required autocomplete="username" />
+            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full"
+                :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
-                        {{ __('Your email address is unverified.') }}
+            <div>
+                <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
+                    {{ __('Your email address is unverified.') }}
 
-                        <button form="send-verification"
-                            class="underline text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
+                    <button form="send-verification"
+                        class="underline text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        {{ __('Click here to re-send the verification email.') }}
+                    </button>
+                </p>
 
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
+                @if (session('status') === 'verification-link-sent')
+                <p class="mt-2 font-medium text-sm text-green-600">
+                    {{ __('A new verification link has been sent to your email address.') }}
+                </p>
+                @endif
+            </div>
             @endif
         </div>
 
@@ -68,8 +68,9 @@
                             d="M12 0C5.373 0 0 5.373 0 12c0 2.117.55 4.103 1.513 5.829L0 24l6.335-1.505A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.01-1.376l-.36-.213-3.76.893.952-3.664-.234-.376A9.818 9.818 0 1121.818 12 9.828 9.828 0 0112 21.818z" />
                     </svg>
                 </div>
-                <x-text-input id="phone" name="phone" type="tel" class="block w-full pl-10" :value="old('phone', $user->phone)"
-                    inputmode="numeric" placeholder="08xxxxxxxxxx" autocomplete="tel" maxlength="16" />
+                <x-text-input id="phone" name="phone" type="tel" class="block w-full pl-10"
+                    :value="old('phone', $user->phone)" inputmode="numeric" placeholder="08xxxxxxxxxx"
+                    autocomplete="tel" maxlength="16" />
             </div>
             <x-input-error class="mt-2" :messages="$errors->get('phone')" />
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -78,16 +79,56 @@
         </div>
 
         <div>
-            <x-input-label for="division" :value="__('Divisi')" />
-            <x-text-input id="division" type="text" class="mt-1 block w-full" :value="$user->division->nama_divisi ?? ''" readonly />
+            <x-input-label for="position_id" :value="__('Jabatan')" />
+            <x-select-input id="position_id" name="position_id">
+                <option value="">-- Pilih Jabatan --</option>
+                @foreach ($positions as $position)
+                <option value="{{ $position->id }}" {{ old('position_id', $user->position_id) == $position->id ?
+                    'selected' : '' }}>
+                    {{ strtoupper($position->nama_jabatan) }}
+                </option>
+                @endforeach
+            </x-select-input>
+            <x-input-error class="mt-2" :messages="$errors->get('position_id')" />
+        </div>
+
+        <div>
+            <x-input-label for="division_id" :value="__('Divisi')" />
+            <x-select-input id="division_id" name="division_id">
+                <option value="">-- Pilih Divisi --</option>
+                @foreach ($divisions as $division)
+                <option value="{{ $division->id }}" {{ old('division_id', $user->division_id) == $division->id ?
+                    'selected' : '' }}>
+                    {{ strtoupper($division->nama_divisi) }}
+                </option>
+                @endforeach
+            </x-select-input>
+            <x-input-error class="mt-2" :messages="$errors->get('division_id')" />
+        </div>
+
+        <div>
+            <x-input-label for="office_id" :value="__('Lokasi Kantor')" />
+            <x-select-input id="office_id" name="office_id">
+                <option value="">-- Pilih Kantor --</option>
+                @foreach ($offices as $office)
+                <option value="{{ $office->id }}" {{ old('office_id', $user->office_id) == $office->id ? 'selected' : ''
+                    }}>
+                    {{ strtoupper($office->nama_kantor) }}
+                </option>
+                @endforeach
+            </x-select-input>
+            <x-input-error class="mt-2" :messages="$errors->get('office_id')" />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Perubahan jabatan/divisi/kantor akan tercatat di riwayat aktivitas akun Anda.
+            </p>
         </div>
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
             @if (session('status') === 'profile-updated')
-                <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600 dark:text-gray-400">{{ __('Saved.') }}</p>
+            <p x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 2000)"
+                class="text-sm text-gray-600 dark:text-gray-400">{{ __('Saved.') }}</p>
             @endif
         </div>
     </form>

@@ -45,6 +45,36 @@ class ActivityLogger
     }
 
     /**
+     * Log perubahan field relasi yang benar-benar berubah.
+     *
+     * @param Model $subject Model setelah disimpan dan relasi di-refresh.
+     * @param array<string, array{id: int|null, label: string|null}> $before
+     * @param array<string, array{label: string, relation: string, column: string, event: string}> $fieldsMeta
+     */
+
+    public static function logRelationChanges(Model $subject, array $before, array $fieldsMeta): void
+    {
+        foreach ($fieldsMeta as $field => $meta) {
+            $oldId = $before[$field]['id'] ?? null;
+            $newId = $subject->{$field} ?? null;
+
+            if ((int) $oldId === (int) $newId) {
+                continue;
+            }
+
+            $oldLabel = $before[$field]['label'] ?? 'belum diatur';
+            $newLabel = $subject->{$meta['relation']}?->{$meta['column']} ?? 'belum diatur';
+
+            self::log(
+                $meta['event'],
+                "Mengganti {$meta['label']} dari \"{$oldLabel}\" menjadi \"{$newLabel}\"",
+                $subject,
+                ['old_id' => $oldId, 'new_id' => $newId]
+            );
+        }
+    }
+
+    /**
      * Versi log tanpa auth()->user() — untuk event yang terjadi di luar request HTTP
      * (misal: scheduler, queue job). Memerlukan causer eksplisit.
      */
@@ -101,6 +131,9 @@ class ActivityLogger
             'attendance.submitted'         => ['category' => 'attendance', 'color' => 'purple'],
             'attendance.cancelled'         => ['category' => 'attendance', 'color' => 'red'],
             'profile.updated'              => ['category' => 'profile',    'color' => 'slate'],
+            'profile.position_changed'     => ['category' => 'profile',    'color' => 'blue'],
+            'profile.division_changed'     => ['category' => 'profile',    'color' => 'blue'],
+            'profile.office_changed'       => ['category' => 'profile',    'color' => 'blue'],
             'admin.user_approved'          => ['category' => 'admin',      'color' => 'green'],
             'admin.user_rejected'          => ['category' => 'admin',      'color' => 'red'],
             'admin.quota_generated'        => ['category' => 'admin',      'color' => 'blue'],

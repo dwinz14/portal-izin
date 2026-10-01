@@ -1,10 +1,11 @@
 {{--
-    SIDEBAR NAVIGATION
-    Drop-in replacement untuk blok sidebar pada navigation.blade.php.
+SIDEBAR NAVIGATION
+Drop-in replacement untuk blok sidebar pada navigation.blade.php.
 --}}
 
 {{-- Mobile Off-canvas menu overlay --}}
-<div x-show="sidebarOpen" class="fixed inset-0 z-50 flex lg:hidden" role="dialog" aria-modal="true" style="display: none;">
+<div x-show="sidebarOpen" class="fixed inset-0 z-50 flex lg:hidden" role="dialog" aria-modal="true"
+    style="display: none;">
 
     {{-- Backdrop --}}
     <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
@@ -18,7 +19,7 @@
         x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
         x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
         x-transition:leave-end="-translate-x-full"
-        class="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-r-2xl bg-gradient-to-b from-primary-700 to-primary-900 shadow-2xl dark:from-indigo-950 dark:to-slate-900 max-w-[260px] w-full">
+        class="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden rounded-r-2xl bg-gradient-to-b from-primary-800 to-primary-950 shadow-2xl dark:from-indigo-950 dark:to-slate-900 max-w-[260px] w-full">
 
         {{-- Close Button --}}
         <div class="absolute right-0 top-0 -mr-12 pt-4">
@@ -78,7 +79,7 @@
 {{-- Desktop Floating Sidebar --}}
 <div class="fixed bottom-3 left-3 top-3 z-50 hidden w-[260px] transition-all duration-300 lg:flex lg:flex-col">
     <div
-        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-r from-primary-700 to-primary-900 shadow-xl shadow-primary-900/20 dark:border-indigo-900/40 dark:from-indigo-950 dark:to-slate-900 dark:shadow-black/40">
+        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-r from-primary-800 to-primary-950 shadow-xl shadow-primary-900/20 dark:border-indigo-900/40 dark:from-indigo-950 dark:to-slate-900 dark:shadow-black/40">
 
         {{-- Logo Area --}}
         <div

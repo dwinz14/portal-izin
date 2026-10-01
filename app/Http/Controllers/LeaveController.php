@@ -43,51 +43,60 @@ class LeaveController extends Controller
 
         $requiresReplacement = in_array($user->role, ['staff', 'kasie', 'kabag-pincab'], true);
 
-        // $penggantiList = $requiresReplacement
-        //     ? Cache::remember("pengganti_{$user->office_id}", 300, fn() =>
-        //     User::select('id', 'name', 'role')->where('office_id', $user->office_id)->where('id', '!=', $user->id)->get())
-        //     : collect();
-        // Default query dasar
-        $query = User::query()->where('id', '!=', $user->id);
+        // Kantor yang tergabung dalam 1 grup 
+        $effectiveOfficeIds = Office::groupedOfficeIds($user->office_id);
+        $isGroupedOffice = count($effectiveOfficeIds) > 1;
 
-        // Case 1: user role kabag-pincab & kantor pusat
-        if ($user->role === 'kabag-pincab' && $user->office_id == Office::PUSAT) {
-            $penggantiList = $query
-                ->where('office_id', Office::PUSAT)
+        // Case 1: kabag-pincab di kantor yang tergabung grup (mis. Pusat/Pare)
+        if ($user->role === 'kabag-pincab' && $isGroupedOffice) {
+            $penggantiList = User::select('id', 'name', 'role')
+                ->whereIn('office_id', $effectiveOfficeIds)
+                ->where('id', '!=', $user->id)
                 ->orderBy('name')
                 ->get();
 
-            // Case 2: user role kabag-pincab tapi bukan kantor pusat
-        } elseif ($user->role === 'kabag-pincab' && $user->office_id != Office::PUSAT) {
-            $penggantiList = $query
+            // Case 2: kabag-pincab di kantor lain (bukan grup) → tetap seperti semula
+        } elseif ($user->role === 'kabag-pincab') {
+            $penggantiList = User::select('id', 'name', 'role')
                 ->whereIn('role', ['kabag-pincab', 'hrd'])
+                ->where('id', '!=', $user->id)
                 ->orderBy('name')
                 ->get();
 
-            // Case 3: role lain → tetap filter satu kantor
+            // Case 3: role lain (staff/kasie) → kantornya sendiri, atau gabungan kalau masuk grup
         } else {
             $penggantiList = $requiresReplacement
-                ? Cache::remember("pengganti_{$user->office_id}", 300, fn() => User::select('id', 'name', 'role')->where('office_id', $user->office_id)->where('id', '!=', $user->id)->get())
+                ? User::select('id', 'name', 'role')
+                ->whereIn('office_id', $effectiveOfficeIds)
+                ->where('id', '!=', $user->id)
+                ->orderBy('name')
+                ->get()
                 : collect();
         }
         $requiresAtasan = ! in_array($user->role, ['direksi'], true);
         $atasanList = collect();
 
         if ($requiresAtasan) {
-            $direksi = Cache::remember('direksi_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'direksi')->get());
+            $direksi = User::select('id', 'name', 'role')
+                ->where('role', 'direksi')
+                ->where('id', '!=', $user->id)
+                ->get();
 
             $atasanList = $atasanList->merge($direksi);
 
-            $hrd = Cache::remember('hrd_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'hrd')->get());
+            $hrd = User::select('id', 'name', 'role')
+                ->where('role', 'hrd')
+                ->where('id', '!=', $user->id)
+                ->get();
 
             $atasanList = $atasanList->merge($hrd);
 
             if ($user->role !== 'hrd') {
-                $others = Cache::remember("atasan_{$user->office_id}", 300, fn() => User::select('id', 'name', 'role')
+                $others = User::select('id', 'name', 'role')
                     ->where('office_id', $user->office_id)
                     ->whereIn('role', ['kabag-pincab', 'kasie'])
                     ->where('id', '!=', $user->id)
-                    ->get());
+                    ->get();
 
                 $atasanList = $atasanList->merge($others);
 

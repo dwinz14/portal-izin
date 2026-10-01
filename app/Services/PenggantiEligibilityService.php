@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Menentukan daftar user yang boleh jadi pengganti
+ * Menentukan daftar user yang boleh jadi pengganti untuk seorang pemohon
  */
 class PenggantiEligibilityService
 {
@@ -18,28 +18,32 @@ class PenggantiEligibilityService
     {
         $query = User::query()->where('id', '!=', $requester->id);
 
-        // Case 1: pemohon kabag-pincab & kantor pusat -> pengganti dari kantor pusat
-        if ($requester->role === 'kabag-pincab' && $requester->office_id == Office::PUSAT) {
-            return $query->where('office_id', Office::PUSAT)
+        // Kantor yang tergabung dalam 1 grup
+        $effectiveOfficeIds = Office::groupedOfficeIds($requester->office_id);
+        $isGroupedOffice = count($effectiveOfficeIds) > 1;
+
+        // Case 1: pemohon kabag-pincab di kantor yang tergabung grup -> semua user se-grup
+        if ($requester->role === 'kabag-pincab' && $isGroupedOffice) {
+            return $query->whereIn('office_id', $effectiveOfficeIds)
                 ->orderBy('name')
                 ->get();
         }
 
-        // Case 2: pemohon kabag-pincab tapi bukan kantor pusat -> pengganti kabag-pincab/hrd
-        if ($requester->role === 'kabag-pincab' && $requester->office_id != Office::PUSAT) {
+        // Case 2: pemohon kabag-pincab di kantor lain (bukan grup) -> pengganti kabag-pincab/hrd
+        if ($requester->role === 'kabag-pincab') {
             return $query->whereIn('role', ['kabag-pincab', 'hrd'])
                 ->orderBy('name')
                 ->get();
         }
 
-        // Case 3: role lain -> tetap satu kantor dengan pemohon
+        // Case 3: role lain -> kantor pemohon sendiri, atau gabungan kalau masuk grup
         $requiresReplacement = in_array($requester->role, ['staff', 'kasie', 'kabag-pincab'], true);
 
         if (! $requiresReplacement) {
             return collect();
         }
 
-        return $query->where('office_id', $requester->office_id)
+        return $query->whereIn('office_id', $effectiveOfficeIds)
             ->orderBy('name')
             ->get();
     }

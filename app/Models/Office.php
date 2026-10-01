@@ -19,6 +19,37 @@ class Office extends Model
         return $this->hasMany(User::class);
     }
 
+    public static function groupedOfficeIds(?int $officeId): array
+    {
+        if (! $officeId) {
+            return [];
+        }
+
+        $offices = Cache::remember('offices_all', 3600, fn() => static::all());
+
+        $current = $offices->firstWhere('id', $officeId);
+
+        if (! $current) {
+            return [$officeId];
+        }
+
+        $currentName = strtolower(trim($current->nama_kantor));
+        $groups = config('office_groups.pengganti_groups', []);
+
+        foreach ($groups as $group) {
+            $normalizedGroup = array_map(fn($name) => strtolower(trim($name)), $group);
+
+            if (in_array($currentName, $normalizedGroup, true)) {
+                return $offices
+                    ->filter(fn($office) => in_array(strtolower(trim($office->nama_kantor)), $normalizedGroup, true))
+                    ->pluck('id')
+                    ->all();
+            }
+        }
+
+        return [$officeId];
+    }
+
     protected static function booted()
     {
         static::saved(function () {

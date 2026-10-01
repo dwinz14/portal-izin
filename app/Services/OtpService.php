@@ -175,7 +175,7 @@ class OtpService
         $label = $purpose === 'verify_email' ? 'Verifikasi Email' : 'Reset Password';
 
         $message = WhatsAppMessage::create(
-            " Kode OTP {$label}\n" .
+            "Kode OTP Anda" .
                 "" . config('app.name') . "\n\n" .
                 "Kode Anda:\n\n" .
                 "     *{$code}*\n\n" .

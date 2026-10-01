@@ -147,20 +147,26 @@ class AttendanceRequestController extends Controller
         $approverList = collect();
 
         $approverList = $approverList->merge(
-            Cache::remember('direksi_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'direksi')->get())
+            User::select('id', 'name', 'role')
+                ->where('role', 'direksi')
+                ->where('id', '!=', $user->id)
+                ->get()
         );
 
         $approverList = $approverList->merge(
-            Cache::remember('hrd_users', 300, fn() => User::select('id', 'name', 'role')->where('role', 'hrd')->get())
+            User::select('id', 'name', 'role')
+                ->where('role', 'hrd')
+                ->where('id', '!=', $user->id)
+                ->get()
         );
 
         if ($user->role !== 'hrd') {
             $approverList = $approverList->merge(
-                Cache::remember("atasan_{$user->office_id}", 300, fn() => User::select('id', 'name', 'role')
+                User::select('id', 'name', 'role')
                     ->where('office_id', $user->office_id)
                     ->whereIn('role', ['kabag-pincab', 'kasie'])
                     ->where('id', '!=', $user->id)
-                    ->get())
+                    ->get()
             );
         }
 

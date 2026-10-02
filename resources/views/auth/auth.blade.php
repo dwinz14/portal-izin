@@ -1061,7 +1061,8 @@
 
                     const keyword = this.value.trim();
 
-                    if (keyword.length < 3) {
+                    // debounce search
+                    if (keyword.length < 11) {
                         nikDropdown.style.display = 'none';
                         nikValidation.style.display = 'none';
                         return;

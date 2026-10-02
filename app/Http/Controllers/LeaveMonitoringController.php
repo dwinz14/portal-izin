@@ -24,12 +24,27 @@ class LeaveMonitoringController extends Controller
         $search     = $request->get('search');
         $officeId   = $request->get('office_id');
         $positionId = $request->get('position_id');
+        $perPage    = (string) $request->get('per_page', '10');
+
+        // Validasi dan konversi nilai per_page
+        $perPageLimit = match ($perPage) {
+            '20'    => 20,
+            '30'    => 30,
+            '50'    => 50,
+            '100'   => 100,
+            'all'   => 100000,
+            default => 10,
+        };
+
+        if (!in_array($perPage, ['10', '20', '30', '50', '100', 'all'], true)) {
+            $perPage = '10';
+        }
 
         $users = $this->monitoringService->paginateUsers([
             'search'      => $search,
             'office_id'   => $officeId,
             'position_id' => $positionId,
-        ]);
+        ], $perPageLimit);
 
         $offices   = Office::orderBy('nama_kantor')->get();
         $positions = Position::orderBy('nama_jabatan')->get();
@@ -40,7 +55,8 @@ class LeaveMonitoringController extends Controller
             'positions',
             'search',
             'officeId',
-            'positionId'
+            'positionId',
+            'perPage'
         ));
     }
 

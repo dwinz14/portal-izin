@@ -18,7 +18,7 @@ class LeaveMonitoringService
     /**
      * @param array{search?: ?string, office_id?: ?int, position_id?: ?int} $filters
      */
-    public function paginateUsers(array $filters, int $perPage = 15): LengthAwarePaginator
+    public function paginateUsers(array $filters, int $perPage = 10): LengthAwarePaginator
     {
         $today = Carbon::today()->toDateString();
 

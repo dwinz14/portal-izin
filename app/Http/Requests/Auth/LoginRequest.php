@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +13,12 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    /**
+     * Batas maksimal percobaan login gagal (per kombinasi NIK + IP)
+     */
+    private const MAX_ATTEMPTS = 5;
+    private const DECAY_SECONDS = 300;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -43,13 +50,17 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $nik = $this->input('nik');
-        $password = $this->input('password');
 
         // Check if NIK exists
         $user = User::where('nik', $nik)->first();
 
         if (!$user) {
-            RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit(
+                $this->throttleKey(),
+                self::DECAY_SECONDS
+            );
+            ActivityLogger::logFailedLogin($nik, 'NIK tidak ditemukan');
+            $this->flashAttemptsLeft();
 
             throw ValidationException::withMessages([
                 'nik' => 'NIK tidak ditemukan.',
@@ -58,7 +69,12 @@ class LoginRequest extends FormRequest
 
         // Check if password is correct
         if (!Auth::attempt($this->only('nik', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            RateLimiter::hit(
+                $this->throttleKey(),
+                self::DECAY_SECONDS
+            );
+            ActivityLogger::logFailedLogin($nik, 'Password salah');
+            $this->flashAttemptsLeft();
 
             throw ValidationException::withMessages([
                 'password' => 'Password salah.',
@@ -75,7 +91,7 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), self::MAX_ATTEMPTS)) {
             return;
         }
 
@@ -83,12 +99,26 @@ class LoginRequest extends FormRequest
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
+        // Dipakai frontend untuk menampilkan countdown lockout secara real-time.
+        $this->session()->flash('login_locked_seconds', $seconds);
+
         throw ValidationException::withMessages([
-            'nik' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'login_locked' => [
+                'Login temporarily locked.',
+            ],
         ]);
+    }
+
+    /**
+     * Flash sisa jatah percobaan
+     */
+    private function flashAttemptsLeft(): void
+    {
+        $remaining = max(0, self::MAX_ATTEMPTS - RateLimiter::attempts($this->throttleKey()));
+
+        if ($remaining > 0) {
+            $this->session()->flash('login_attempts_left', $remaining);
+        }
     }
 
     /**

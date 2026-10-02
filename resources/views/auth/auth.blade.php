@@ -38,12 +38,60 @@
                 </p>
             </div>
 
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
+            <form method="POST" action="{{ route('login') }}" class="space-y-5"
+                x-data="{ lockedSeconds: {{ (int) session('login_locked_seconds', 0) }} }" x-init="if (lockedSeconds > 0) {
+                    const timer = setInterval(() => {
+                        lockedSeconds--;
+                        if (lockedSeconds <= 0) clearInterval(timer);
+                    }, 1000);
+                }">
                 @csrf
 
                 {{-- Force login flag: aktif hanya saat ada konflik sesi --}}
                 @if ($errors->has('session_conflict'))
                 <input type="hidden" name="force_login" value="1">
+                @endif
+
+                {{-- Banner: akun dikunci sementara (brute-force protection), countdown real-time --}}
+                <template x-if="lockedSeconds > 0">
+                    <div
+                        class="p-4 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800">
+                        <div class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-semibold text-rose-800 dark:text-rose-300">
+                                    Akun Dikunci Sementara
+                                </p>
+                                <p class="text-xs text-rose-700 dark:text-rose-400 mt-0.5">
+                                    Terlalu banyak percobaan login gagal. Coba lagi dalam
+                                    <span class="font-bold" x-text="lockedSeconds"></span> detik.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Banner: peringatan dini sisa percobaan (belum sampai lockout) --}}
+                @if (session('login_attempts_left') && !session('login_locked_seconds'))
+                <div
+                    class="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p class="text-xs text-amber-700 dark:text-amber-400">
+                            NIK atau password yang Anda masukkan salah. Sisa
+                            <span class="font-bold">{{ session('login_attempts_left') }}</span>
+                            percobaan lagi sebelum akun dikunci sementara.
+                        </p>
+                    </div>
+                </div>
                 @endif
 
                 {{-- Banner: konflik sesi aktif --}}
@@ -86,12 +134,6 @@
                         <x-input-label for="password" class="mb-0 text-slate-700 dark:text-slate-300 font-medium">
                             {{ __('Password') }} <span class="text-rose-500 font-bold">*</span>
                         </x-input-label>
-                        @if (Route::has('password.request'))
-                        <a class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
-                            href="{{ route('password.request') }}">
-                            Lupa password?
-                        </a>
-                        @endif
                     </div>
                     <div class="relative group">
                         <x-text-input id="password"
@@ -117,25 +159,34 @@
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
 
-                <!-- Remember Me -->
-                <div class="block mt-4">
+                <div class="flex items-center justify-between mt-4">
                     <label for="remember_me" class="inline-flex items-center cursor-pointer">
                         <input id="remember_me" type="checkbox"
                             class="rounded dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-primary-600 shadow-sm focus:ring-primary-500 dark:focus:ring-primary-600 dark:focus:ring-offset-slate-900"
                             name="remember">
+
                         <span class="ml-2 text-sm text-slate-600 dark:text-slate-400 font-medium select-none">
                             {{ __('Ingat sesi saya') }}
                         </span>
                     </label>
+
+                    @if (Route::has('password.request'))
+                    <a class="text-sm font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+                        href="{{ route('password.request') }}">
+                        Lupa password?
+                    </a>
+                    @endif
                 </div>
 
+
                 <div class="pt-2">
-                    <x-primary-button
-                        class="w-full justify-center py-3.5 px-4 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-xl shadow-sm hover:shadow focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-slate-900 transition-all duration-200 font-semibold text-base">
+                    <x-primary-button x-bind:disabled="lockedSeconds > 0"
+                        class="w-full justify-center py-3.5 px-4 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white rounded-xl shadow-sm hover:shadow focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-slate-900 transition-all duration-200 font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed">
                         @if ($errors->has('session_conflict'))
                         ⚡ Paksa Login — Perangkat Lain Akan Logout
                         @else
-                        {{ __('Masuk') }}
+                        <span x-show="lockedSeconds <= 0">{{ __('Masuk') }}</span>
+                        <span x-show="lockedSeconds > 0">Tunggu <span x-text="lockedSeconds"></span> detik...</span>
                         @endif
                     </x-primary-button>
                 </div>

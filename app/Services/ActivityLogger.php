@@ -75,6 +75,31 @@ class ActivityLogger
     }
 
     /**
+     * Log percobaan login gagal (NIK tidak ditemukan atau password salah).
+     */
+    public static function logFailedLogin(string $nik, string $reason): void
+    {
+        try {
+            $meta = self::getEventMeta('auth.login_failed');
+
+            activity('user_activity')
+                ->withProperties([
+                    'event_type' => 'auth.login_failed',
+                    'category'   => $meta['category'],
+                    'color'      => $meta['color'],
+                    'nik'        => $nik,
+                    'ip'         => request()?->ip(),
+                    'reason'     => $reason,
+                ])
+                ->log("Percobaan login gagal untuk NIK \"{$nik}\" ({$reason})");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                '[ActivityLogger] Gagal mencatat percobaan login gagal: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
      * Versi log tanpa auth()->user() — untuk event yang terjadi di luar request HTTP
      * (misal: scheduler, queue job). Memerlukan causer eksplisit.
      */
@@ -114,6 +139,7 @@ class ActivityLogger
     {
         return match ($eventType) {
             'auth.login'                   => ['category' => 'auth',       'color' => 'blue'],
+            'auth.login_failed'            => ['category' => 'auth',       'color' => 'red'],
             'auth.logout'                  => ['category' => 'auth',       'color' => 'slate'],
             'auth.password_reset'          => ['category' => 'auth',       'color' => 'amber'],
             'auth.password_changed'        => ['category' => 'auth',       'color' => 'amber'],

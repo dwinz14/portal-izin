@@ -30,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)->by(request()->ip());
         });
 
+        RateLimiter::for('login-ip', function (\Illuminate\Http\Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
+
         if (app()->environment('local')) {
             URL::forceScheme('http');
         }

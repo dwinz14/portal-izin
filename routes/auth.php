@@ -34,7 +34,7 @@ Route::middleware('guest')->group(function () {
         ->middleware('prevent-back-history')
         ->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store'])
-        ->middleware('prevent-back-history');
+        ->middleware(['prevent-back-history', 'throttle:login-ip']);
 
     // ── Lupa Password — Step 1: Input NIK ───────────────────────────────────
     Route::get('forgot-password',  [PasswordResetController::class, 'request'])->name('password.request');

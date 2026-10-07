@@ -29,7 +29,7 @@ class RegisteredUserController extends Controller
     {
         $input                          = $request->all();
         $input['nik']                   = strtoupper(trim($input['nik'] ?? ''));
-        $input['name']                  = strtolower(trim($input['name'] ?? ''));
+        $input['name']                  = strtolower(sanitize_name($input['name'] ?? ''));
         $input['email']                 = strtolower(trim($input['email'] ?? ''));
         $input['phone']                 = (isset($input['phone']) && $input['phone'] !== '') ? preg_replace('/\s+/', '', $input['phone']) : null;
         $input['gender']                = trim($input['gender'] ?? '');

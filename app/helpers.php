@@ -105,3 +105,31 @@ if (!function_exists('isMenuActive')) {
         return request()->routeIs($pattern);
     }
 }
+
+if (! function_exists('sanitize_name')) {
+    /**
+     * Bersihkan nama dari karakter non-alfabet
+     */
+    function sanitize_name(string $name): string
+    {
+        // 1. Hapus karakter non-ASCII (karakter unicode di luar latin)
+        $name = preg_replace('/[^\x00-\x7F]/', '', $name);
+
+        // 2. Hapus semua varian apostrof dan backtick
+        $name = str_replace(["'", "'", "'", "`", "ʼ", "ʻ"], '', $name);
+
+        // 3. Hapus titik (untuk singkatan seperti M. atau Abd.)
+        $name = str_replace('.', '', $name);
+
+        // 4. Ganti strip/dash dengan spasi
+        $name = str_replace(['-', '_'], ' ', $name);
+
+        // 5. Hapus karakter selain huruf dan spasi yang tersisa
+        $name = preg_replace('/[^a-zA-Z\s]/', '', $name);
+
+        // 6. Normalisasi spasi berlebih → satu spasi, lalu trim
+        $name = trim(preg_replace('/\s+/', ' ', $name));
+
+        return $name;
+    }
+}

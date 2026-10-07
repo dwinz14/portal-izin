@@ -113,13 +113,15 @@ class NikLookupController extends Controller
                 }
             }
 
+            $namaBersih = sanitize_name($pegawai->pegawai_nama ?? '');
+
             return response()->json([
                 'valid'           => true,
                 'sudah_terdaftar' => $sudahTerdaftar,
                 'data'            => [
                     'nik'  => $pegawai->pegawai_nip,
                     'pin'  => $pegawai->pegawai_pin,
-                    'nama' => $pegawai->pegawai_nama,
+                    'nama' => $namaBersih,
                 ],
                 'autofill' => [
                     'position_id'    => $position?->id,

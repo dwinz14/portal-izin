@@ -79,7 +79,7 @@ class MasterUserController extends Controller
             'phone' => ['nullable', 'string', 'regex:/^(\+62|62|0)[0-9]{8,13}$/'],
         ]);
 
-        $validated['name']               = strtolower(strip_tags(trim($validated['name'])));
+        $validated['name']               = strtolower(sanitize_name($validated['name']));
         $validated['email']              = strtolower(trim($validated['email']));
         $validated['phone'] = isset($validated['phone']) ? preg_replace('/\s+/', '', $validated['phone']) : null;
         $validated['password']           = Hash::make(config('app.default_user_password', 'password123'));
@@ -131,7 +131,7 @@ class MasterUserController extends Controller
             'tanggal_aktif_kerja.before_or_equal' => 'Tanggal aktif kerja tidak boleh lebih dari hari ini.',
         ]);
 
-        $validated['name'] = strtolower(strip_tags(trim($validated['name'])));
+        $validated['name'] = strtolower(sanitize_name($validated['name']));
         $validated['email'] = strtolower(trim($validated['email']));
         $validated['phone'] = isset($validated['phone']) ? preg_replace('/\s+/', '', $validated['phone']) : null;
 

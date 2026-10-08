@@ -6,9 +6,11 @@ use App\Enums\UserRole;
 use App\Models\LeaveType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\Concerns\ValidatesProofImage;
 
 class StoreLeaveRequest extends FormRequest
 {
+    use ValidatesProofImage;
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -64,12 +66,7 @@ class StoreLeaveRequest extends FormRequest
                 'regex:/^[a-zA-Z0-9\s.,()\/-]+$/',
             ],
 
-            'proof_image' => [
-                $requiresProof ? 'required' : 'nullable',
-                'image',
-                'mimes:jpeg,png,jpg,gif',
-                'max:2048',
-            ],
+            'proof_image' => $this->proofImageRules($requiresProof),
 
             'pengganti_id' => [
                 $requiresReplacement ? 'required' : 'nullable',
@@ -85,7 +82,7 @@ class StoreLeaveRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return array_merge([
             'leave_type_id.required' => 'Anda harus memilih jenis cuti.',
             'leave_type_id.exists'   => 'Jenis cuti tidak valid.',
             'start_date.required'    => 'Anda harus memilih tanggal mulai cuti.',
@@ -94,14 +91,11 @@ class StoreLeaveRequest extends FormRequest
             'end_date.after_or_equal' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
             'alasan.required'        => 'Anda harus mengisi alasan cuti.',
             'alasan.max'             => 'Alasan cuti maksimal 500 karakter.',
-            'proof_image.required'   => 'Anda harus menyertakan bukti surat dokter.',
-            'proof_image.image'      => 'File bukti harus berupa gambar.',
-            'proof_image.max'        => 'Ukuran gambar maksimal 2MB.',
             'pengganti_id.required'  => 'Anda harus memilih pengganti.',
             'pengganti_id.exists'    => 'Pengganti yang dipilih tidak valid.',
             'atasan_id.required'     => 'Anda harus memilih atasan.',
             'atasan_id.exists'       => 'Atasan yang dipilih tidak valid.',
-        ];
+        ], $this->proofImageMessages('Anda harus menyertakan bukti surat dokter.'));
     }
 
     /**

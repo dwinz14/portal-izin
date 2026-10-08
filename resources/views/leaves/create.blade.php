@@ -342,10 +342,6 @@
                                                 ],
                                             )" :selected="old('atasan_id')" placeholder="-- Cari & Pilih Atasan --"
                                         searchable="true" />
-                                    @error('atasan_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
-                                    @enderror
                                 </div>
                                 @endif
 
@@ -360,10 +356,6 @@
                                                 ],
                                             )" :selected="old('pengganti_id')" placeholder="-- Cari & Pilih Rekan --"
                                         searchable="true" />
-                                    @error('pengganti_id')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
-                                    @enderror
                                 </div>
                                 @endif
                             </div>
@@ -398,34 +390,8 @@
 
                                 {{-- Upload Bukti (Khusus Izin Sakit dgn Surat) --}}
                                 <div x-show="showProof" x-transition>
-                                    <label for="proof_image"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Upload
-                                        Bukti (Surat Dokter) <span class="text-red-500">*</span></label>
-                                    <div class="flex items-center gap-3">
-                                        <input type="file" id="proof_image" name="proof_image" accept="image/*"
-                                            @change="onProofChange($event)"
-                                            class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-slate-700 dark:file:text-primary-400 dark:hover:file:bg-slate-600 transition-all border border-gray-300 dark:border-slate-600 rounded-lg cursor-pointer bg-white dark:bg-slate-900">
-
-                                        <button type="button" x-show="proofPreviewUrl" @click="openImagePreview()"
-                                            class="flex-shrink-0 inline-flex items-center px-3 py-2 border border-gray-300 dark:border-slate-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none transition-colors">
-                                            <svg class="w-4 h-4 mr-1.5 text-primary-500" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                            Preview
-                                        </button>
-                                    </div>
-                                    <p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Format didukung: JPG, PNG, GIF. Maksimal 2MB.
-                                    </p>
-                                    @error('proof_image')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                                    @enderror
+                                    <x-image-uploader name="proof_image" label="Upload Bukti (Surat Dokter)"
+                                        required-when="showProof" />
                                 </div>
                             </div>
                         </section>
@@ -555,7 +521,6 @@
                 startViewMonth: _now.getMonth(),
                 endViewYear: _now.getFullYear(),
                 endViewMonth: _now.getMonth(),
-                proofPreviewUrl: '',
                 MONTHS,
                 DAYS_SHORT,
 
@@ -702,14 +667,29 @@
                     return `${base}${ring} text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-slate-700 cursor-pointer`;
                 },
 
-                onLeaveTypeChange(selectEl) {
+                init() {
+                    const select = this.$root.querySelector('#leave_type_id');
+
+                    if (select?.value) {
+                        this.applyLeaveTypeFlags(select);
+                        this.showForm = true;
+                    }
+                },
+
+                // Menerjemahkan jenis cuti terpilih menjadi flag UI (tidak menyentuh tanggal).
+                applyLeaveTypeFlags(selectEl) {
                     const name = (selectEl.options[selectEl.selectedIndex]?.text || '').toLowerCase();
-                    const wasSick = this.isSickLeave;
                     const isSickWith = name.includes('izin sakit dengan surat dokter');
                     const isSickOut = name.includes('izin sakit tanpa surat dokter');
 
                     this.isSickLeave = isSickWith || isSickOut;
                     this.showProof = isSickWith;
+                },
+
+                onLeaveTypeChange(selectEl) {
+                    const wasSick = this.isSickLeave;
+
+                    this.applyLeaveTypeFlags(selectEl);
                     this.showForm = !!selectEl.value;
 
                     if (wasSick !== this.isSickLeave) {
@@ -721,18 +701,15 @@
                     this.startViewMonth = _now.getMonth();
                     this.endViewYear = _now.getFullYear();
                     this.endViewMonth = _now.getMonth();
+
+                    // Jenis ini tidak butuh bukti: buang foto yang mungkin sudah dipilih
+                    if (!this.showProof) {
+                        this.$dispatch('image-uploader-reset', {
+                            name: 'proof_image'
+                        });
+                    }
                 },
 
-                onProofChange(e) {
-                    const file = e.target.files?.[0];
-                    this.proofPreviewUrl = file ? URL.createObjectURL(file) : '';
-                },
-
-                openImagePreview() {
-                    this.$dispatch('open-image-preview', {
-                        src: this.proofPreviewUrl
-                    });
-                },
             };
         }
     </script>

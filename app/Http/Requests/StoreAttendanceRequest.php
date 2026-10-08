@@ -5,9 +5,12 @@ namespace App\Http\Requests;
 use App\Models\AttendanceRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Concerns\ValidatesProofImage;
 
 class StoreAttendanceRequest extends FormRequest
 {
+    use ValidatesProofImage;
+
     public function authorize(): bool
     {
         return auth()->check();
@@ -68,12 +71,7 @@ class StoreAttendanceRequest extends FormRequest
                 'regex:/^[a-zA-Z0-9\s.,()\/:\-]+$/',
             ],
 
-            'proof_image' => [
-                $isUpdateAttendance ? 'required' : 'nullable',
-                'image',
-                'mimes:jpeg,png,jpg,gif',
-                'max:2048',
-            ],
+            'proof_image' => $this->proofImageRules($isUpdateAttendance),
 
             'approver_id' => [
                 'required',
@@ -85,7 +83,7 @@ class StoreAttendanceRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        return array_merge([
             'type.required'        => 'Anda harus memilih jenis pengajuan kehadiran.',
             'type.in'              => 'Jenis pengajuan kehadiran tidak valid.',
             'update_type.required' => 'Pilih bagian absensi yang ingin diupdate.',
@@ -100,13 +98,9 @@ class StoreAttendanceRequest extends FormRequest
             'reason.required'      => 'Alasan pengajuan wajib diisi.',
             'reason.max'           => 'Alasan maksimal 500 karakter.',
             'reason.regex'         => 'Alasan hanya boleh berisi huruf, angka, spasi, dan tanda baca umum.',
-            'proof_image.required' => 'Foto bukti wajib dilampirkan untuk pengajuan update absensi.',
-            'proof_image.image'    => 'File bukti harus berupa gambar.',
-            'proof_image.mimes'    => 'Format bukti harus JPG, PNG, JPEG, atau GIF.',
-            'proof_image.max'      => 'Ukuran gambar maksimal 2MB.',
             'approver_id.required' => 'Anda harus memilih atasan langsung.',
             'approver_id.exists'   => 'Atasan yang dipilih tidak valid.',
             'approver_id.not_in'   => 'Atasan tidak boleh sama dengan pemohon.',
-        ];
+        ], $this->proofImageMessages('Foto bukti wajib dilampirkan untuk pengajuan update absensi.'));
     }
 }

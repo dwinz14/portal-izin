@@ -77,4 +77,11 @@ class Leave extends Model
     {
         return $this->hasMany(LeavePenggantiChange::class)->latest();
     }
+
+    protected static function booted(): void
+    {
+        static::deleted(function (self $model) {
+            app(\App\Services\ImageCompressionService::class)->delete($model->proof_image);
+        });
+    }
 }

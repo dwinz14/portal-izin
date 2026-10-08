@@ -10,10 +10,9 @@
                     Monitoring pengajuan kehadiran yang sudah masuk ke sistem.
                 </p>
             </div>
-            {{-- Tombol Export --}}
             <form method="GET" action="{{ route('hrd.kehadiran.export') }}" class="inline-block">
                 @foreach (request()->query() as $key => $val)
-                    <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
                 @endforeach
                 <button type="submit"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 active:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 transition-colors duration-200">
@@ -28,9 +27,25 @@
         </div>
     </x-slot>
 
+    {{-- Lightbox overlay untuk bukti foto --}}
+    <div id="foto-lightbox" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+        style="display: none !important;" onclick="closeLightbox()">
+        <div class="relative max-w-3xl w-full mx-4" onclick="event.stopPropagation()">
+            <button onclick="closeLightbox()"
+                class="absolute -top-10 right-0 text-white hover:text-gray-300 transition text-sm font-medium flex items-center gap-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Tutup
+            </button>
+            <img id="foto-lightbox-img" src="" alt="Bukti Foto"
+                class="w-full max-h-[80vh] object-contain rounded-xl shadow-2xl">
+        </div>
+    </div>
+
     <div class="space-y-6" x-data="{ showFilter: false }">
 
-        {{-- Panel Filter & Pencarian (Compact UI sesuai rekap.blade.php) --}}
+        {{-- Panel Filter --}}
         <div class="bg-white dark:bg-slate-800 shadow-lg rounded-xl p-4 transition-all">
             <div class="flex items-center justify-between mb-3">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Filter & Pencarian</h3>
@@ -52,18 +67,13 @@
             <div class="gap-2" x-show="showFilter" x-collapse x-cloak>
                 <form method="GET" action="{{ route('hrd.kehadiran.index') }}">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-
-                        {{-- Dari Tanggal --}}
                         <div>
                             <label for="date_from"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Dari
                                 Tanggal</label>
-                            <input type="date" id="date_from" name="date_from"
-                                value="{{ $filters['date_from'] ?? '' }}"
+                            <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs [&::-webkit-calendar-picker-indicator]:opacity-60 dark:[&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:opacity-80">
                         </div>
-
-                        {{-- Sampai Tanggal --}}
                         <div>
                             <label for="date_to"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Sampai
@@ -71,8 +81,6 @@
                             <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs [&::-webkit-calendar-picker-indicator]:opacity-60 dark:[&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:opacity-80">
                         </div>
-
-                        {{-- Jenis --}}
                         <div>
                             <label for="type"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Jenis</label>
@@ -80,28 +88,24 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Jenis --</option>
                                 @foreach ($typeLabels as $value => $label)
-                                    <option value="{{ $value }}" @selected(($filters['type'] ?? '') === $value)>{{ $label }}
-                                    </option>
+                                <option value="{{ $value }}" @selected(($filters['type'] ?? '' )===$value)>{{ $label }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
-
-                        {{-- Status --}}
                         <div>
                             <label for="status"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Status</label>
                             <select id="status" name="status"
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Status --</option>
-                                @foreach (['pending' => 'Menunggu', 'approved' => 'Disetujui', 'rejected' => 'Ditolak'] as $value => $label)
-                                    <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>
-                                        {{ $label }}
-                                    </option>
+                                @foreach (['pending' => 'Menunggu', 'approved' => 'Disetujui', 'rejected' => 'Ditolak']
+                                as $value => $label)
+                                <option value="{{ $value }}" @selected(($filters['status'] ?? '' )===$value)>{{ $label
+                                    }}</option>
                                 @endforeach
                             </select>
                         </div>
-
-                        {{-- Kantor --}}
                         <div>
                             <label for="office_id"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Kantor</label>
@@ -109,14 +113,13 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Kantor --</option>
                                 @foreach ($offices as $office)
-                                    <option value="{{ $office->id }}" @selected(($filters['office_id'] ?? '') == $office->id)>
-                                        {{ strtoupper($office->nama_kantor) }}
-                                    </option>
+                                <option value="{{ $office->id }}" @selected(($filters['office_id'] ?? '' )==$office->
+                                    id)>
+                                    {{ strtoupper($office->nama_kantor) }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
-
-                        {{-- Jabatan --}}
                         <div>
                             <label for="position_id"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Jabatan</label>
@@ -124,15 +127,14 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Jabatan --</option>
                                 @foreach ($positions as $position)
-                                    <option value="{{ $position->id }}" @selected(($filters['position_id'] ?? '') == $position->id)>
-                                        {{ strtoupper($position->nama_jabatan) }}
-                                    </option>
+                                <option value="{{ $position->id }}" @selected(($filters['position_id'] ?? ''
+                                    )==$position->id)>
+                                    {{ strtoupper($position->nama_jabatan) }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
-
                     </div>
-
                     <div class="flex items-center justify-end gap-2 mt-4">
                         <button type="submit"
                             class="inline-flex items-center justify-center px-3 py-1.5 bg-primary-600 rounded-md text-white font-medium text-xs hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition">
@@ -154,101 +156,187 @@
                     <thead class="bg-blue-100 dark:bg-blue-900">
                         <tr>
                             <th
-                                class="px-6 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
+                                class="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                                 Pemohon</th>
                             <th
-                                class="px-6 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
-                                Jenis</th>
+                                class="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
+                                Jenis & Detail</th>
                             <th
-                                class="px-6 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
+                                class="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                                 Tanggal & Waktu</th>
                             <th
-                                class="px-6 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
+                                class="px-2 py-2 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
+                                Bukti Foto</th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                                 Atasan</th>
                             <th
-                                class="px-6 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
+                                class="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
                                 Status</th>
                             <th
-                                class="px-6 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
-                                Catatan</th>
+                                class="px-4 py-3 text-left text-xs font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap">
+                                Alasan & Catatan</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse ($attendanceRequests as $attendanceRequest)
-                            @php
-                                $statusClass = match ($attendanceRequest->status) {
-                                    'approved' => 'bg-status-success-bg text-status-success-text',
-                                    'rejected' => 'bg-status-danger-bg text-status-danger-text',
-                                    default => 'bg-status-warning-bg text-status-warning-text',
-                                };
-                                $statusLabel = match ($attendanceRequest->status) {
-                                    'approved' => 'Disetujui',
-                                    'rejected' => 'Ditolak',
-                                    default => 'Menunggu',
-                                };
-                            @endphp
-                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
-                                <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                                    <div class="font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $attendanceRequest->user->name }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ strtoupper($attendanceRequest->user?->position?->nama_jabatan ?? '-') }}
-                                    </div>
-                                    <div class="text-xs text-gray-400 dark:text-gray-500">
-                                        {{ strtoupper($attendanceRequest->user?->office?->nama_kantor ?? '-') }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                        @php
+                        $statusClass = match ($attendanceRequest->status) {
+                        'approved' => 'bg-status-success-bg text-status-success-text',
+                        'rejected' => 'bg-status-danger-bg text-status-danger-text',
+                        default => 'bg-status-warning-bg text-status-warning-text',
+                        };
+                        $statusLabel = match ($attendanceRequest->status) {
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                        default => 'Menunggu',
+                        };
+                        $isUpdateAttendance = $attendanceRequest->type ===
+                        \App\Models\AttendanceRequest::TYPE_UPDATE_ATTENDANCE;
+                        @endphp
+                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition">
+
+                            {{-- Pemohon --}}
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                                <div class="font-semibold text-gray-900 dark:text-gray-100">
+                                    {{ ucwords(strtolower($attendanceRequest->user->name)) }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                    {{ $attendanceRequest->user->nik ?? '-' }}
+                                </div>
+                                <div class="text-xs text-gray-400 dark:text-gray-500">
+                                    {{ strtoupper($attendanceRequest->user?->position?->nama_jabatan ?? '-') }}
+                                </div>
+                                <div class="text-xs text-gray-400 dark:text-gray-500">
+                                    {{ strtoupper($attendanceRequest->user?->office?->nama_kantor ?? '-') }}
+                                </div>
+                            </td>
+
+                            {{-- Jenis & Detail --}}
+                            <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                                <div class="font-medium">
                                     {{ $attendanceRequest->type_label }}
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                                    {{ $attendanceRequest->date->isoFormat('D MMM YYYY') }}
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ \Illuminate\Support\Str::of($attendanceRequest->start_time)->substr(0, 5) }}
-                                        @if ($attendanceRequest->end_time)
-                                            -
-                                            {{ \Illuminate\Support\Str::of($attendanceRequest->end_time)->substr(0, 5) }}
-                                        @endif
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                                    {{ $attendanceRequest->approver->name ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-sm whitespace-nowrap">
+                                </div>
+                                @if ($isUpdateAttendance && $attendanceRequest->update_type)
+                                <div class="mt-1">
                                     <span
-                                        class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
-                                        {{ $statusLabel }}
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                                        {{ $attendanceRequest->update_type_label }}
                                     </span>
-                                    @if ($attendanceRequest->approved_at)
-                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $attendanceRequest->approved_at->format('d/m/Y H:i') }}
-                                        </div>
-                                    @elseif ($attendanceRequest->rejected_at)
-                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $attendanceRequest->rejected_at->format('d/m/Y H:i') }}
-                                        </div>
+                                </div>
+                                @endif
+                            </td>
+
+                            {{-- Tanggal & Waktu --}}
+                            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                <div class="font-medium">
+                                    {{ $attendanceRequest->date->isoFormat('D MMM YYYY') }}
+                                </div>
+                                <div class="mt-1 space-y-0.5">
+                                    @if ($attendanceRequest->start_time)
+                                    <div class="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
+                                        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                                        </svg>
+                                        <span>In: {{
+                                            \Illuminate\Support\Str::of($attendanceRequest->start_time)->substr(0, 5)
+                                            }}</span>
+                                    </div>
                                     @endif
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-                                    <div class="line-clamp-2">{{ $attendanceRequest->reason }}</div>
-                                    @if ($attendanceRequest->approval_note)
-                                        <div class="mt-1 text-xs text-green-700 dark:text-green-400">
-                                            ✓ {{ $attendanceRequest->approval_note }}
-                                        </div>
+                                    @if ($attendanceRequest->end_time)
+                                    <div class="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+                                        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        <span>Out: {{
+                                            \Illuminate\Support\Str::of($attendanceRequest->end_time)->substr(0, 5)
+                                            }}</span>
+                                    </div>
                                     @endif
-                                    @if ($attendanceRequest->rejection_reason)
-                                        <div class="mt-1 text-xs text-red-700 dark:text-red-400">
-                                            ✗ {{ $attendanceRequest->rejection_reason }}
-                                        </div>
+                                    @if (! $attendanceRequest->start_time && ! $attendanceRequest->end_time)
+                                    <div class="text-xs text-gray-400">-</div>
                                     @endif
-                                </td>
-                            </tr>
+                                </div>
+                            </td>
+
+                            {{-- Bukti Foto --}}
+                            <td class="px-2 py-2 text-sm whitespace-nowrap">
+                                @if ($attendanceRequest->proof_image)
+                                <button type="button"
+                                    onclick="openLightbox('{{ Storage::url($attendanceRequest->proof_image) }}')" class="inline-flex items-center justify-center w-9 h-9 rounded-lg
+                   text-gray-500 hover:text-primary-600
+                   hover:bg-primary-50 dark:hover:bg-slate-700
+                   transition-all focus:outline-none focus:ring-2
+                   focus:ring-primary-500" title="Lihat bukti">
+
+                                    {{-- Icon Mata --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5
+                       c4.478 0 8.268 2.943 9.542 7
+                       -1.274 4.057-5.064 7-9.542 7
+                       -4.477 0-8.268-2.943-9.542-7z" />
+
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </button>
+                                @else
+                                <span class="text-xs text-gray-400 text-center dark:text-gray-500 italic">
+                                    -
+                                </span>
+                                @endif
+                            </td>
+
+                            {{-- Atasan --}}
+                            <td class="px-4 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                {{ ucwords(strtolower($attendanceRequest->approver->name ?? '-')) }}
+                            </td>
+
+                            {{-- Status --}}
+                            <td class="px-4 py-4 text-sm whitespace-nowrap">
+                                <span
+                                    class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusClass }}">
+                                    {{ $statusLabel }}
+                                </span>
+                                @if ($attendanceRequest->approved_at)
+                                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $attendanceRequest->approved_at->format('d/m/Y H:i') }}
+                                </div>
+                                @elseif ($attendanceRequest->rejected_at)
+                                <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $attendanceRequest->rejected_at->format('d/m/Y H:i') }}
+                                </div>
+                                @endif
+                            </td>
+
+                            {{-- Alasan & Catatan --}}
+                            <td class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                                <div class="line-clamp-2 text-gray-700 dark:text-gray-300">
+                                    {{ $attendanceRequest->reason }}
+                                </div>
+                                @if ($attendanceRequest->approval_note)
+                                <div class="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
+                                    ✓ {{ $attendanceRequest->approval_note }}
+                                </div>
+                                @endif
+                                @if ($attendanceRequest->rejection_reason)
+                                <div class="mt-1 text-xs text-red-700 dark:text-red-400">
+                                    ✗ {{ $attendanceRequest->rejection_reason }}
+                                </div>
+                                @endif
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
-                                    Tidak ada data pengajuan kehadiran.
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="7" class="px-6 py-16 text-center text-gray-500 dark:text-gray-400">
+                                Tidak ada data pengajuan kehadiran.
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -260,4 +348,24 @@
     </div>
 
     <x-toast-notification />
+
+    <script>
+        function openLightbox(src) {
+            const lb  = document.getElementById('foto-lightbox');
+            const img = document.getElementById('foto-lightbox-img');
+            img.src = src;
+            lb.style.removeProperty('display');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            const lb = document.getElementById('foto-lightbox');
+            lb.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
 </x-app-layout>

@@ -379,8 +379,16 @@ class LeaveController extends Controller
     {
         $leaves = Leave::with('user')
             ->where('pengganti_id', Auth::id())
-            ->where('status_final', 'approved')  // ← tambah ini
-            ->latest()
+            ->where('status_final', 'approved')
+            ->orderByRaw("
+        CASE
+            WHEN start_date <= CURDATE()
+             AND end_date >= CURDATE() THEN 0
+            WHEN start_date > CURDATE() THEN 1
+            ELSE 2
+        END
+    ")
+            ->orderBy('start_date', 'asc')
             ->paginate(10);
 
         return view('replacements.index', compact('leaves'));

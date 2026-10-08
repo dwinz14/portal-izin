@@ -22,10 +22,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ActivityLogger;
+use App\Services\ImageCompressionService;
 
 class LeaveController extends Controller
 {
-    public function __construct(protected LeaveOverlapChecker $overlapChecker) {}
+    public function __construct(
+        protected LeaveOverlapChecker $overlapChecker,
+        protected ImageCompressionService $imageCompressor,
+    ) {}
 
     public function index()
     {
@@ -217,127 +221,138 @@ class LeaveController extends Controller
             return back()->withErrors(['msg' => 'Anda sedang jadi pengganti di tanggal tersebut.']);
         }
 
-        // Transaction untuk insert data
-        return DB::transaction(function () use ($request, $user, $totalHari, $leaveType, $isSickLeave) {
-            $proofImagePath = null;
-            if ($request->hasFile('proof_image')) {
-                $proofImagePath = $request->file('proof_image')->store('proof_images', 'public');
+
+        $proofImagePath = null;
+        if ($requiresProof && $request->hasFile('proof_image')) {
+            try {
+                $proofImagePath = $this->imageCompressor->compress($request->file('proof_image'), 'proof_images');
+            } catch (\RuntimeException $e) {
+                return back()->withErrors(['proof_image' => $e->getMessage()])->withInput();
             }
+        }
 
-            // Buat record cuti
-            $leave = Leave::create([
-                'user_id' => $user->id,
-                'leave_type_id' => $request->leave_type_id,
-                'pengganti_id' => $request->pengganti_id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'total_hari' => $totalHari,
-                'alasan' => $request->alasan,
-                'proof_image' => $proofImagePath,
-                'status_final' => 'pending',
-                'is_mendadak' => ! $isSickLeave && \Carbon\Carbon::parse($request->start_date)->lt(\Carbon\Carbon::today()->addWeek()),
-            ]);
+        try {
+            // Transaction untuk insert data
+            return DB::transaction(function () use ($request, $user, $totalHari, $leaveType, $isSickLeave, $proofImagePath) {
 
-            // Log setelah leave berhasil dibuat
-            ActivityLogger::log(
-                'leave.submitted',
-                "Mengajukan {$leaveType->name} {$leave->total_hari} hari kerja (" .
-                    \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') . ' s/d ' .
-                    \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') . ')',
-                $leave,
-                [
-                    'jenis_cuti' => $leaveType->name,
-                    'total_hari' => $leave->total_hari,
-                    'start_date' => $leave->start_date,
-                    'end_date'   => $leave->end_date,
-                ]
-            );
+                // Buat record cuti
+                $leave = Leave::create([
+                    'user_id' => $user->id,
+                    'leave_type_id' => $request->leave_type_id,
+                    'pengganti_id' => $request->pengganti_id,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'total_hari' => $totalHari,
+                    'alasan' => $request->alasan,
+                    'proof_image' => $proofImagePath,
+                    'status_final' => 'pending',
+                    'is_mendadak' => ! $isSickLeave && \Carbon\Carbon::parse($request->start_date)->lt(\Carbon\Carbon::today()->addWeek()),
+                ]);
 
-            // Kasus khusus: role direksi -> langsung disetujui
-            if ($user->role === 'direksi') {
-                $leave->update(['status_final' => 'approved']);
+                // Log setelah leave berhasil dibuat
+                ActivityLogger::log(
+                    'leave.submitted',
+                    "Mengajukan {$leaveType->name} {$leave->total_hari} hari kerja (" .
+                        \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') . ' s/d ' .
+                        \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') . ')',
+                    $leave,
+                    [
+                        'jenis_cuti' => $leaveType->name,
+                        'total_hari' => $leave->total_hari,
+                        'start_date' => $leave->start_date,
+                        'end_date'   => $leave->end_date,
+                    ]
+                );
 
-                if ($leaveType->quota > 0) {
-                    $balance = UserLeaveBalance::where('user_id', $user->id)
-                        ->where('leave_type_id', $request->leave_type_id)
-                        ->where('year', now()->year)
-                        ->first();
+                // Kasus khusus: role direksi -> langsung disetujui
+                if ($user->role === 'direksi') {
+                    $leave->update(['status_final' => 'approved']);
 
-                    if ($balance) {
-                        $balance->update([
-                            'used' => \DB::raw("used + {$totalHari}"),
-                            'remaining' => \DB::raw("remaining - {$totalHari}"),
-                        ]);
+                    if ($leaveType->quota > 0) {
+                        $balance = UserLeaveBalance::where('user_id', $user->id)
+                            ->where('leave_type_id', $request->leave_type_id)
+                            ->where('year', now()->year)
+                            ->first();
+
+                        if ($balance) {
+                            $balance->update([
+                                'used' => \DB::raw("used + {$totalHari}"),
+                                'remaining' => \DB::raw("remaining - {$totalHari}"),
+                            ]);
+                        }
                     }
+
+                    ApprovalHistory::create([
+                        'leave_id' => $leave->id,
+                        'approved_by' => $user->id,
+                        'role' => $user->role,
+                        'status' => 'approved',
+                    ]);
+
+                    return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti disetujui otomatis.');
                 }
 
-                ApprovalHistory::create([
-                    'leave_id' => $leave->id,
-                    'approved_by' => $user->id,
-                    'role' => $user->role,
-                    'status' => 'approved',
-                ]);
+                // Buat daftar approver (pengganti dan atasan)
+                $penggantiId = $request->pengganti_id;
+                $atasanId = $request->atasan_id;
+                $approvers = collect([$penggantiId, $atasanId])->filter()->values();
 
-                return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti disetujui otomatis.');
-            }
-
-            // Buat daftar approver (pengganti dan atasan)
-            $penggantiId = $request->pengganti_id;
-            $atasanId = $request->atasan_id;
-            $approvers = collect([$penggantiId, $atasanId])->filter()->values();
-
-            // Simpan approval steps
-            foreach ($approvers as $index => $approverId) {
-                Approval::create([
-                    'leave_id' => $leave->id,
-                    'approver_id' => $approverId,
-                    'step' => $index + 1,
-                    'status' => 'pending',
-                ]);
-            }
-
-            // Notifikasi ke approver pertama
-            $firstApprover = User::find($approvers->first());
-            if ($firstApprover) {
-                $firstApprover->notify(new \App\Notifications\LeaveRequestSubmitted($leave));
-            }
-
-            // Kasus khusus: jika pengganti == atasan, maka step1 langsung auto-approve
-            if ($penggantiId && $atasanId && $penggantiId === $atasanId) {
-                $step1 = $leave->approvals()->where('step', 1)->first();
-                if ($step1) {
-                    $step1->update(['status' => 'approved']);
-                }
-
-                ApprovalHistory::create([
-                    'leave_id' => $leave->id,
-                    'approved_by' => $atasanId,
-                    'role' => User::find($atasanId)->role,
-                    'step' => 1,
-                    'status' => 'approved',
-                    'catatan' => 'Auto-approved: pengganti dan atasan adalah orang yang sama.',
-                ]);
-
-                // Notifikasi ke atasan (yang juga sebagai pengganti)
-                $step2Exists = $leave->approvals()->where('step', 2)->exists();
-                if (! $step2Exists) {
+                // Simpan approval steps
+                foreach ($approvers as $index => $approverId) {
                     Approval::create([
                         'leave_id' => $leave->id,
-                        'approver_id' => $atasanId,
-                        'step' => 2,
+                        'approver_id' => $approverId,
+                        'step' => $index + 1,
                         'status' => 'pending',
                     ]);
                 }
 
-                // Kirim notifikasi ke atasan untuk step2
-                $atasan = User::find($atasanId);
-                if ($atasan) {
-                    $atasan->notify(new \App\Notifications\LeaveRequestSubmitted($leave));
+                // Notifikasi ke approver pertama
+                $firstApprover = User::find($approvers->first());
+                if ($firstApprover) {
+                    $firstApprover->notify(new \App\Notifications\LeaveRequestSubmitted($leave));
                 }
-            }
 
-            return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dibuat.');
-        });
+                // Kasus khusus: jika pengganti == atasan, maka step1 langsung auto-approve
+                if ($penggantiId && $atasanId && $penggantiId === $atasanId) {
+                    $step1 = $leave->approvals()->where('step', 1)->first();
+                    if ($step1) {
+                        $step1->update(['status' => 'approved']);
+                    }
+
+                    ApprovalHistory::create([
+                        'leave_id' => $leave->id,
+                        'approved_by' => $atasanId,
+                        'role' => User::find($atasanId)->role,
+                        'step' => 1,
+                        'status' => 'approved',
+                        'catatan' => 'Auto-approved: pengganti dan atasan adalah orang yang sama.',
+                    ]);
+
+                    // Notifikasi ke atasan (yang juga sebagai pengganti)
+                    $step2Exists = $leave->approvals()->where('step', 2)->exists();
+                    if (! $step2Exists) {
+                        Approval::create([
+                            'leave_id' => $leave->id,
+                            'approver_id' => $atasanId,
+                            'step' => 2,
+                            'status' => 'pending',
+                        ]);
+                    }
+
+                    // Kirim notifikasi ke atasan untuk step2
+                    $atasan = User::find($atasanId);
+                    if ($atasan) {
+                        $atasan->notify(new \App\Notifications\LeaveRequestSubmitted($leave));
+                    }
+                }
+
+                return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dibuat.');
+            });
+        } catch (\Throwable $e) {
+            $this->imageCompressor->delete($proofImagePath);
+            throw $e;
+        }
     }
 
     public function destroy(Leave $leave)

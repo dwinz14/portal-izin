@@ -11,9 +11,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ActivityLogger;
+use App\Services\ImageCompressionService;
 
 class AttendanceRequestController extends Controller
 {
+    public function __construct(protected ImageCompressionService $imageCompressor) {}
+
     public function index()
     {
         $attendanceRequests = AttendanceRequest::with('approver')
@@ -55,67 +58,97 @@ class AttendanceRequestController extends Controller
                 ->withErrors(['msg' => 'Anda masih memiliki pengajuan kehadiran yang sama pada tanggal tersebut dan sedang diproses.'])
                 ->withInput();
         }
+        $proofImagePath = null;
 
-        return DB::transaction(function () use ($request, $user) {
-            $proofImagePath = null;
-
-            if ($request->hasFile('proof_image')) {
-                $proofImagePath = $request->file('proof_image')->store('attendance_proofs', 'public');
+        if ($request->hasFile('proof_image')) {
+            try {
+                $proofImagePath = $this->imageCompressor->compress(
+                    $request->file('proof_image'),
+                    'attendance_proofs'
+                );
+            } catch (\RuntimeException $e) {
+                return back()
+                    ->withErrors(['proof_image' => $e->getMessage()])
+                    ->withInput();
             }
+        }
 
-            $isUpdateAttendance = $request->type === AttendanceRequest::TYPE_UPDATE_ATTENDANCE;
-            $updateType         = $isUpdateAttendance ? $request->update_type : null;
+        try {
+            return DB::transaction(function () use (
+                $request,
+                $user,
+                $proofImagePath
+            ) {
 
-            // Tentukan start_time dan end_time berdasarkan update_type
-            $startTime = null;
-            $endTime   = null;
+                $isUpdateAttendance = $request->type === AttendanceRequest::TYPE_UPDATE_ATTENDANCE;
 
-            if ($isUpdateAttendance) {
-                $startTime = $updateType !== AttendanceRequest::UPDATE_TYPE_CHECKOUT_ONLY
-                    ? $request->start_time
+                $updateType = $isUpdateAttendance
+                    ? $request->update_type
                     : null;
 
-                $endTime = in_array($updateType, [
-                    AttendanceRequest::UPDATE_TYPE_BOTH,
-                    AttendanceRequest::UPDATE_TYPE_CHECKOUT_ONLY,
-                ]) ? $request->end_time : null;
-            } else {
-                $startTime = $request->start_time;
-                $endTime   = $request->end_time;
-            }
+                // Tentukan start_time dan end_time berdasarkan update_type
+                $startTime = null;
+                $endTime   = null;
 
-            $attendanceRequest = AttendanceRequest::create([
-                'user_id'     => $user->id,
-                'approver_id' => $request->approver_id,
-                'type'        => $request->type,
-                'update_type' => $updateType,
-                'date'        => $request->date,
-                'start_time'  => $startTime,
-                'end_time'    => $endTime,
-                'reason'      => $request->reason,
-                'proof_image' => $proofImagePath,
-                'status'      => AttendanceRequest::STATUS_PENDING,
-            ]);
+                if ($isUpdateAttendance) {
 
-            $attendanceRequest->approver?->notify(new AttendanceRequestSubmitted($attendanceRequest));
+                    $startTime = $updateType !== AttendanceRequest::UPDATE_TYPE_CHECKOUT_ONLY
+                        ? $request->start_time
+                        : null;
 
-            ActivityLogger::log(
-                'attendance.submitted',
-                'Mengajukan ' . $attendanceRequest->type_label .
-                    ($updateType ? ' (' . $attendanceRequest->update_type_label . ')' : '') .
-                    ' pada ' . \Carbon\Carbon::parse($attendanceRequest->date)->format('d/m/Y'),
-                $attendanceRequest,
-                [
-                    'type'        => $attendanceRequest->type_label,
-                    'update_type' => $attendanceRequest->update_type_label,
-                    'date'        => $attendanceRequest->date,
-                ]
-            );
+                    $endTime = in_array($updateType, [
+                        AttendanceRequest::UPDATE_TYPE_BOTH,
+                        AttendanceRequest::UPDATE_TYPE_CHECKOUT_ONLY,
+                    ])
+                        ? $request->end_time
+                        : null;
+                } else {
 
-            return redirect()
-                ->route('kehadiran.index')
-                ->with('success', 'Pengajuan kehadiran berhasil dikirim.');
-        });
+                    $startTime = $request->start_time;
+                    $endTime   = $request->end_time;
+                }
+
+                $attendanceRequest = AttendanceRequest::create([
+                    'user_id'     => $user->id,
+                    'approver_id' => $request->approver_id,
+                    'type'        => $request->type,
+                    'update_type' => $updateType,
+                    'date'        => $request->date,
+                    'start_time'  => $startTime,
+                    'end_time'    => $endTime,
+                    'reason'      => $request->reason,
+                    'proof_image' => $proofImagePath,
+                    'status'      => AttendanceRequest::STATUS_PENDING,
+                ]);
+
+                $attendanceRequest->approver?->notify(
+                    new AttendanceRequestSubmitted($attendanceRequest)
+                );
+
+                ActivityLogger::log(
+                    'attendance.submitted',
+                    'Mengajukan ' . $attendanceRequest->type_label .
+                        ($updateType
+                            ? ' (' . $attendanceRequest->update_type_label . ')'
+                            : '') .
+                        ' pada ' .
+                        \Carbon\Carbon::parse($attendanceRequest->date)->format('d/m/Y'),
+                    $attendanceRequest,
+                    [
+                        'type'        => $attendanceRequest->type_label,
+                        'update_type' => $attendanceRequest->update_type_label,
+                        'date'        => $attendanceRequest->date,
+                    ]
+                );
+
+                return redirect()
+                    ->route('kehadiran.index')
+                    ->with('success', 'Pengajuan kehadiran berhasil dikirim.');
+            });
+        } catch (\Throwable $e) {
+            $this->imageCompressor->delete($proofImagePath);
+            throw $e;
+        }
     }
 
     public function destroy(AttendanceRequest $kehadiran)

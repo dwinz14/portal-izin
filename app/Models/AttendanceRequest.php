@@ -96,4 +96,11 @@ class AttendanceRequest extends Model
     {
         return self::updateTypeLabels()[$this->update_type] ?? '-';
     }
+
+    protected static function booted(): void
+    {
+        static::deleted(function (self $model) {
+            app(\App\Services\ImageCompressionService::class)->delete($model->proof_image);
+        });
+    }
 }

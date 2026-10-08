@@ -61,83 +61,93 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         @php
-                            $typesConfig = [
-                                'late_arrival' => [
-                                    'title' => 'Datang Terlambat',
-                                    'desc' => 'Tiba melebihi jam masuk',
-                                    'icon' =>
-                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />',
-                                    'color' => 'amber',
-                                ],
-                                'early_departure' => [
-                                    'title' => 'Pulang Lebih Awal',
-                                    'desc' => 'Pulang sebelum jam usai',
-                                    'icon' =>
-                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />',
-                                    'color' => 'blue',
-                                ],
-                                'leave_during_work' => [
-                                    'title' => 'Meninggalkan Kerja',
-                                    'desc' => 'Keluar kantor sementara',
-                                    'icon' =>
-                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />',
-                                    'color' => 'purple',
-                                ],
-                                'update_attendance' => [
-                                    'title' => 'Update Absensi',
-                                    'desc' => 'Koreksi log presensi',
-                                    'icon' =>
-                                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />',
-                                    'color' => 'emerald',
-                                ],
-                            ];
+                        $typesConfig = [
+                        'late_arrival' => [
+                        'title' => 'Datang Terlambat',
+                        'desc' => 'Tiba melebihi jam masuk',
+                        'icon' =>
+                        '
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />',
+                        'color' => 'amber',
+                        ],
+                        'early_departure' => [
+                        'title' => 'Pulang Lebih Awal',
+                        'desc' => 'Pulang sebelum jam usai',
+                        'icon' =>
+                        '
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        ',
+                        'color' => 'blue',
+                        ],
+                        'leave_during_work' => [
+                        'title' => 'Meninggalkan Kerja',
+                        'desc' => 'Keluar kantor sementara',
+                        'icon' =>
+                        '
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />',
+                        'color' => 'purple',
+                        ],
+                        'update_attendance' => [
+                        'title' => 'Update Absensi',
+                        'desc' => 'Koreksi log presensi',
+                        'icon' =>
+                        '
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        ',
+                        'color' => 'emerald',
+                        ],
+                        ];
                         @endphp
 
                         @foreach ($typeLabels as $value => $label)
-                            @php $cfg = $typesConfig[$value] ?? null; @endphp
-                            <label
-                                class="relative flex flex-col p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200"
-                                :class="type === '{{ $value }}'
+                        @php $cfg = $typesConfig[$value] ?? null; @endphp
+                        <label
+                            class="relative flex flex-col p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200"
+                            :class="type === '{{ $value }}'
                                     ?
                                     'border-primary-600 bg-primary-50/50 dark:bg-primary-950/30 dark:border-primary-500 shadow-sm ring-2 ring-primary-500/10' :
                                     'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-gray-300 dark:hover:border-slate-600'">
-                                <input type="radio" name="type" value="{{ $value }}" x-model="type"
-                                    class="sr-only" required>
+                            <input type="radio" name="type" value="{{ $value }}" x-model="type" class="sr-only"
+                                required>
 
-                                <div class="flex items-center justify-between mb-2.5">
-                                    <div class="w-8 h-8 rounded-xl flex items-center justify-center"
-                                        :class="type === '{{ $value }}' ? 'bg-primary-600 text-white' :
+                            <div class="flex items-center justify-between mb-2.5">
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center" :class="type === '{{ $value }}' ? 'bg-primary-600 text-white' :
                                             'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-gray-400'">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            {!! $cfg['icon'] ??
-                                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />' !!}
-                                        </svg>
-                                    </div>
-                                    <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center"
-                                        :class="type === '{{ $value }}' ? 'border-primary-600 bg-primary-600' :
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        {!! $cfg['icon'] ??
+                                        '
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />' !!}
+                                    </svg>
+                                </div>
+                                <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center" :class="type === '{{ $value }}' ? 'border-primary-600 bg-primary-600' :
                                             'border-gray-300 dark:border-slate-600'">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-white"
-                                            x-show="type === '{{ $value }}'"></div>
+                                    <div class="w-1.5 h-1.5 rounded-full bg-white" x-show="type === '{{ $value }}'">
                                     </div>
                                 </div>
+                            </div>
 
-                                <div class="font-bold text-xs text-gray-800 dark:text-gray-100">{{ $label }}
-                                </div>
-                                <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
-                                    {{ $cfg['desc'] ?? '' }}</div>
-                            </label>
+                            <div class="font-bold text-xs text-gray-800 dark:text-gray-100">{{ $label }}
+                            </div>
+                            <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                                {{ $cfg['desc'] ?? '' }}</div>
+                        </label>
                         @endforeach
                     </div>
 
                     @error('type')
-                        <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400 flex items-center">
-                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            {{ $message }}
-                        </p>
+                    <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400 flex items-center">
+                        <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        {{ $message }}
+                    </p>
                     @enderror
 
                     {{-- Type Helper Info Banner --}}
@@ -178,30 +188,30 @@
                             </label>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 @foreach (\App\Models\AttendanceRequest::updateTypeLabels() as $value => $label)
-                                    <label
-                                        class="relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200"
-                                        :class="updateType === '{{ $value }}'
+                                <label
+                                    class="relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200"
+                                    :class="updateType === '{{ $value }}'
                                             ?
                                             'border-primary-600 bg-primary-50/50 dark:bg-primary-950/30 dark:border-primary-500 ring-2 ring-primary-500/10' :
                                             'border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:border-gray-300 dark:hover:border-slate-600'">
-                                        <input type="radio" name="update_type" value="{{ $value }}"
-                                            x-model="updateType" class="sr-only">
-                                        <div class="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
-                                            :class="updateType === '{{ $value }}'
+                                    <input type="radio" name="update_type" value="{{ $value }}" x-model="updateType"
+                                        class="sr-only">
+                                    <div class="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center"
+                                        :class="updateType === '{{ $value }}'
                                                 ?
                                                 'border-primary-600 bg-primary-600' :
                                                 'border-gray-300 dark:border-slate-600'">
-                                            <div class="w-1.5 h-1.5 rounded-full bg-white"
-                                                x-show="updateType === '{{ $value }}'"></div>
-                                        </div>
-                                        <span
-                                            class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ $label }}</span>
-                                    </label>
+                                        <div class="w-1.5 h-1.5 rounded-full bg-white"
+                                            x-show="updateType === '{{ $value }}'"></div>
+                                    </div>
+                                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ $label
+                                        }}</span>
+                                </label>
                                 @endforeach
                             </div>
                             @error('update_type')
-                                <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
-                                    {{ $message }}</p>
+                            <p class="mt-2 text-xs font-semibold text-red-600 dark:text-red-400">
+                                {{ $message }}</p>
                             @enderror
                         </div>
 
@@ -216,8 +226,8 @@
                                     value="{{ old('date', now()->format('Y-m-d')) }}" required
                                     class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition" />
                                 @error('date')
-                                    <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
+                                <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                                    {{ $message }}</p>
                                 @enderror
                             </div>
 
@@ -229,8 +239,8 @@
                                 <x-time-picker name="start_time" id="start_time" value="{{ old('start_time', '') }}"
                                     x-model-key="startTime" />
                                 @error('start_time')
-                                    <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
+                                <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                                    {{ $message }}</p>
                                 @enderror
                             </div>
 
@@ -242,8 +252,8 @@
                                 <x-time-picker name="end_time" id="end_time" value="{{ old('end_time', '') }}"
                                     x-model-key="endTime" />
                                 @error('end_time')
-                                    <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
+                                <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                                    {{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
@@ -271,70 +281,23 @@
                                     class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition">
                                     <option value="">-- Pilih Atasan Langsung --</option>
                                     @foreach ($approverList as $approver)
-                                        <option value="{{ $approver->id }}" @selected(old('approver_id') == $approver->id)>
-                                            {{ strtoupper($approver->name) }} —
-                                            {{ strtoupper(str_replace('_', ' ', $approver->role)) }}
-                                        </option>
+                                    <option value="{{ $approver->id }}" @selected(old('approver_id')==$approver->id)>
+                                        {{ strtoupper($approver->name) }} —
+                                        {{ strtoupper(str_replace('_', ' ', $approver->role)) }}
+                                    </option>
                                     @endforeach
                                 </select>
                                 <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Notifikasi pengajuan akan
                                     langsung dikirim ke atasan ini.</p>
                                 @error('approver_id')
-                                    <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
+                                <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
+                                    {{ $message }}</p>
                                 @enderror
                             </div>
 
                             {{-- Bukti Pendukung / Foto --}}
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                                    Bukti Pendukung / Foto
-                                    <span x-show="type === 'update_attendance'" class="text-red-500"> *</span>
-                                    <span x-show="type !== 'update_attendance'"
-                                        class="text-gray-400 font-normal">(Opsional)</span>
-                                </label>
-
-                                <div class="relative">
-                                    <input type="file" id="proof_image" name="proof_image"
-                                        accept="image/jpeg,image/png,image/jpg,image/gif"
-                                        @change="handleImageUpload($event)" class="sr-only" />
-
-                                    <label for="proof_image"
-                                        class="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 dark:border-slate-600 hover:border-primary-500 dark:hover:border-primary-400 bg-gray-50/50 dark:bg-slate-700/30 cursor-pointer transition text-xs font-medium text-gray-600 dark:text-gray-300">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <span
-                                            x-text="imagePreview ? 'Ganti Foto Bukti' : 'Pilih Foto / Screenshot Bukti'"></span>
-                                    </label>
-                                </div>
-                                <p class="mt-1 text-[11px] text-gray-400 dark:text-gray-500">Maks. 2MB (Format: JPG,
-                                    PNG, JPEG, GIF).</p>
-
-                                @error('proof_image')
-                                    <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">
-                                        {{ $message }}</p>
-                                @enderror
-
-                                {{-- Image Preview Container --}}
-                                <template x-if="imagePreview">
-                                    <div class="mt-3 relative inline-block">
-                                        <img :src="imagePreview" alt="Pratinjau Bukti"
-                                            class="h-24 w-auto rounded-xl object-cover border border-gray-200 dark:border-slate-600 shadow-sm" />
-                                        <button type="button" @click="removeImage()"
-                                            class="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 shadow-sm focus:outline-none transition"
-                                            title="Hapus foto">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
+                            <x-image-uploader name="proof_image" label="Bukti Pendukung / Foto"
+                                required-when="type === 'update_attendance'" />
                         </div>
 
                         {{-- Alasan Pengajuan --}}
@@ -351,8 +314,8 @@
                                 placeholder="Jelaskan alasan pengajuan secara jelas dan ringkas (contoh: Kendala mesin absensi / Keperluan keluarga mendesak)..."
                                 class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm p-3.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition">{{ old('reason') }}</textarea>
                             @error('reason')
-                                <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">{{ $message }}
-                                </p>
+                            <p class="mt-1 text-xs font-semibold text-red-600 dark:text-red-400">{{ $message }}
+                            </p>
                             @enderror
                         </div>
                     </section>
@@ -376,10 +339,10 @@
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
                             </svg>
-                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none"
-                                viewBox="0 0 24 24" x-show="isSubmitting" style="display: none;">
-                                <circle class="opacity-25" cx="12" cy="12" r="10"
-                                    stroke="currentColor" stroke-width="4"></circle>
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"
+                                x-show="isSubmitting" style="display: none;">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor"
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                 </path>
@@ -394,30 +357,30 @@
 
     {{-- Modal Error / Duplicate Notice --}}
     @if ($errors->has('msg'))
-        <div x-data="{ show: true }" x-show="show" x-cloak x-transition
-            class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div @click.outside="show = false"
-                class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-200 dark:border-slate-700"
-                x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100">
-                <div
-                    class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </div>
-                <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Pengajuan Tidak Dapat Diproses</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">{{ $errors->first('msg') }}
-                </p>
-                <div class="mt-5">
-                    <button type="button" @click="show = false"
-                        class="w-full px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold text-xs transition shadow-sm">
-                        Saya Mengerti
-                    </button>
-                </div>
+    <div x-data="{ show: true }" x-show="show" x-cloak x-transition
+        class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div @click.outside="show = false"
+            class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-200 dark:border-slate-700"
+            x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100">
+            <div
+                class="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Pengajuan Tidak Dapat Diproses</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed">{{ $errors->first('msg') }}
+            </p>
+            <div class="mt-5">
+                <button type="button" @click="show = false"
+                    class="w-full px-4 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold text-xs transition shadow-sm">
+                    Saya Mengerti
+                </button>
             </div>
         </div>
+    </div>
     @endif
 
     {{-- Frontend Handler Script --}}
@@ -429,7 +392,6 @@
                 startTime: @json(old('start_time', '')),
                 endTime: @json(old('end_time', '')),
                 reason: @json(old('reason', '')),
-                imagePreview: null,
                 isSubmitting: false,
 
                 // Tampilkan start_time kecuali update_attendance + checkout_only
@@ -500,28 +462,6 @@
                     }
                 },
 
-                handleImageUpload(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        if (file.size > 2048 * 1024) {
-                            alert('Ukuran file bukti maksimal 2MB.');
-                            event.target.value = '';
-                            this.imagePreview = null;
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            this.imagePreview = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                },
-
-                removeImage() {
-                    this.imagePreview = null;
-                    const input = document.getElementById('proof_image');
-                    if (input) input.value = '';
-                },
 
                 // Inisialisasi: dengarkan event time-changed dari x-time-picker anak
                 init() {

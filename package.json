@@ -17,6 +17,7 @@
     },
     "dependencies": {
         "@alpinejs/collapse": "^3.15.1",
-        "@heroicons/vue": "^2.2.0"
+        "@heroicons/vue": "^2.2.0",
+        "cropperjs": "^1.6.2"
     }
 }

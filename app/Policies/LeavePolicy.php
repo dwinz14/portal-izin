@@ -5,8 +5,7 @@ namespace App\Policies;
 use App\Models\Leave;
 use App\Models\User;
 use App\Models\Approval;
-use Carbon\Carbon;
-use Illuminate\Auth\Access\Response;
+
 
 class LeavePolicy
 {
@@ -68,10 +67,6 @@ class LeavePolicy
     public function changePengganti(User $user, Leave $leave): bool
     {
         if ($leave->status_final !== 'approved' || !$leave->pengganti_id) {
-            return false;
-        }
-
-        if (Carbon::today()->gt(Carbon::parse($leave->end_date))) {
             return false;
         }
 

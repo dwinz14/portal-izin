@@ -7,8 +7,8 @@
                     {{ __('Ubah Pengganti') }}
                 </h2>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Daftar cuti yang sudah final approved di bawah tanggung jawab anda. Pengganti hanya bisa diganti
-                    selama periode cuti belum terlewat.
+                    Daftar cuti yang sudah final approved di bawah tanggung jawab anda. Pengganti dapat diubah dan
+                    tercatat sebagai koreksi anda.
                 </p>
             </div>
         </div>
@@ -18,15 +18,17 @@
         modalOpen: false,
         leaveId: null,
         leaveLabel: '',
+        isPast: false,
         candidates: [],
         loadingCandidates: false,
         selectedPenggantiId: '',
         confirmText: '',
         submitting: false,
         get canConfirm() { return this.confirmText === 'GANTI' && this.selectedPenggantiId !== '' },
-        openModal(id, label) {
+        openModal(id, label, isPast = false) {
             this.leaveId = id;
             this.leaveLabel = label;
+            this.isPast = isPast;
             this.candidates = [];
             this.selectedPenggantiId = '';
             this.confirmText = '';
@@ -48,14 +50,14 @@
         <x-toast-notification />
 
         @if ($errors->any())
-            <div
-                class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
-                <ul class="list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        <div
+            class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
+            <ul class="list-disc list-inside">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
         @endif
 
         {{-- ═══ TABEL DAFTAR CUTI ═══ --}}
@@ -74,48 +76,58 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
                         @forelse ($leaves as $leave)
-                            <tr>
-                                <td class="px-6 py-4 font-medium text-gray-800 dark:text-gray-100">
-                                    {{ ucwords($leave->user->name) }}
-                                </td>
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
-                                    {{ $leave->leaveType->name ?? '-' }}
-                                </td>
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($leave->start_date)->translatedFormat('d M Y') }}
-                                    s/d
-                                    {{ \Carbon\Carbon::parse($leave->end_date)->translatedFormat('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
-                                    {{ ucwords($leave->pengganti->name ?? '-') }}
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button type="button"
-                                        @click="openModal({{ $leave->id }}, '{{ addslashes(ucwords($leave->user->name)) }} ({{ \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') }})')"
-                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-lg hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M16 15v-1a4 4 0 00-4-4H8m0 0l3-3m-3 3l3 3m10 3v1a4 4 0 01-4 4h-4m0 0l3 3m-3-3l3-3" />
-                                        </svg>
-                                        Ubah Pengganti
-                                    </button>
-                                </td>
-                            </tr>
+
+                        @php
+                        $isPast = \Carbon\Carbon::parse($leave->end_date)->startOfDay()->lt(today());
+                        @endphp
+                        <tr>
+                            <td class="px-6 py-4 font-medium text-gray-800 dark:text-gray-100">
+                                {{ ucwords($leave->user->name) }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                {{ $leave->leaveType->name ?? '-' }}
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                {{ \Carbon\Carbon::parse($leave->start_date)->translatedFormat('d M Y') }}
+                                s/d
+                                {{ \Carbon\Carbon::parse($leave->end_date)->translatedFormat('d M Y') }}
+                                @if ($isPast)
+                                <span
+                                    class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-900/50 dark:text-gray-300">
+                                    Sudah lewat
+                                </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                {{ ucwords($leave->pengganti->name ?? '-') }}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button type="button"
+                                    @click="openModal({{ $leave->id }}, '{{ addslashes(ucwords($leave->user->name)) }} ({{ \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') }})', {{ $isPast ? 'true' : 'false' }})"
+                                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-lg hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                            d="M16 15v-1a4 4 0 00-4-4H8m0 0l3-3m-3 3l3 3m10 3v1a4 4 0 01-4 4h-4m0 0l3 3m-3-3l3-3" />
+                                    </svg>
+                                    Ubah Pengganti
+                                </button>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">
-                                    Tidak ada cuti yang bisa diubah penggantinya saat ini.
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">
+                                Belum ada izin/cuti final di bawah tanggung jawab anda yang memiliki pengganti.
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
             @if ($leaves->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700">
-                    {{ $leaves->links() }}
-                </div>
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700">
+                {{ $leaves->links() }}
+            </div>
             @endif
         </div>
 
@@ -150,6 +162,11 @@
                 </div>
 
                 <div class="px-8 py-6 space-y-5">
+                    {{-- Peringatan: koreksi setelah periode cuti berakhir --}}
+                    <div x-show="isPast" x-cloak
+                        class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300">
+                        Periode cuti ini sudah berakhir. Perubahan akan dicatat sebagai koreksi data pengganti.
+                    </div>
                     {{-- Pilih pengganti baru --}}
                     <div>
                         <label class="block text-sm font-bold text-slate-700 dark:text-gray-200 mb-2">

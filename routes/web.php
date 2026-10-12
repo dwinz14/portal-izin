@@ -115,6 +115,9 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
         ->name('offices.insertFromExternal');
     Route::post('offices/insert-all-from-external', [MasterOfficeController::class, 'insertAllFromExternal'])
         ->name('offices.insertAllFromExternal');
+    // Sync kuota per-user
+    Route::post('users/{user}/sync-quota', [MasterUserController::class, 'syncQuota'])
+        ->name('users.syncQuota');
 
     Route::resource('divisions', DivisionController::class);
     Route::resource('positions', MasterPositionController::class);

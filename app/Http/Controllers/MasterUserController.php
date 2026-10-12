@@ -11,6 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use App\Services\LeaveQuotaService;
+use App\Models\QuotaSetting;
+use App\Services\ActivityLogger;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class MasterUserController extends Controller
@@ -135,9 +139,71 @@ class MasterUserController extends Controller
         $validated['email'] = strtolower(trim($validated['email']));
         $validated['phone'] = isset($validated['phone']) ? preg_replace('/\s+/', '', $validated['phone']) : null;
 
+        $tanggalLama = $user->tanggal_aktif_kerja
+            ? \Carbon\Carbon::parse($user->tanggal_aktif_kerja)->toDateString()
+            : null;
+
+        $tanggalBaru = $validated['tanggal_aktif_kerja'] ?? null;
+
         $user->fill($validated)->save();
 
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui.');
+        // Jika tanggal aktif kerja berubah → re-generate kuota tahun berjalan
+        // supaya masa kerja yang dikoreksi langsung tercermin di kuota
+        if ($tanggalLama !== $tanggalBaru && $user->status === 'approved') {
+            try {
+                if (QuotaSetting::getValue('auto_generate_leave_balances', true)) {
+                    $result = app(LeaveQuotaService::class)
+                        ->generateForUser($user->fresh(), now()->year);
+
+                    Log::info("Re-generate kuota setelah edit tanggal aktif: "
+                        . "user [{$user->id}] {$user->name} — "
+                        . "dibuat: {$result['created']}, diperbarui: {$result['updated']}.");
+                }
+            } catch (\Throwable $e) {
+                Log::error("Re-generate kuota gagal setelah edit user [{$user->id}]: "
+                    . $e->getMessage());
+            }
+        }
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User berhasil diperbarui.'
+                . ($tanggalLama !== $tanggalBaru ? ' Kuota cuti otomatis disinkronkan.' : ''));
+    }
+
+    /**
+     * Sync kuota cuti satu user untuk tahun berjalan.
+     * Dipakai sebagai manual fallback oleh admin.
+     */
+    public function syncQuota(User $user)
+    {
+        if ($user->role === 'super_admin') {
+            return back()->with('error', 'Super admin tidak memerlukan kuota cuti.');
+        }
+
+        if ($user->status !== 'approved') {
+            return back()->with('error', 'User belum berstatus approved — kuota tidak bisa di-generate.');
+        }
+
+        try {
+            $result = app(LeaveQuotaService::class)
+                ->generateForUser($user, now()->year);
+
+            $message = "Kuota cuti {$user->name} berhasil disinkronkan: "
+                . "{$result['created']} dibuat, {$result['updated']} diperbarui, "
+                . "{$result['skipped']} dilewati.";
+
+            ActivityLogger::log(
+                'admin.quota_sync_user',
+                "Sync kuota cuti manual: {$user->name} tahun " . now()->year,
+                $user,
+                ['tahun' => now()->year, 'result' => $result]
+            );
+
+            return back()->with('success', $message);
+        } catch (\Throwable $e) {
+            Log::error("Sync kuota manual gagal: user [{$user->id}] — " . $e->getMessage());
+            return back()->with('error', 'Gagal sync kuota. Coba beberapa saat lagi.');
+        }
     }
 
     public function destroy(User $user)

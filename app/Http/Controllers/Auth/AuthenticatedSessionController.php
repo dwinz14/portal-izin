@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Models\QuotaSetting;
+use App\Models\UserLeaveBalance;
+use App\Services\LeaveQuotaService;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -79,7 +82,38 @@ class AuthenticatedSessionController extends Controller
         DB::table('users')->where('id', $user->id)->update(['last_login_at' => now()]);
         $request->session()->regenerate();
 
-        // ── 7. Log aktivitas ────────────────────────────────────────────────
+        // ── 7. Auto-generate kuota jika belum ada untuk tahun ini ────────────
+        // Lazy approach: generate di sini karena sudah pasti semua guard
+        if ($user->role !== 'super_admin' && $user->status === 'approved') {
+            try {
+                $cutiTahunan = \App\Models\LeaveType::where('is_annual_leave', true)
+                    ->where('is_active', true)
+                    ->first();
+
+                if (
+                    $cutiTahunan &&
+                    $user->masaKerjaTahun() >= $cutiTahunan->min_years &&
+                    ! \App\Models\UserLeaveBalance::where('user_id', $user->id)
+                        ->where('leave_type_id', $cutiTahunan->id)
+                        ->where('year', now()->year)
+                        ->exists()
+                ) {
+                    app(LeaveQuotaService::class)->generateForUser($user, now()->year);
+
+                    \Illuminate\Support\Facades\Log::info(
+                        "Auto-generate cuti tahunan: user [{$user->id}] {$user->name} "
+                            . "masa kerja {$user->masaKerjaTahun()} tahun."
+                    );
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error(
+                    "Auto-generate cuti tahunan gagal: user [{$user->id}] — "
+                        . $e->getMessage()
+                );
+            }
+        }
+
+        // ── 8. Log aktivitas ────────────────────────────────────────────────
         $logMessage = $request->boolean('force_login')
             ? 'Login paksa — sesi aktif di perangkat lain telah dihapus'
             : 'Login berhasil ke sistem';

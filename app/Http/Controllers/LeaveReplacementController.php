@@ -28,16 +28,20 @@ class LeaveReplacementController extends Controller
      */
     public function index()
     {
+        $today = Carbon::today()->toDateString();
+
         $leaves = Leave::with(['user', 'pengganti', 'leaveType'])
             ->where('status_final', 'approved')
             ->whereNotNull('pengganti_id')
-            ->whereDate('end_date', '>=', Carbon::today())
             ->whereHas('approvals', function ($q) {
                 $q->where('step', 2)
                     ->where('approver_id', Auth::id())
                     ->where('status', 'approved');
             })
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw('CASE WHEN end_date >= ? THEN 0 ELSE 1 END', [$today])
+            ->orderByRaw('CASE WHEN end_date >= ? THEN end_date END ASC', [$today])
+            ->orderByDesc('end_date')
+            ->orderByDesc('id')
             ->paginate(10);
 
         return view('replacements.manage', compact('leaves'));
@@ -78,11 +82,6 @@ class LeaveReplacementController extends Controller
             // Defense-in-depth: state bisa berubah antara form dimuat & disubmit.
             abort_unless($lockedLeave->status_final === 'approved', 422, 'Cuti ini sudah tidak berstatus approved.');
             abort_unless($lockedLeave->pengganti_id, 422, 'Cuti ini belum punya pengganti.');
-            abort_if(
-                Carbon::today()->gt(Carbon::parse($lockedLeave->end_date)),
-                422,
-                'Periode cuti ini sudah lewat, penggantinya tidak bisa diganti lagi.'
-            );
 
             // Idempotency guard: kalau sudah diganti user lain jadi nilai yang sama
             // (mis. akibat double-submit), tidak perlu proses ulang.
@@ -113,11 +112,20 @@ class LeaveReplacementController extends Controller
 
             $lockedLeave->update(['pengganti_id' => $newPengganti->id]);
 
+            // Penandaan koreksi setelah periode cuti berakhir, untuk kebutuhan audit.
+            $isRetroactive = Carbon::today()->gt(Carbon::parse($lockedLeave->end_date));
+
             ActivityLogger::log(
                 'approval.pengganti_changed',
                 "Mengubah pengganti izin/cuti {$lockedLeave->user->name} dari " .
-                    ($oldPengganti->name ?? '-') . " menjadi {$newPengganti->name}",
+                    ($oldPengganti->name ?? '-') . " menjadi {$newPengganti->name}" .
+                    ($isRetroactive ? ' (setelah periode cuti berakhir)' : ''),
                 $lockedLeave,
+                [
+                    'old_pengganti_id' => $oldPenggantiId,
+                    'new_pengganti_id' => $newPengganti->id,
+                    'retroaktif'       => $isRetroactive,
+                ]
             );
 
             // Notifikasi ke 3 pihak

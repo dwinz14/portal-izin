@@ -12,16 +12,16 @@
             </div>
             <form method="GET" action="{{ route('hrd.quota.index') }}" class="flex items-center gap-2">
                 @foreach (request()->except('leave_type_id') as $k => $v)
-                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                <input type="hidden" name="{{ $k }}" value="{{ $v }}">
                 @endforeach
                 <label class="text-sm font-medium text-gray-600 dark:text-gray-300 whitespace-nowrap">Jenis
                     Cuti:</label>
                 <select name="leave_type_id" onchange="this.form.submit()"
                     class="rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm focus:border-primary-500 focus:ring-primary-500 pr-8">
                     @foreach ($leaveTypes as $leaveType)
-                        <option value="{{ $leaveType->id }}" {{ $leaveTypeId == $leaveType->id ? 'selected' : '' }}>
-                            {{ $leaveType->name }}
-                        </option>
+                    <option value="{{ $leaveType->id }}" {{ $leaveTypeId==$leaveType->id ? 'selected' : '' }}>
+                        {{ $leaveType->name }}
+                    </option>
                     @endforeach
                 </select>
             </form>
@@ -31,7 +31,7 @@
     <div class="space-y-5" x-data="quotaManager()" x-init="init()">
 
         {{-- ================================================================
-             MODAL: KONFIRMASI AKSI BERBAHAYA
+        MODAL: KONFIRMASI AKSI BERBAHAYA
         ================================================================ --}}
         <div x-show="confirmDialog.show" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4"
             x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -41,8 +41,7 @@
             <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
                 x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100">
-                <div class="h-1.5 w-full"
-                    :class="{
+                <div class="h-1.5 w-full" :class="{
                         'bg-red-500': confirmDialog.type === 'danger',
                         'bg-amber-500': confirmDialog.type === 'warning',
                         'bg-blue-500': confirmDialog.type === 'info'
@@ -50,8 +49,7 @@
                 </div>
                 <div class="p-6">
                     <div class="flex gap-4">
-                        <div class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center"
-                            :class="{
+                        <div class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center" :class="{
                                 'bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400': confirmDialog
                                     .type === 'danger',
                                 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400': confirmDialog
@@ -59,8 +57,7 @@
                                 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400': confirmDialog
                                     .type === 'info'
                             }">
-                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
@@ -78,8 +75,7 @@
                             Batal
                         </button>
                         <button type="button" @click="confirmAction()"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
-                            :class="{
+                            class="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-colors" :class="{
                                 'bg-red-600 hover:bg-red-700': confirmDialog.type === 'danger',
                                 'bg-amber-500 hover:bg-amber-600': confirmDialog.type === 'warning',
                                 'bg-blue-600 hover:bg-blue-700': confirmDialog.type === 'info'
@@ -92,7 +88,7 @@
         </div>
 
         {{-- ================================================================
-             MODAL: EDIT KUOTA INDIVIDUAL
+        MODAL: EDIT KUOTA INDIVIDUAL
         ================================================================ --}}
         <div x-show="editModal.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
             x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -124,8 +120,8 @@
                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Total</div>
                         </div>
                         <div class="bg-orange-50 dark:bg-orange-900/20 rounded-xl p-3">
-                            <div class="text-xl font-bold text-orange-600 dark:text-orange-400"
-                                x-text="editModal.used"></div>
+                            <div class="text-xl font-bold text-orange-600 dark:text-orange-400" x-text="editModal.used">
+                            </div>
                             <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Terpakai</div>
                         </div>
                         <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-3">
@@ -140,8 +136,7 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                 Sisa Kuota Baru <span class="text-gray-400 font-normal">(hari)</span>
                             </label>
-                            <input type="number" name="remaining" x-model="editModal.newRemaining" min="0"
-                                max="365"
+                            <input type="number" name="remaining" x-model="editModal.newRemaining" min="0" max="365"
                                 class="w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-center text-2xl font-bold focus:border-primary-500 focus:ring-primary-500 py-3"
                                 placeholder="0" />
                             <p class="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
@@ -166,7 +161,7 @@
         </div>
 
         {{-- ================================================================
-             MODAL: BULK UPDATE
+        MODAL: BULK UPDATE
         ================================================================ --}}
         <div x-show="bulkModal.show" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4"
             x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -206,8 +201,7 @@
                                     <span x-text="allRowData[id]?.name ?? rowData[id]?.name ?? id"></span>
                                     <button type="button" @click="toggleSelect(id)"
                                         class="text-primary-400 hover:text-primary-600">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12" />
                                         </svg>
@@ -239,8 +233,8 @@
                                         class="flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border-2 text-center transition-all
                                         border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400
                                         peer-checked:border-primary-500 peer-checked:bg-primary-50 dark:peer-checked:bg-primary-900/30 peer-checked:text-primary-700 dark:peer-checked:text-primary-300">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" stroke-width="2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                                         </svg>
@@ -255,8 +249,8 @@
                                         class="flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border-2 text-center transition-all
                                         border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400
                                         peer-checked:border-green-500 peer-checked:bg-green-50 dark:peer-checked:bg-green-900/30 peer-checked:text-green-700 dark:peer-checked:text-green-300">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" stroke-width="2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                         </svg>
                                         <span class="text-xs font-semibold">Tambah</span>
@@ -270,8 +264,8 @@
                                         class="flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border-2 text-center transition-all
                                         border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400
                                         peer-checked:border-amber-500 peer-checked:bg-amber-50 dark:peer-checked:bg-amber-900/30 peer-checked:text-amber-700 dark:peer-checked:text-amber-300">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" stroke-width="2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                            stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
                                         </svg>
                                         <span class="text-xs font-semibold">Kurangi</span>
@@ -286,8 +280,8 @@
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                                 Jumlah <span class="text-gray-400 font-normal">(hari)</span>
                             </label>
-                            <input type="number" name="value" x-model="bulkModal.value" min="0"
-                                max="365" required placeholder="0"
+                            <input type="number" name="value" x-model="bulkModal.value" min="0" max="365" required
+                                placeholder="0"
                                 class="w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-center text-3xl font-bold focus:border-primary-500 focus:ring-primary-500 py-3" />
 
                             {{-- Preview ringkas --}}
@@ -295,20 +289,20 @@
                                 x-show="bulkModal.value > 0">
                                 <template x-if="bulkModal.mode === 'set'">
                                     <span>Sisa kuota semua karyawan yang dipilih akan menjadi <strong
-                                            class="text-gray-800 dark:text-gray-200"
-                                            x-text="bulkModal.value"></strong> hari</span>
+                                            class="text-gray-800 dark:text-gray-200" x-text="bulkModal.value"></strong>
+                                        hari</span>
                                 </template>
                                 <template x-if="bulkModal.mode === 'add'">
                                     <span>Sisa kuota setiap karyawan yang dipilih akan <strong
                                             class="text-green-600">bertambah</strong> <strong
-                                            class="text-gray-800 dark:text-gray-200"
-                                            x-text="bulkModal.value"></strong> hari dari nilai saat ini</span>
+                                            class="text-gray-800 dark:text-gray-200" x-text="bulkModal.value"></strong>
+                                        hari dari nilai saat ini</span>
                                 </template>
                                 <template x-if="bulkModal.mode === 'subtract'">
                                     <span>Sisa kuota setiap karyawan yang dipilih akan <strong
                                             class="text-amber-600">berkurang</strong> <strong
-                                            class="text-gray-800 dark:text-gray-200"
-                                            x-text="bulkModal.value"></strong> hari dari nilai saat ini (minimal
+                                            class="text-gray-800 dark:text-gray-200" x-text="bulkModal.value"></strong>
+                                        hari dari nilai saat ini (minimal
                                         0)</span>
                                 </template>
                             </div>
@@ -336,7 +330,7 @@
 
 
         {{-- ================================================================
-             LAYOUT UTAMA
+        LAYOUT UTAMA
         ================================================================ --}}
         <div class="flex flex-col xl:flex-row gap-5 items-start">
 
@@ -354,8 +348,7 @@
                                 <div class="relative">
                                     <span
                                         class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
@@ -372,9 +365,9 @@
                                     class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm focus:border-primary-500 focus:ring-primary-500">
                                     <option value="">Semua Jabatan</option>
                                     @foreach ($positions as $position)
-                                        <option value="{{ $position->id }}"
-                                            {{ $positionId == $position->id ? 'selected' : '' }}>
-                                            {{ strtoupper($position->nama_jabatan) }}</option>
+                                    <option value="{{ $position->id }}" {{ $positionId==$position->id ? 'selected' : ''
+                                        }}>
+                                        {{ strtoupper($position->nama_jabatan) }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -385,9 +378,8 @@
                                     class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm focus:border-primary-500 focus:ring-primary-500">
                                     <option value="">Semua Kantor</option>
                                     @foreach ($offices as $office)
-                                        <option value="{{ $office->id }}"
-                                            {{ $officeId == $office->id ? 'selected' : '' }}>
-                                            {{ strtoupper($office->nama_kantor) }}</option>
+                                    <option value="{{ $office->id }}" {{ $officeId==$office->id ? 'selected' : '' }}>
+                                        {{ strtoupper($office->nama_kantor) }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -397,9 +389,10 @@
                                 <select name="role"
                                     class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm focus:border-primary-500 focus:ring-primary-500">
                                     <option value="">Semua Role</option>
-                                    @foreach (['staff' => 'Staff', 'kasie' => 'Kasie', 'kabag-pincab' => 'Kabag/Pincab', 'hrd' => 'HRD', 'direksi' => 'Direksi'] as $val => $lbl)
-                                        <option value="{{ $val }}" {{ $role == $val ? 'selected' : '' }}>
-                                            {{ $lbl }}</option>
+                                    @foreach (['staff' => 'Staff', 'kasie' => 'Kasie', 'kabag-pincab' => 'Kabag/Pincab',
+                                    'hrd' => 'HRD', 'direksi' => 'Direksi'] as $val => $lbl)
+                                    <option value="{{ $val }}" {{ $role==$val ? 'selected' : '' }}>
+                                        {{ $lbl }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -430,8 +423,7 @@
                                 <div class="relative">
                                     <input type="checkbox" class="sr-only peer" x-ref="checkboxAll"
                                         @change="toggleSelectAll($event.target.checked)">
-                                    <div
-                                        class="w-5 h-5 rounded-md border-2 border-gray-300 dark:border-slate-500
+                                    <div class="w-5 h-5 rounded-md border-2 border-gray-300 dark:border-slate-500
                                         peer-checked:bg-primary-600 peer-checked:border-primary-600
                                         group-hover:border-primary-400 dark:group-hover:border-primary-500
                                         flex items-center justify-center transition-all">
@@ -492,32 +484,25 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
                                 @forelse ($userLeaveBalances as $balance)
-                                    @php
-                                        $pct =
-                                            $balance->total_quota > 0
-                                                ? round(($balance->used / $balance->total_quota) * 100)
-                                                : 0;
-                                        $barColor =
-                                            $pct >= 90 ? 'bg-red-500' : ($pct >= 70 ? 'bg-amber-500' : 'bg-green-500');
-                                        $sisaColor =
-                                            $balance->remaining == 0
-                                                ? 'text-red-600 dark:text-red-400'
-                                                : ($balance->remaining < 5
-                                                    ? 'text-amber-600 dark:text-amber-400'
-                                                    : 'text-green-600 dark:text-green-400');
-                                        $avatarColors = [
-                                            'from-blue-500 to-blue-600',
-                                            'from-violet-500 to-violet-600',
-                                            'from-emerald-500 to-emerald-600',
-                                            'from-rose-500 to-rose-600',
-                                            'from-amber-500 to-amber-600',
-                                            'from-cyan-500 to-cyan-600',
-                                        ];
-                                        $avatarColor =
-                                            $avatarColors[crc32($balance->user->name) % count($avatarColors)];
-                                        $actionUrl = route('hrd.quota.update', [$balance->user, $balance->leaveType]);
-                                        $userId = $balance->user->id;
-                                        $userName = addslashes(Str::title($balance->user->name));
+                                @php
+                                $pct =
+                                $balance->total_quota > 0
+                                ? round(($balance->used / $balance->total_quota) * 100)
+                                : 0;
+                                $barColor =
+                                $pct >= 90 ? 'bg-red-500' : ($pct >= 70 ? 'bg-amber-500' : 'bg-green-500');
+                                $sisaColor =
+                                $balance->remaining == 0
+                                ? 'text-red-600 dark:text-red-400'
+                                : ($balance->remaining < 5 ? 'text-amber-600 dark:text-amber-400'
+                                    : 'text-green-600 dark:text-green-400' );
+                                    $avatarColors=[ 'from-blue-500 to-blue-600' , 'from-violet-500 to-violet-600'
+                                    , 'from-emerald-500 to-emerald-600' , 'from-rose-500 to-rose-600'
+                                    , 'from-amber-500 to-amber-600' , 'from-cyan-500 to-cyan-600' , ];
+                                    $avatarColor=$avatarColors[crc32($balance->user->name) % count($avatarColors)];
+                                    $actionUrl = route('hrd.quota.update', [$balance->user, $balance->leaveType]);
+                                    $userId = $balance->user->id;
+                                    $userName = addslashes(Str::title($balance->user->name));
                                     @endphp
                                     <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-700/40 transition-colors group"
                                         :class="selectedIds.includes({{ $userId }}) ?
@@ -530,8 +515,7 @@
                                                     <input type="checkbox" class="sr-only peer"
                                                         :checked="selectedIds.includes({{ $userId }})"
                                                         @change="toggleSelect({{ $userId }})">
-                                                    <div
-                                                        class="w-4.5 h-4.5 w-[18px] h-[18px] rounded border-2 border-gray-300 dark:border-slate-500
+                                                    <div class="w-4.5 h-4.5 w-[18px] h-[18px] rounded border-2 border-gray-300 dark:border-slate-500
                                                         peer-checked:bg-primary-600 peer-checked:border-primary-600
                                                         flex items-center justify-center transition-all">
                                                         <svg class="w-2.5 h-2.5 text-white opacity-0 peer-checked:opacity-100 scale-0 peer-checked:scale-100 transition-all"
@@ -572,8 +556,8 @@
 
                                         {{-- Alokasi --}}
                                         <td class="px-4 py-3 text-center">
-                                            <span
-                                                class="text-base font-bold text-gray-700 dark:text-gray-200">{{ $balance->total_quota }}</span>
+                                            <span class="text-base font-bold text-gray-700 dark:text-gray-200">{{
+                                                $balance->total_quota }}</span>
                                             <span class="text-xs text-gray-400 dark:text-gray-500 block">hari</span>
                                         </td>
 
@@ -587,8 +571,8 @@
                                                 </div>
                                                 <div
                                                     class="text-xs text-gray-500 dark:text-gray-400 w-16 text-right whitespace-nowrap">
-                                                    <span
-                                                        class="font-medium text-orange-600 dark:text-orange-400">{{ $balance->used }}</span>
+                                                    <span class="font-medium text-orange-600 dark:text-orange-400">{{
+                                                        $balance->used }}</span>
                                                     <span class="text-gray-400"> / {{ $balance->total_quota }}</span>
                                                 </div>
                                             </div>
@@ -598,15 +582,14 @@
 
                                         {{-- Sisa --}}
                                         <td class="px-4 py-3 text-center">
-                                            <span
-                                                class="text-base font-bold {{ $sisaColor }}">{{ $balance->remaining }}</span>
+                                            <span class="text-base font-bold {{ $sisaColor }}">{{ $balance->remaining
+                                                }}</span>
                                             <span class="text-xs text-gray-400 dark:text-gray-500 block">hari</span>
                                         </td>
 
                                         {{-- Tombol edit satuan --}}
                                         <td class="px-4 py-3 text-center">
-                                            <button type="button"
-                                                @click="openEditModal({
+                                            <button type="button" @click="openEditModal({
                                                     name: '{{ $userName }}',
                                                     total: {{ $balance->total_quota }},
                                                     used: {{ $balance->used }},
@@ -623,14 +606,14 @@
                                             </button>
                                         </td>
                                     </tr>
-                                @empty
+                                    @empty
                                     <tr>
                                         <td colspan="7" class="px-6 py-16 text-center">
                                             <div class="flex flex-col items-center gap-3">
                                                 <div
                                                     class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-slate-700 flex items-center justify-center">
-                                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500"
-                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="1.5"
                                                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -645,16 +628,16 @@
                                             </div>
                                         </td>
                                     </tr>
-                                @endforelse
+                                    @endforelse
                             </tbody>
                         </table>
                     </div>
 
                     @if ($userLeaveBalances->hasPages())
-                        <div
-                            class="px-5 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/40">
-                            {{ $userLeaveBalances->links() }}
-                        </div>
+                    <div
+                        class="px-5 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/40">
+                        {{ $userLeaveBalances->links() }}
+                    </div>
                     @endif
                 </div>
             </div>
@@ -668,8 +651,8 @@
                     <div class="px-4 py-3.5 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2.5">
                         <div
                             class="w-7 h-7 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
@@ -684,8 +667,8 @@
                         <div
                             class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-xs text-green-700 dark:text-green-300">
                             <div class="font-semibold mb-1">Kuota tahun {{ now()->year }}</div>
-                            <div class="flex justify-between"><span>Kuota dasar</span><span
-                                    class="font-medium">{{ $defaultQuota }} hari</span></div>
+                            <div class="flex justify-between"><span>Kuota dasar</span><span class="font-medium">{{
+                                    $defaultQuota }} hari</span></div>
                             <div class="flex justify-between"><span>Cuti bersama</span><span
                                     class="font-medium text-red-600 dark:text-red-400">− {{ $jointLeaveCount }}
                                     hari</span></div>
@@ -694,23 +677,27 @@
                                 <span>Efektif</span><span>{{ $effectiveQuota }} hari</span>
                             </div>
                             <div class="mt-2 text-[10px] text-green-600 dark:text-green-400">
-                                Pastikan <a href="{{ route('hrd.holidays.index') }}"
-                                    class="underline font-medium">data hari libur</a> sudah lengkap sebelum generate.
+                                Pastikan <a href="{{ route('hrd.holidays.index') }}" class="underline font-medium">data
+                                    hari libur</a> sudah lengkap sebelum generate.
                             </div>
                         </div>
-                        <form action="{{ route('hrd.quota.generateAnnual') }}" method="POST"
-                            @submit.prevent="showConfirmation($event, {
+                        <form action="{{ route('hrd.quota.generateAnnual') }}" method="POST" @submit.prevent="showConfirmation($event, {
                                 title: 'Generate Kuota Tahunan',
                                 message: 'Proses ini akan membuat atau memperbarui kuota cuti untuk semua karyawan aktif. Lanjutkan?',
                                 type: 'info'
                             })">
                             @csrf
                             <div class="mb-2">
-                                <label
-                                    class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Tahun</label>
-                                <input type="number" name="year" value="{{ now()->year }}" min="2020"
-                                    max="{{ now()->year + 1 }}"
-                                    class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm focus:border-green-500 focus:ring-green-500">
+                                <select id="generate_year" name="year"
+                                    class="rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 text-sm shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                                    {{-- Tahun lalu, tahun ini, tahun depan --}}
+                                    @foreach ([now()->year - 1, now()->year, now()->year + 1] as $y)
+                                    <option value="{{ $y }}" @selected($y===now()->year)>
+                                        {{ $y }}{{ $y === now()->year ? ' (tahun ini)' : ($y === now()->year + 1 ? '
+                                        (tahun depan)' : '') }}
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <button type="submit"
                                 class="w-full px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
@@ -731,8 +718,8 @@
                     <div class="px-4 py-3.5 border-b border-gray-200 dark:border-slate-700 flex items-center gap-2.5">
                         <div
                             class="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -756,8 +743,8 @@
                                         ditambah</div>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="auto_generate_leave_balances" value="1"
-                                        {{ $autoGenerate ? 'checked' : '' }} class="sr-only peer">
+                                    <input type="checkbox" name="auto_generate_leave_balances" value="1" {{
+                                        $autoGenerate ? 'checked' : '' }} class="sr-only peer">
                                     <div
                                         class="w-9 h-5 bg-gray-300 dark:bg-slate-600 peer-checked:bg-primary-600 rounded-full transition-colors
                                         after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-4">
@@ -767,8 +754,8 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Kuota
                                     Default (hari)</label>
-                                <input type="number" name="default_annual_leave_quota"
-                                    value="{{ $effectiveQuota }}" min="0"
+                                <input type="number" name="default_annual_leave_quota" value="{{ $effectiveQuota }}"
+                                    min="0"
                                     class="w-full rounded-lg border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                             <button type="submit"
@@ -783,8 +770,8 @@
         </div>
 
         {{-- ================================================================
-             FLOATING BULK ACTION BAR
-             Muncul di bawah layar saat ada karyawan yang dicentang
+        FLOATING BULK ACTION BAR
+        Muncul di bawah layar saat ada karyawan yang dicentang
         ================================================================ --}}
         <div x-show="selectedIds.length > 0" x-cloak class="fixed bottom-6 inset-x-0 flex justify-center z-40 px-4"
             x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4"
@@ -797,8 +784,8 @@
                 {{-- Info jumlah dipilih --}}
                 <div class="flex items-center gap-2.5 flex-shrink-0">
                     <div class="w-8 h-8 rounded-xl bg-primary-500/20 flex items-center justify-center">
-                        <svg class="w-4 h-4 text-primary-300" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24" stroke-width="2">
+                        <svg class="w-4 h-4 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -818,8 +805,7 @@
                     {{-- Set nilai --}}
                     <button type="button" @click="openBulkModal('set')"
                         class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs font-semibold transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                         </svg>
@@ -829,8 +815,7 @@
                     {{-- Tambah hari --}}
                     <button type="button" @click="openBulkModal('add')"
                         class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-green-600 hover:bg-green-500 text-white text-xs font-semibold transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                         </svg>
                         Tambah Hari
@@ -839,8 +824,7 @@
                     {{-- Kurangi hari --}}
                     <button type="button" @click="openBulkModal('subtract')"
                         class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-semibold transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            stroke-width="2">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
                         </svg>
                         Kurangi Hari
@@ -861,7 +845,7 @@
     </div>{{-- end x-data --}}
 
     {{-- ================================================================
-         ALPINE SCRIPT
+    ALPINE SCRIPT
     ================================================================ --}}
     <script>
         function quotaManager() {

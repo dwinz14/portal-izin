@@ -163,6 +163,8 @@ class ActivityLogger
             'admin.user_approved'          => ['category' => 'admin',      'color' => 'green'],
             'admin.user_rejected'          => ['category' => 'admin',      'color' => 'red'],
             'admin.quota_generated'        => ['category' => 'admin',      'color' => 'blue'],
+            'leave.cancelled_by_approver'   => ['category' => 'leave', 'color' => 'red'],
+            'leave.rescheduled_by_approver' => ['category' => 'leave', 'color' => 'amber'],
             default                        => ['category' => 'other',      'color' => 'gray'],
         };
     }

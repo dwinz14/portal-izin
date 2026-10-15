@@ -7,6 +7,7 @@ use App\Http\Controllers\AttendanceRequestController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseMaintenanceController;
 use App\Http\Controllers\DivisionController;
+use App\Http\Controllers\LeaveAdjustmentController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\LeavePrintController;
 use App\Http\Controllers\MasterLeaveTypeController;
@@ -47,6 +48,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pengganti/kelola', [LeaveReplacementController::class, 'index'])->name('replacement.index');
         Route::get('/{leave}/pengganti/eligible', [LeaveReplacementController::class, 'eligiblePengganti'])->name('replacement.eligible');
         Route::patch('/{leave}/replace-pengganti', [LeaveReplacementController::class, 'update'])->name('replace-pengganti');
+        // Batalkan / ubah tanggal cuti yang sudah final approved (oleh atasan; wajib ketik konfirmasi)
+        Route::delete('/{leave}/approver-cancel', [LeaveAdjustmentController::class, 'cancel'])->name('approver-cancel');
+        Route::patch('/{leave}/reschedule', [LeaveAdjustmentController::class, 'reschedule'])->name('reschedule');
     });
 
     Route::get('cuti/{leave}/print', [LeavePrintController::class, 'print'])

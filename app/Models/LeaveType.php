@@ -32,4 +32,15 @@ class LeaveType extends Model
     {
         return $this->hasMany(Leave::class);
     }
+
+    /**
+     * Apakah jenis cuti ini kategori izin sakit
+     */
+    public function isSickLeave(): bool
+    {
+        $name = strtolower((string) $this->name);
+
+        return str_contains($name, 'izin sakit dengan surat dokter')
+            || str_contains($name, 'izin sakit tanpa surat dokter');
+    }
 }

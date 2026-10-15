@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Helpers\LeaveHelper;
 use App\Http\Requests\StoreLeaveRequest;
 use App\Models\Approval;
 use App\Models\ApprovalHistory;
@@ -16,18 +15,22 @@ use App\Notifications\LeaveRequestSubmitted;
 use App\Notifications\RevisionAccepted;
 use App\Notifications\RevisionRejected;
 use App\Services\LeaveApprovalService;
-use App\Services\LeaveOverlapChecker;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ActivityLogger;
 use App\Services\ImageCompressionService;
+use Illuminate\Support\Facades\Gate;
+use App\Exceptions\LeaveRuleViolation;
+use App\Services\LeaveBalanceService;
+use App\Services\LeaveRulesService;
 
 class LeaveController extends Controller
 {
     public function __construct(
-        protected LeaveOverlapChecker $overlapChecker,
+        protected LeaveRulesService $rules,
+        protected LeaveBalanceService $balances,
         protected ImageCompressionService $imageCompressor,
     ) {}
 
@@ -167,60 +170,17 @@ class LeaveController extends Controller
             return back()->withErrors(['leave_type_id' => 'Jenis cuti ini tidak tersedia untuk Anda.'])->withInput();
         }
 
-        $totalHari = LeaveHelper::calculateWorkingDays($request->start_date, $request->end_date);
-
-        // Tolak pengajuan yang tidak memiliki hari kerja sama sekali
-        // (misal: seluruh rentang jatuh di akhir pekan / libur nasional / cuti bersama)
-        if ($totalHari <= 0) {
-            return back()->withErrors(['msg' => 'Rentang tanggal yang dipilih tidak memiliki hari kerja (seluruhnya akhir pekan, libur nasional, atau cuti bersama).'])->withInput();
+        try {
+            $totalHari = $this->rules->assertSchedulable(
+                $user->id,
+                $leaveType,
+                $request->start_date,
+                $request->end_date,
+                $request->pengganti_id ? (int) $request->pengganti_id : null,
+            );
+        } catch (LeaveRuleViolation $e) {
+            return back()->withErrors(['msg' => $e->getMessage()])->withInput();
         }
-
-        // Cek kuota (jika cuti memiliki batasan kuota)
-        // Catatan: 'remaining' baru dikurangi saat final approved (lihat LeaveApprovalService),
-        // jadi di sini kita juga jumlahkan total_hari dari pengajuan PENDING lain (jenis cuti sama,
-        // tahun berjalan) yang belum ter-deduct dari remaining, supaya user tidak bisa membuat
-        // beberapa pengajuan pending yang total harinya melebihi sisa kuota sebenarnya.
-        if ($leaveType->quota > 0) {
-            $userLeaveBalance = UserLeaveBalance::where('user_id', $user->id)
-                ->where('leave_type_id', $request->leave_type_id)
-                ->where('year', now()->year)
-                ->first();
-
-            $pendingReserved = Leave::where('user_id', $user->id)
-                ->where('leave_type_id', $request->leave_type_id)
-                ->where('status_final', 'pending')
-                ->whereYear('start_date', now()->year)
-                ->sum('total_hari');
-
-            $availableQuota = ($userLeaveBalance->remaining ?? 0) - $pendingReserved;
-
-            if (! $userLeaveBalance || $availableQuota < $totalHari) {
-                return back()->withErrors(['msg' => 'Kuota cuti tidak mencukupi untuk jenis cuti ini (termasuk yang sudah dipakai di pengajuan lain yang masih pending).'])->withInput();
-            }
-        }
-
-        // Cek tumpang tindih cuti dengan user sendiri (mencegah 2 pengajuan di tanggal yang sama,
-        // baik yang sedang pending maupun yang sudah approved — bukan lagi membatasi jumlah
-        // pengajuan pending secara keseluruhan)
-        if ($this->overlapChecker->hasOverlapLeave($user->id, $request->start_date, $request->end_date)) {
-            return back()->withErrors(['msg' => 'Tanggal yang dipilih bertabrakan dengan pengajuan cuti Anda yang lain (pending atau sudah disetujui).']);
-        }
-
-        // Cek tumpang tindih cuti dengan pengganti
-        if ($request->pengganti_id && $this->overlapChecker->hasReplacementOnLeave($request->pengganti_id, $request->start_date, $request->end_date)) {
-            return back()->withErrors(['msg' => 'Pengganti yang dipilih sedang mengajukan cuti di tanggal tersebut.']);
-        }
-
-        // Cek apakah pengganti sudah ditugaskan di cuti lain
-        if ($request->pengganti_id && $this->overlapChecker->hasOverlapReplacement($request->pengganti_id, $request->start_date, $request->end_date)) {
-            return back()->withErrors(['msg' => 'Pengganti tersebut sudah ditugaskan pada cuti lain.']);
-        }
-
-        // Cek apakah user sedang menjadi pengganti untuk cuti orang lain
-        if ($this->overlapChecker->hasOverlapReplacement($user->id, $request->start_date, $request->end_date)) {
-            return back()->withErrors(['msg' => 'Anda sedang jadi pengganti di tanggal tersebut.']);
-        }
-
 
         $proofImagePath = null;
         if ($requiresProof && $request->hasFile('proof_image')) {
@@ -268,19 +228,7 @@ class LeaveController extends Controller
                 if ($user->role === 'direksi') {
                     $leave->update(['status_final' => 'approved']);
 
-                    if ($leaveType->quota > 0) {
-                        $balance = UserLeaveBalance::where('user_id', $user->id)
-                            ->where('leave_type_id', $request->leave_type_id)
-                            ->where('year', now()->year)
-                            ->first();
-
-                        if ($balance) {
-                            $balance->update([
-                                'used' => \DB::raw("used + {$totalHari}"),
-                                'remaining' => \DB::raw("remaining - {$totalHari}"),
-                            ]);
-                        }
-                    }
+                    $this->balances->deduct($leave);
 
                     ApprovalHistory::create([
                         'leave_id' => $leave->id,
@@ -357,20 +305,27 @@ class LeaveController extends Controller
 
     public function destroy(Leave $leave)
     {
-        ActivityLogger::log(
-            'leave.cancelled',
-            "Membatalkan pengajuan {$leave->leaveType?->name} (" .
-                \Carbon\Carbon::parse($leave->start_date)->format('d/m/Y') . ' s/d ' .
-                \Carbon\Carbon::parse($leave->end_date)->format('d/m/Y') . ')',
-            $leave,
-            [
-                'jenis_cuti' => $leave->leaveType?->name,
-                'start_date' => $leave->start_date,
-                'end_date'   => $leave->end_date,
-            ]
-        );
+        DB::transaction(function () use ($leave) {
 
-        $leave->delete();
+            $locked = Leave::with('leaveType')->lockForUpdate()->findOrFail($leave->id);
+
+            Gate::authorize('delete', $locked);
+
+            ActivityLogger::log(
+                'leave.cancelled',
+                "Membatalkan pengajuan {$locked->leaveType?->name} (" .
+                    \Carbon\Carbon::parse($locked->start_date)->format('d/m/Y') . ' s/d ' .
+                    \Carbon\Carbon::parse($locked->end_date)->format('d/m/Y') . ')',
+                $locked,
+                [
+                    'jenis_cuti' => $locked->leaveType?->name,
+                    'start_date' => $locked->start_date,
+                    'end_date'   => $locked->end_date,
+                ]
+            );
+
+            $locked->delete();
+        });
 
         return redirect()->route('cuti.index')->with('success', 'Pengajuan cuti berhasil dihapus.');
     }

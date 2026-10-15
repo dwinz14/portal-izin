@@ -8,6 +8,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class LeavePrintController extends Controller
 {
@@ -64,9 +65,66 @@ class LeavePrintController extends Controller
         ];
 
         // Render view ke PDF
+        $generated_at = now('Asia/Jakarta')
+            ->locale('id')
+            ->translatedFormat('d F Y H:i');
+
+        // Kalau $data sudah berisi generated_at, timpa agar konsisten.
+        $data['generated_at'] = $generated_at;
+
+        // Render PDF satu kali saja.
         $pdf = Pdf::loadView('leaves.pdf', $data)
             ->setPaper('a4', 'portrait')
-            ->setOptions(['defaultFont' => 'DejaVu Sans']);
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+            ]);
+
+        $generatedAt = Carbon::now('Asia/Jakarta')->locale('id');
+
+        $footerDate = 'Dicetak pada ' .
+            $generatedAt->translatedFormat('d F Y') .
+            ', pukul ' .
+            $generatedAt->format('H.i') .
+            ' WIB';
+
+        $footerStatus = 'Dokumen ini diterbitkan secara digital oleh sistem SIMIKA.';
+
+        $canvas = $pdf->getDomPDF()->getCanvas();
+
+        $canvas->page_script('
+    if ($PAGE_NUM == $PAGE_COUNT) {
+        $font = $fontMetrics->get_font("DejaVu Sans", "normal");
+        $boldFont = $fontMetrics->get_font("DejaVu Sans", "bold");
+        $italicFont = $fontMetrics->get_font("DejaVu Sans", "italic");
+
+        $width = $pdf->get_width();
+
+        $date = ' . json_encode($footerDate) . ';
+        $status = ' . json_encode($footerStatus) . ';
+
+
+        $dateWidth = $fontMetrics->get_text_width($date, $font, 8);
+        $statusWidth = $fontMetrics->get_text_width($status, $boldFont, 8);
+
+        $pdf->text(
+            ($width - $dateWidth) / 2,
+            799,
+            $date,
+            $font,
+            8,
+            array(0.53, 0.53, 0.53)
+        );
+
+        $pdf->text(
+            ($width - $statusWidth) / 2,
+            813,
+            $status,
+            $boldFont,
+            8,
+            array(0.14, 0.52, 0.33)
+        );
+    }
+');
 
         $filename = 'form-cuti-' . $leave->id . '-' . now()->format('Ymd_His') . '.pdf';
 

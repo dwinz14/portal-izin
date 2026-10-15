@@ -76,4 +76,34 @@ class LeavePolicy
             ->where('status', 'approved')
             ->exists();
     }
+
+    /**
+     * Membatalkan / mengubah tanggal cuti yang SUDAH final approved.
+     * Sengaja tanpa batas tanggal: boleh juga setelah periode cuti berakhir (koreksi data).
+     */
+    public function adjustApproved(User $user, Leave $leave): bool
+    {
+        if ($leave->status_final !== 'approved') {
+            return false;
+        }
+
+        $finalApproval = Approval::where('leave_id', $leave->id)
+            ->orderByDesc('step')
+            ->first();
+
+        if (! $finalApproval) {
+            return $this->roleOf($user) === 'hrd'
+                && $leave->user
+                && $this->roleOf($leave->user) === 'direksi';
+        }
+
+        return $finalApproval->status === 'approved'
+            && (int) $finalApproval->approver_id === (int) $user->id;
+    }
+
+    /** Role sebagai string, baik atribut biasa maupun BackedEnum. */
+    private function roleOf(User $user): ?string
+    {
+        return $user->role instanceof \BackedEnum ? $user->role->value : $user->role;
+    }
 }

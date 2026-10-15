@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 
 class Leave extends Model
 {
@@ -17,6 +18,7 @@ class Leave extends Model
         'start_date',
         'end_date',
         'total_hari',
+        'quota_year',
         'alasan',
         'proof_image',
         'status_pengganti',
@@ -31,6 +33,7 @@ class Leave extends Model
     protected $casts = [
         'is_revision_pending' => 'boolean',
         'is_mendadak'         => 'boolean',
+        'quota_year'          => 'integer',
     ];
 
     public function user()
@@ -41,6 +44,34 @@ class Leave extends Model
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    /**
+     * Cuti approved yang BOLEH dikelola (batalkan / ubah tanggal / ubah pengganti) oleh $user atasan.
+     */
+    public function scopeAdjustableBy(Builder $query, User $user): Builder
+    {
+        return $query->where('status_final', 'approved')
+            ->where(function (Builder $q) use ($user) {
+                $q->whereHas('approvals', function ($a) use ($user) {
+                    $a->where('approver_id', $user->id)
+                        ->where('status', 'approved')
+                        ->where('step', function ($sub) {
+                            $sub->from('approvals as latest')
+                                ->selectRaw('MAX(latest.step)')
+                                ->whereColumn('latest.leave_id', 'approvals.leave_id');
+                        });
+                });
+
+                $role = $user->role instanceof \BackedEnum ? $user->role->value : $user->role;
+
+                if ($role === 'hrd') {
+                    $q->orWhere(function (Builder $direksi) {
+                        $direksi->whereDoesntHave('approvals')
+                            ->whereHas('user', fn($u) => $u->where('role', 'direksi'));
+                    });
+                }
+            });
     }
 
     public function leaveType()

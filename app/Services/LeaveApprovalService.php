@@ -3,46 +3,24 @@
 namespace App\Services;
 
 use App\Models\Leave;
-use App\Models\UserLeaveBalance;
 use App\Notifications\LeaveFinalApproved;
 use Illuminate\Support\Facades\DB;
 
 class LeaveApprovalService
 {
+    public function __construct(
+        protected LeaveBalanceService $balances,
+    ) {}
+
     public function finalApprove(Leave $leave): void
     {
-        $leave->update(['status_final' => 'approved']);
+        // Status final + pemotongan saldo harus atomik: tidak boleh ada cuti approved
+        // tanpa saldo terpotong (atau sebaliknya) bila salah satu langkah gagal.
+        $remainingBalance = DB::transaction(function () use ($leave) {
+            $leave->update(['status_final' => 'approved']);
 
-        $remainingBalance = null;
-
-        $leaveType = $leave->leaveType;
-        if ($leaveType->quota > 0) {
-            $balance = UserLeaveBalance::where('user_id', $leave->user_id)
-                ->where('leave_type_id', $leave->leave_type_id)
-                ->where('year', now()->year)
-                ->first();
-
-            if ($balance) {
-                // Hitung sisa kuota SETELAH pemotongan (untuk ditampilkan di WA)
-                $remainingBalance = max(0, $balance->remaining - $leave->total_hari);
-
-                $balance->update([
-                    'used'      => DB::raw("used + {$leave->total_hari}"),
-                    'remaining' => DB::raw("remaining - {$leave->total_hari}"),
-                ]);
-            } else {
-                $remainingBalance = max(0, $leaveType->quota - $leave->total_hari);
-
-                UserLeaveBalance::create([
-                    'user_id'       => $leave->user_id,
-                    'leave_type_id' => $leave->leave_type_id,
-                    'year'          => now()->year,
-                    'total_quota'   => $leaveType->quota,
-                    'used'          => $leave->total_hari,
-                    'remaining'     => $remainingBalance,
-                ]);
-            }
-        }
+            return $this->balances->deduct($leave);
+        });
 
         // Notifikasi ke pemohon (database + WA)
         $leave->user->notify(new LeaveFinalApproved($leave, $remainingBalance));

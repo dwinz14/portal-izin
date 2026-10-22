@@ -7,7 +7,6 @@ use App\Models\Approval;
 use App\Models\ApprovalHistory;
 use App\Models\Leave;
 use App\Models\LeaveType;
-use App\Models\Office;
 use App\Models\PublicHoliday;
 use App\Models\User;
 use App\Models\UserLeaveBalance;
@@ -15,9 +14,7 @@ use App\Notifications\LeaveRequestSubmitted;
 use App\Notifications\RevisionAccepted;
 use App\Notifications\RevisionRejected;
 use App\Services\LeaveApprovalService;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Services\ActivityLogger;
 use App\Services\ImageCompressionService;
@@ -25,12 +22,14 @@ use Illuminate\Support\Facades\Gate;
 use App\Exceptions\LeaveRuleViolation;
 use App\Services\LeaveBalanceService;
 use App\Services\LeaveRulesService;
+use App\Services\PenggantiEligibilityService;
 
 class LeaveController extends Controller
 {
     public function __construct(
         protected LeaveRulesService $rules,
         protected LeaveBalanceService $balances,
+        protected PenggantiEligibilityService $eligibility,
         protected ImageCompressionService $imageCompressor,
     ) {}
 
@@ -48,38 +47,16 @@ class LeaveController extends Controller
     {
         $user = Auth::user();
 
-        $requiresReplacement = in_array($user->role, ['staff', 'kasie', 'kabag-pincab'], true);
+        // Aturan pengganti per role
+        $replacementMode     = $user->replacementRequirement();
+        $showReplacement     = $replacementMode !== User::REPLACEMENT_NONE;
+        $replacementOptional = $replacementMode === User::REPLACEMENT_OPTIONAL;
 
-        // Kantor yang tergabung dalam 1 grup 
-        $effectiveOfficeIds = Office::groupedOfficeIds($user->office_id);
-        $isGroupedOffice = count($effectiveOfficeIds) > 1;
+        // Daftar calon pengganti
+        $penggantiList = $showReplacement
+            ? $this->eligibility->forRequester($user)
+            : collect();
 
-        // Case 1: kabag-pincab di kantor yang tergabung grup (mis. Pusat/Pare)
-        if ($user->role === 'kabag-pincab' && $isGroupedOffice) {
-            $penggantiList = User::select('id', 'name', 'role')
-                ->whereIn('office_id', $effectiveOfficeIds)
-                ->where('id', '!=', $user->id)
-                ->orderBy('name')
-                ->get();
-
-            // Case 2: kabag-pincab di kantor lain (bukan grup) → tetap seperti semula
-        } elseif ($user->role === 'kabag-pincab') {
-            $penggantiList = User::select('id', 'name', 'role')
-                ->whereIn('role', ['kabag-pincab', 'hrd'])
-                ->where('id', '!=', $user->id)
-                ->orderBy('name')
-                ->get();
-
-            // Case 3: role lain (staff/kasie) → kantornya sendiri, atau gabungan kalau masuk grup
-        } else {
-            $penggantiList = $requiresReplacement
-                ? User::select('id', 'name', 'role')
-                ->whereIn('office_id', $effectiveOfficeIds)
-                ->where('id', '!=', $user->id)
-                ->orderBy('name')
-                ->get()
-                : collect();
-        }
         $requiresAtasan = ! in_array($user->role, ['direksi'], true);
         $atasanList = collect();
 
@@ -137,7 +114,7 @@ class LeaveController extends Controller
         // Data hari libur (tanggal merah & cuti bersama) untuk menandai kalender
         $holidayMap = PublicHoliday::getHolidayMap();
 
-        return view('leaves.create', compact('penggantiList', 'requiresReplacement', 'atasanList', 'requiresAtasan', 'leaveTypes', 'userLeaveBalances', 'user', 'holidayMap'));
+        return view('leaves.create', compact('penggantiList', 'showReplacement', 'replacementOptional', 'atasanList', 'requiresAtasan', 'leaveTypes', 'userLeaveBalances', 'user', 'holidayMap'));
     }
 
     public function store(StoreLeaveRequest $request)
@@ -145,6 +122,10 @@ class LeaveController extends Controller
         $user = Auth::user();
 
         $leaveType = LeaveType::findOrFail($request->leave_type_id);
+
+        $penggantiId = $user->replacementRequirement() === User::REPLACEMENT_NONE
+            ? null
+            : ($request->pengganti_id ?: null);
 
         // Validasi masa kerja minimal untuk jenis cuti
         if ($leaveType->min_years > 0) {
@@ -176,7 +157,7 @@ class LeaveController extends Controller
                 $leaveType,
                 $request->start_date,
                 $request->end_date,
-                $request->pengganti_id ? (int) $request->pengganti_id : null,
+                $penggantiId ? (int) $penggantiId : null,
             );
         } catch (LeaveRuleViolation $e) {
             return back()->withErrors(['msg' => $e->getMessage()])->withInput();
@@ -193,13 +174,13 @@ class LeaveController extends Controller
 
         try {
             // Transaction untuk insert data
-            return DB::transaction(function () use ($request, $user, $totalHari, $leaveType, $isSickLeave, $proofImagePath) {
+            return DB::transaction(function () use ($request, $user, $totalHari, $leaveType, $isSickLeave, $proofImagePath, $penggantiId) {
 
                 // Buat record cuti
                 $leave = Leave::create([
                     'user_id' => $user->id,
                     'leave_type_id' => $request->leave_type_id,
-                    'pengganti_id' => $request->pengganti_id,
+                    'pengganti_id' => $penggantiId,
                     'start_date' => $request->start_date,
                     'end_date' => $request->end_date,
                     'total_hari' => $totalHari,
@@ -221,7 +202,12 @@ class LeaveController extends Controller
                         'total_hari' => $leave->total_hari,
                         'start_date' => $leave->start_date,
                         'end_date'   => $leave->end_date,
-                    ]
+                    ] + (
+                        // Pemohon sebenarnya boleh memilih tanpa pengganti
+                        ($penggantiId === null && $user->replacementRequirement() !== User::REPLACEMENT_NONE)
+                        ? ['tanpa_pengganti' => 'ya']
+                        : []
+                    )
                 );
 
                 // Kasus khusus: role direksi -> langsung disetujui
@@ -241,7 +227,6 @@ class LeaveController extends Controller
                 }
 
                 // Buat daftar approver (pengganti dan atasan)
-                $penggantiId = $request->pengganti_id;
                 $atasanId = $request->atasan_id;
                 $approvers = collect([$penggantiId, $atasanId])->filter()->values();
 

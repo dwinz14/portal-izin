@@ -307,9 +307,9 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                 <tr
                                     class="bg-slate-50/80 dark:bg-slate-900/40 text-left text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                                     <th scope="col" class="px-6 py-4">Karyawan Pemohon</th>
-                                    <th scope="col" class="px-6 py-4">Jenis Cuti & Durasi</th>
+                                    <th scope="col" class="px-6 py-4">Jenis & Durasi</th>
                                     <th scope="col" class="px-6 py-4">Periode & Status</th>
-                                    <th scope="col" class="px-6 py-4">Pengganti Ditugaskan</th>
+                                    <th scope="col" class="px-6 py-4">Pengganti</th>
                                     <th scope="col" class="px-6 py-4 text-right">Aksi Penyesuaian</th>
                                 </tr>
                             </thead>
@@ -495,7 +495,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
 
                                             <button type="button"
                                                 @click="openTanggal({{ \Illuminate\Support\Js::from($rowData) }})"
-                                                title="Ubah jadwal tanggal cuti"
+                                                title="Ubah Tanggal Pengajuan"
                                                 class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors duration-150 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white dark:focus-visible:ring-offset-slate-900">
                                                 <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24" aria-hidden="true">
@@ -840,7 +840,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                         </span>
                                         <button type="button" @click="confirmText = 'GANTI'"
                                             class="text-[11px] font-semibold text-amber-700 dark:text-amber-400 hover:underline">
-                                            Salin Kata Kunci
+                                            Ketik Kata Kunci
                                         </button>
                                     </div>
                                     <p class="text-[11px] text-amber-800 dark:text-amber-300">
@@ -944,7 +944,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                             Ubah Jadwal Tanggal Cuti
                                         </h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                            Sesuaikan tanggal mulai & selesai cuti yang telah approved.
+                                            Sesuaikan tanggal izin/cuti yang telah approved.
                                         </p>
                                     </div>
                                 </div>
@@ -1056,7 +1056,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                         </span>
                                         <button type="button" @click="confirmText = 'UBAH TANGGAL'"
                                             class="text-[11px] font-semibold text-blue-700 dark:text-blue-400 hover:underline">
-                                            Salin Kata Kunci
+                                            Ketik Kata Kunci
                                         </button>
                                     </div>
                                     <p class="text-[11px] text-blue-800 dark:text-blue-300">
@@ -1162,7 +1162,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                             Batalkan Izin / Cuti
                                         </h3>
                                         <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                            Hapus pengajuan cuti yang telah final approved secara permanen.
+                                            Hapus pengajuan yang telah disetujui secara permanen.
                                         </p>
                                     </div>
                                 </div>
@@ -1212,7 +1212,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                     class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-800 dark:text-rose-300 space-y-1">
                                     <p class="font-bold">Konsekuensi Pembatalan:</p>
                                     <ul class="list-disc list-inside space-y-0.5 text-rose-700 dark:text-rose-400">
-                                        <li>Kuota cuti dikembalikan otomatis ke saldo karyawan (jika berkuota).</li>
+                                        <li>Kuota dikembalikan otomatis ke saldo karyawan (jika berkuota).</li>
                                         <li>Tugas pengganti dibebaskan dan pengajuan dihapus dari status aktif.</li>
                                         <li>Notifikasi pembatalan resmi dikirimkan ke pemohon & pengganti.</li>
                                         <li>Tindakan ini terekam permanen dalam log aktivitas.</li>
@@ -1249,7 +1249,7 @@ $ongoingCount = $collection->filter(fn($l) => $l->start_date <= $todayStr && $l-
                                         </span>
                                         <button type="button" @click="confirmText = 'BATALKAN'"
                                             class="text-[11px] font-semibold text-rose-700 dark:text-rose-400 hover:underline">
-                                            Salin Kata Kunci
+                                            Ketik Kata Kunci
                                         </button>
                                     </div>
                                     <p class="text-[11px] text-rose-800 dark:text-rose-300">

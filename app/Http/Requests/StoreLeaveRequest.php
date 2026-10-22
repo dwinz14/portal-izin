@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\UserRole;
+use App\Models\User;
 use App\Models\LeaveType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -34,14 +34,11 @@ class StoreLeaveRequest extends FormRequest
         $requiresProof  = $leaveType && strtolower($leaveType->name) === 'izin sakit dengan surat dokter';
 
         // Tentukan apakah user wajib pilih pengganti
-        $requiresReplacement = $user->role instanceof UserRole
-            ? $user->role->requiresReplacement()
-            : in_array($user->role, ['staff', 'kasie', 'kabag-pincab'], true);
+        $requiresReplacement = $user->replacementRequirement() === User::REPLACEMENT_REQUIRED;
+
 
         // Tentukan apakah user wajib pilih atasan
-        $requiresSupervisor = $user->role instanceof UserRole
-            ? $user->role->requiresSupervisor()
-            : !in_array($user->role, ['direksi'], true);
+        $requiresSupervisor = ! in_array($user->role, ['direksi'], true);
 
         return [
             'leave_type_id' => ['required', 'exists:leave_types,id'],

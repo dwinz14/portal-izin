@@ -14,6 +14,10 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
+    public const REPLACEMENT_REQUIRED = 'required';
+    public const REPLACEMENT_OPTIONAL = 'optional';
+    public const REPLACEMENT_NONE     = 'none';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -59,6 +63,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function replacementRequirement(): string
+    {
+        $role = $this->role instanceof \BackedEnum ? $this->role->value : $this->role;
+        $mode = config("approval_flow.replacement.{$role}");
+
+        return match ($mode) {
+            self::REPLACEMENT_REQUIRED, self::REPLACEMENT_OPTIONAL => $mode,
+            null, self::REPLACEMENT_NONE                           => self::REPLACEMENT_NONE,
+            default                                                => self::REPLACEMENT_REQUIRED,
+        };
     }
 
     public function division()

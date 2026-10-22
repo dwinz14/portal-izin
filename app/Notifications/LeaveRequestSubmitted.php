@@ -42,6 +42,11 @@ class LeaveRequestSubmitted extends Notification implements ShouldQueue
     {
         $start = Carbon::parse($this->leave->start_date)->isoFormat('D MMMM Y');
         $end   = Carbon::parse($this->leave->end_date)->isoFormat('D MMMM Y');
+        $penggantiLine = '';
+        if ((int) $notifiable->id !== (int) $this->leave->pengganti_id) {
+            $pengganti     = $this->leave->pengganti?->name;
+            $penggantiLine = 'Pengganti: ' . ($pengganti ? ucwords($pengganti) : 'Tanpa pengganti') . "\n";
+        }
 
         return WhatsAppMessage::create(
             "PENGAJUAN IZIN/CUTI BARU\n\n" .
@@ -51,6 +56,7 @@ class LeaveRequestSubmitted extends Notification implements ShouldQueue
                 "Jenis Cuti: " . ($this->leave->leaveType->name ?? '-') . "\n" .
                 "Periode: {$start} s/d {$end}\n" .
                 "Durasi: {$this->leave->total_hari} hari kerja\n" .
+                $penggantiLine .
                 "Alasan: \"{$this->leave->alasan}\"\n\n" .
                 "Tinjau dan setujui di SIMIKA\n"
         );

@@ -93,6 +93,17 @@ class Leave extends Model
         return $this->belongsTo(User::class, 'pengganti_id');
     }
 
+    public function finalApproval(): ?Approval
+    {
+        return $this->approvals->sortByDesc('step')->first();
+    }
+
+    /** Atasan = approver pada langkah terakhir. */
+    public function atasan(): ?User
+    {
+        return $this->finalApproval()?->approver;
+    }
+
     /** ambil riwayat terakhir tanpa N+1 saat rekap */
     public function lastHistory()
     {

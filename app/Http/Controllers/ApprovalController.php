@@ -24,7 +24,7 @@ class ApprovalController extends Controller
         $userId = Auth::id();
 
         // Subquery untuk mengecek apakah semua approval step sebelumnya sudah approved
-        $approvals = Approval::with(['leave.user', 'approver'])
+        $approvals = Approval::with(['leave.user', 'leave.leaveType', 'leave.pengganti', 'leave.approvals', 'approver'])
             ->where('approver_id', $userId)
             ->where('status', 'pending')
             ->whereNotExists(function ($query) {

@@ -15,7 +15,7 @@
 
                     {{-- Logic ini sudah benar & efisien untuk meneruskan parameter filter --}}
                     @foreach (request()->query() as $key => $val)
-                        <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                    <input type="hidden" name="{{ $key }}" value="{{ $val }}">
                     @endforeach
 
                     <button type="submit"
@@ -64,9 +64,9 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Jabatan --</option>
                                 @foreach ($positions as $position)
-                                    <option value="{{ $position->id }}" @selected($positionId == $position->id)>
-                                        {{ strtoupper($position->nama_jabatan) }}
-                                    </option>
+                                <option value="{{ $position->id }}" @selected($positionId==$position->id)>
+                                    {{ strtoupper($position->nama_jabatan) }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -79,9 +79,9 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Kantor --</option>
                                 @foreach ($offices as $office)
-                                    <option value="{{ $office->id }}" @selected($officeId == $office->id)>
-                                        {{ strtoupper($office->nama_kantor) }}
-                                    </option>
+                                <option value="{{ $office->id }}" @selected($officeId==$office->id)>
+                                    {{ strtoupper($office->nama_kantor) }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -95,9 +95,9 @@
                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-xs">
                                 <option value="">-- Semua Jenis --</option>
                                 @foreach ($leaveTypes as $leaveType)
-                                    <option value="{{ $leaveType->id }}" @selected($leaveTypeId == $leaveType->id)>
-                                        {{ $leaveType->name }}
-                                    </option>
+                                <option value="{{ $leaveType->id }}" @selected($leaveTypeId==$leaveType->id)>
+                                    {{ $leaveType->name }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -156,103 +156,102 @@
                     </thead>
                     <tbody class="text-xs divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse($leaves as $leave)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/40 transition cursor-pointer">
-                                <td class="px-3 py-3 font-medium text-gray-900 dark:text-gray-100 truncate">
-                                    {{ Str::title($leave->user->name) }}</td>
-                                <td class="px-3 py-3 text-gray-600 dark:text-gray-400 truncate">
-                                    {{ strtoupper($leave->user->position->nama_jabatan ?? '-') }}</td>
-                                <td class="px-3 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                                    <div>
-                                        {{ \Carbon\Carbon::parse($leave->start_date)->isoFormat('D MMM YYYY') }} —
-                                        {{ \Carbon\Carbon::parse($leave->end_date)->isoFormat('D MMM YYYY') }}
-                                    </div>
-                                    <span class="text-xs text-gray-400 block">({{ $leave->total_hari }} hari)</span>
-                                </td>
-                                <td class="px-3 py-3 text-gray-600 dark:text-gray-400 whitespace-normal break-words">
-                                    {{ Str::title($leave->leaveType->name ?? '-') }}
-                                    @if ($leave->is_mendadak)
-                                        <span
-                                            class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
-                                            ⚡ Mendadak
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-3 py-3 text-gray-600 dark:text-gray-400 truncate">
-                                    {{ $leave->pengganti ? Str::title($leave->pengganti->name) : '-' }}
-                                </td>
-                                <td class="px-3 py-3 max-w-[150px]">
-                                    <div class="text-gray-900 dark:text-gray-100 truncate">
-                                        {{ $leave->alasan }}
-                                    </div>
-                                </td>
-                                <td class="px-3 py-3 text-center">
-                                    @if ($leave->proof_image)
-                                        <button type="button"
-                                            onclick="window.open('{{ asset('storage/' . $leave->proof_image) }}', '_blank')"
-                                            class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 text-blue-600 dark:text-blue-300 rounded-full transition-colors"
-                                            title="Lihat Bukti">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                                </path>
-                                            </svg>
-                                        </button>
-                                    @else
-                                        <span class="text-xs text-gray-400 dark:text-gray-500">Tidak Ada</span>
-                                    @endif
-                                </td>
-                                <td class="px-2 py-2 text-center">
-                                    @php
-                                        $statusClass =
-                                            [
-                                                'approved' =>
-                                                    'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-                                                'pending' =>
-                                                    'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
-                                                'rejected' =>
-                                                    'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-                                            ][strtolower($leave->status_final)] ??
-                                            'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
-                                    @endphp
-                                    <span
-                                        class="px-2 py-1 text-xs font-semibold rounded-full {{ $statusClass }} whitespace-nowrap">
-                                        {{ ucfirst($leave->status_final) }}
-                                    </span>
-                                </td>
-                                <td class="px-3 py-3 max-w-xs">
-                                    <div class="text-gray-600 dark:text-gray-400 whitespace-normal break-words">
-                                        {{ Str::title(optional($leave->approvals->firstWhere('step', 2)?->approver)->name ?? '-') }}
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/40 transition cursor-pointer">
+                            <td class="px-3 py-3 font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {{ Str::title($leave->user->name) }}</td>
+                            <td class="px-3 py-3 text-gray-600 dark:text-gray-400 truncate">
+                                {{ strtoupper($leave->user->position->nama_jabatan ?? '-') }}</td>
+                            <td class="px-3 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                                <div>
+                                    {{ \Carbon\Carbon::parse($leave->start_date)->isoFormat('D MMM YYYY') }} —
+                                    {{ \Carbon\Carbon::parse($leave->end_date)->isoFormat('D MMM YYYY') }}
+                                </div>
+                                <span class="text-xs text-gray-400 block">({{ $leave->total_hari }} hari)</span>
+                            </td>
+                            <td class="px-3 py-3 text-gray-600 dark:text-gray-400 whitespace-normal break-words">
+                                {{ Str::title($leave->leaveType->name ?? '-') }}
+                                @if ($leave->is_mendadak)
+                                <span
+                                    class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+                                    ⚡ Mendadak
+                                </span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-3 text-gray-600 dark:text-gray-400 truncate">
+                                {{ $leave->pengganti ? Str::title($leave->pengganti->name) : '-' }}
+                            </td>
+                            <td class="px-3 py-3 max-w-[150px]">
+                                <div class="text-gray-900 dark:text-gray-100 truncate">
+                                    {{ $leave->alasan }}
+                                </div>
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                                @if ($leave->proof_image)
+                                <button type="button"
+                                    onclick="window.open('{{ asset('storage/' . $leave->proof_image) }}', '_blank')"
+                                    class="inline-flex items-center justify-center w-8 h-8 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 text-blue-600 dark:text-blue-300 rounded-full transition-colors"
+                                    title="Lihat Bukti">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                        </path>
+                                    </svg>
+                                </button>
+                                @else
+                                <span class="text-xs text-gray-400 dark:text-gray-500">Tidak Ada</span>
+                                @endif
+                            </td>
+                            <td class="px-2 py-2 text-center">
+                                @php
+                                $statusClass =
+                                [
+                                'approved' =>
+                                'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+                                'pending' =>
+                                'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
+                                'rejected' =>
+                                'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
+                                ][strtolower($leave->status_final)] ??
+                                'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300';
+                                @endphp
+                                <span
+                                    class="px-2 py-1 text-xs font-semibold rounded-full {{ $statusClass }} whitespace-nowrap">
+                                    {{ ucfirst($leave->status_final) }}
+                                </span>
+                            </td>
+                            <td class="px-3 py-3 max-w-xs">
+                                <div class="text-gray-600 dark:text-gray-400 whitespace-normal break-words">
+                                    {{ Str::title(optional($leave->atasan())->name ?? '-') }}
+                                </div>
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="9" class="px-4 py-14 text-center text-gray-500 dark:text-gray-400">
-                                    <div class="flex flex-col items-center justify-center gap-2">
-                                        <svg class="w-14 h-14 text-gray-300 dark:text-gray-600"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                            stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5 4.5l-2.25-2.25m0 0l2.25-2.25m-2.25 2.25l2.25 2.25M12 18.75l-2.25-2.25m2.25 2.25l2.25-2.25m-2.25 2.25l-2.25-2.25M6.34 7.5h11.32a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25H6.34a2.25 2.25 0 01-2.25-2.25v-7.5a2.25 2.25 0 012.25-2.25z" />
-                                        </svg>
-                                        <p class="text-sm font-medium">Tidak ada data cuti</p>
-                                        <p class="text-xs text-gray-400">Data akan muncul ketika ada pengajuan cuti.
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="9" class="px-4 py-14 text-center text-gray-500 dark:text-gray-400">
+                                <div class="flex flex-col items-center justify-center gap-2">
+                                    <svg class="w-14 h-14 text-gray-300 dark:text-gray-600"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.5" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5 4.5l-2.25-2.25m0 0l2.25-2.25m-2.25 2.25l2.25 2.25M12 18.75l-2.25-2.25m2.25 2.25l2.25-2.25m-2.25 2.25l-2.25-2.25M6.34 7.5h11.32a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25H6.34a2.25 2.25 0 01-2.25-2.25v-7.5a2.25 2.25 0 012.25-2.25z" />
+                                    </svg>
+                                    <p class="text-sm font-medium">Tidak ada data cuti</p>
+                                    <p class="text-xs text-gray-400">Data akan muncul ketika ada pengajuan cuti.
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
             @if ($leaves->hasPages())
-                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800">
-                    {{ $leaves->links() }}
-                </div>
+            <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-slate-800">
+                {{ $leaves->links() }}
+            </div>
             @endif
         </div>
 

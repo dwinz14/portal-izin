@@ -318,7 +318,7 @@
                         <hr class="border-gray-100 dark:border-slate-700">
 
                         {{-- ── BAGIAN 3: PERSONIL TERLIBAT (Atasan & Pengganti) ──────── --}}
-                        @if ($requiresReplacement || $requiresAtasan)
+                        @if ($showReplacement || $requiresAtasan)
                         <section>
                             <h3
                                 class="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -327,7 +327,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
-                                Personil Terlibat
+                                Persetujuan
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 @if ($requiresAtasan)
@@ -345,16 +345,32 @@
                                 </div>
                                 @endif
 
-                                @if ($requiresReplacement)
+                                @if ($showReplacement)
+                                @php
+                                $penggantiOptions = $penggantiList->map(
+                                fn($u) => [
+                                'id' => $u->id,
+                                'name' => strtoupper($u->name . ' (' . $u->role . ')'),
+                                ],
+                                );
+
+                                // Mode opsional: sediakan pilihan kosong agar pengganti bisa dikosongkan lagi
+                                if ($replacementOptional) {
+                                $penggantiOptions = $penggantiOptions->prepend(['id' => '', 'name' => 'TANPA
+                                PENGGANTI']);
+                                }
+                                @endphp
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rekan
-                                        Pengganti (Backup)</label>
-                                    <x-select-dropdown name="pengganti_id" label="" :options="$penggantiList->map(
-                                                fn($u) => [
-                                                    'id' => $u->id,
-                                                    'name' => strtoupper($u->name . ' (' . $u->role . ')'),
-                                                ],
-                                            )" :selected="old('pengganti_id')" placeholder="-- Cari & Pilih Rekan --"
+                                        Pengganti (Backup)
+                                        @if ($replacementOptional)
+                                        <span
+                                            class="text-xs font-normal text-gray-400 dark:text-gray-500">(opsional)</span>
+                                        @endif
+                                    </label>
+                                    <x-select-dropdown name="pengganti_id" label="" :options="$penggantiOptions"
+                                        :selected="old('pengganti_id')"
+                                        :placeholder="$replacementOptional ? '-- Tanpa Pengganti / Pilih Rekan --' : '-- Cari & Pilih Rekan --'"
                                         searchable="true" />
                                 </div>
                                 @endif

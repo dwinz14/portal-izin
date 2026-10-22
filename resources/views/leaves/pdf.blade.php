@@ -217,12 +217,12 @@
         <table>
             <tr>
                 <td class="tbl-key">Pengganti</td>
-                <td class="tbl-val">{{ ucwords(optional($leave->pengganti)->name ?? '-') }}</td>
+                <td class="tbl-val">{{ $leave->pengganti ? ucwords($leave->pengganti->name) : 'Tanpa pengganti' }}</td>
             </tr>
             <tr>
                 <td class="tbl-key">Atasan Langsung</td>
                 <td class="tbl-val">
-                    {{ strtoupper(optional($leave->approvals->where('step', 2)->first()->approver)->name ?? '-') }}
+                    {{ strtoupper(optional($leave->atasan())->name ?? '-') }}
                 </td>
             </tr>
         </table>

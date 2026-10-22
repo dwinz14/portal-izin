@@ -4,10 +4,10 @@
             <div>
                 <h2
                     class="border-l-4 border-primary-700 pl-4 font-bold text-xl text-gray-800 dark:text-gray-100 leading-tight">
-                    {{ __('Pengajuan Cuti Saya') }}
+                    {{ __('Pengajuan Saya') }}
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 pl-4">
-                    Pantau status riwayat pengajuan cuti dan tindak lanjuti usulan revisi tanggal.
+                    Pantau status riwayat pengajuan izin dan cuti anda, serta tindak lanjuti usulan revisi tanggal.
                 </p>
             </div>
             <div class="flex justify-end">
@@ -17,7 +17,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    Ajukan Cuti Baru
+                    Pengajuan Baru
                 </a>
             </div>
         </div>
@@ -56,7 +56,7 @@
                 <div class="min-w-0">
                     <div class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none">{{ $leaves->total() }}
                     </div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">Total Pengajuan Cuti</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">Total Pengajuan</div>
                 </div>
             </div>
 
@@ -337,7 +337,7 @@
             <div
                 class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between bg-gray-50/50 dark:bg-slate-800/50">
                 <div class="flex items-center gap-2">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Daftar Pengajuan Cuti</h3>
+                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100">Daftar Pengajuan</h3>
                     <span
                         class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 dark:bg-primary-950 text-primary-700 dark:text-primary-300">
                         {{ $leaves->total() }} pengajuan
@@ -351,11 +351,11 @@
                         <tr class="bg-gray-50/80 dark:bg-slate-700/50">
                             <th scope="col"
                                 class="px-5 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Jenis Cuti
+                                Jenis Izin/Cuti
                             </th>
                             <th scope="col"
                                 class="px-5 py-3.5 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Periode Cuti
+                                Periode
                             </th>
                             <th scope="col"
                                 class="px-4 py-3.5 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -538,7 +538,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 4.5v15m7.5-7.5h-15" />
                                         </svg>
-                                        Ajukan Cuti Baru
+                                        Buat Pengajuan Baru
                                     </a>
                                 </div>
                             </td>

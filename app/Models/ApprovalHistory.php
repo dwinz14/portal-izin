@@ -45,7 +45,9 @@ class ApprovalHistory extends Model
             return 'Sebagai Pemohon Cuti';
         }
 
-        return $this->step === 1 ? 'Sebagai Pengganti' : 'Sebagai Atasan';
+        return ($this->step === 1 && $this->leave->pengganti_id !== null)
+            ? 'Sebagai Pengganti'
+            : 'Sebagai Atasan';
     }
 
     // Helper untuk icon context

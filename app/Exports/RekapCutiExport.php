@@ -99,7 +99,7 @@ class RekapCutiExport implements
     {
         // Pakai koleksi yang sudah di-eager-load (bukan query ulang) supaya tidak N+1.
         $lastApproval = $leave->approvalHistories->sortByDesc('created_at')->first();
-        $atasanStep2  = $leave->approvals->firstWhere('step', 2);
+        $atasan       = $leave->atasan();
 
         return [
             $leave->user->nik ?? '-',
@@ -113,7 +113,7 @@ class RekapCutiExport implements
             $leave->total_hari,
             $leave->is_mendadak ? 'Ya' : 'Tidak',
             strtoupper($leave->status_final ?? 'pending'),
-            ucwords(optional($atasanStep2?->approver)->name ?? '-'),
+            ucwords(optional($atasan)->name ?? '-'),
             $lastApproval ? Carbon::parse($lastApproval->created_at) : null,
             $leave->alasan ?? '-',
         ];

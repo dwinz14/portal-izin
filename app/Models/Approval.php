@@ -35,4 +35,8 @@ class Approval extends Model
     {
         return $this->belongsTo(User::class, 'approver_id');
     }
+    public function isFinalStep(): bool
+    {
+        return (int) $this->step === (int) $this->leave->approvals->max('step');
+    }
 }

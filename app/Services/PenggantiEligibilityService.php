@@ -16,6 +16,11 @@ class PenggantiEligibilityService
      */
     public function forRequester(User $requester): Collection
     {
+        // Role tanpa alur pengganti
+        if ($requester->replacementRequirement() === User::REPLACEMENT_NONE) {
+            return collect();
+        }
+
         $query = User::query()->where('id', '!=', $requester->id);
 
         // Kantor yang tergabung dalam 1 grup
@@ -37,11 +42,6 @@ class PenggantiEligibilityService
         }
 
         // Case 3: role lain -> kantor pemohon sendiri, atau gabungan kalau masuk grup
-        $requiresReplacement = in_array($requester->role, ['staff', 'kasie', 'kabag-pincab'], true);
-
-        if (! $requiresReplacement) {
-            return collect();
-        }
 
         return $query->whereIn('office_id', $effectiveOfficeIds)
             ->orderBy('name')

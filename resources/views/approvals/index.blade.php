@@ -27,7 +27,7 @@
         @forelse ($approvals as $approval)
         @php
         $hasRevision = $approval->revised_at !== null;
-        $isAtasan = $approval->step === 2;
+        $isAtasan = $approval->isFinalStep();
         @endphp
 
         <div x-data="{ open: false }"
@@ -179,7 +179,12 @@
                                 <div class="flex items-start">
                                     <span class="font-medium w-32 flex-shrink-0">Pengganti</span>
                                     <span class="flex-1">:
-                                        {{ strtoupper($approval->leave->pengganti->name) ?? 'N/A' }}</span>
+                                        @if ($approval->leave->pengganti)
+                                        {{ strtoupper($approval->leave->pengganti->name) }}
+                                        @else
+                                        <span class="italic text-gray-400 dark:text-gray-500">Tanpa pengganti</span>
+                                        @endif
+                                    </span>
                                 </div>
                                 <div class="flex items-start">
                                     <span class="font-medium w-32 flex-shrink-0">Alasan</span>

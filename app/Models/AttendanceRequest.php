@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class AttendanceRequest extends Model
 {
@@ -85,6 +86,15 @@ class AttendanceRequest extends Model
     public function approver(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'approver_id');
+    }
+
+    /**
+     * Pengajuan kehadiran approved yang BOLEH dihapus oleh $user (atasan yang menyetujuinya).
+     */
+    public function scopeDeletableBy(Builder $query, User $user): Builder
+    {
+        return $query->where('status', self::STATUS_APPROVED)
+            ->where('approver_id', $user->id);
     }
 
     public function getTypeLabelAttribute(): string

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AttendanceApprovalController;
+use App\Http\Controllers\AttendanceManagementController;
 use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\AttendanceRequestController;
 use App\Http\Controllers\DashboardController;
@@ -75,8 +76,10 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('approval-kehadiran')->name('approval-kehadiran.')->group(function () {
         Route::get('/', [AttendanceApprovalController::class, 'index'])->name('index');
         Route::get('/history', [AttendanceApprovalController::class, 'history'])->name('history');
+        Route::get('/kelola', [AttendanceManagementController::class, 'index'])->name('manage');
         Route::patch('/{attendanceRequest}/approve', [AttendanceApprovalController::class, 'approve'])->name('approve');
         Route::patch('/{attendanceRequest}/reject', [AttendanceApprovalController::class, 'reject'])->name('reject');
+        Route::delete('/{attendanceRequest}', [AttendanceManagementController::class, 'destroy'])->name('destroy');
     });
 
     // Routes untuk notifikasi

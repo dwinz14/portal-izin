@@ -156,6 +156,7 @@ class ActivityLogger
             'approval.attendance_rejected' => ['category' => 'approval',   'color' => 'red'],
             'attendance.submitted'         => ['category' => 'attendance', 'color' => 'purple'],
             'attendance.cancelled'         => ['category' => 'attendance', 'color' => 'red'],
+            'attendance.deleted_by_approver' => ['category' => 'attendance', 'color' => 'red'],
             'profile.updated'              => ['category' => 'profile',    'color' => 'slate'],
             'profile.position_changed'     => ['category' => 'profile',    'color' => 'blue'],
             'profile.division_changed'     => ['category' => 'profile',    'color' => 'blue'],

@@ -197,7 +197,7 @@ class AttendanceRequestController extends Controller
             $approverList = $approverList->merge(
                 User::select('id', 'name', 'role')
                     ->where('office_id', $user->office_id)
-                    ->whereIn('role', ['kabag-pincab', 'kasie'])
+                    ->whereIn('role', ['kabag-pincab'])
                     ->where('id', '!=', $user->id)
                     ->get()
             );

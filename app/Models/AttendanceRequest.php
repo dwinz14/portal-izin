@@ -107,6 +107,30 @@ class AttendanceRequest extends Model
         return self::updateTypeLabels()[$this->update_type] ?? '-';
     }
 
+    public function getFullTypeLabelAttribute(): string
+    {
+        return $this->type === self::TYPE_UPDATE_ATTENDANCE && $this->update_type
+            ? "{$this->type_label} ({$this->update_type_label})"
+            : $this->type_label;
+    }
+
+    public function getUpdateTimeDetailsAttribute(): array
+    {
+        if ($this->type !== self::TYPE_UPDATE_ATTENDANCE) {
+            return [];
+        }
+
+        $checkIn  = ['key' => 'in',  'label' => 'Check-in',  'time' => $this->start_time ? substr($this->start_time, 0, 5) : null];
+        $checkOut = ['key' => 'out', 'label' => 'Check-out', 'time' => $this->end_time ? substr($this->end_time, 0, 5) : null];
+
+        return match ($this->update_type) {
+            self::UPDATE_TYPE_CHECKIN_ONLY  => [$checkIn],
+            self::UPDATE_TYPE_CHECKOUT_ONLY => [$checkOut],
+            self::UPDATE_TYPE_BOTH          => [$checkIn, $checkOut],
+            default                         => [],
+        };
+    }
+
     protected static function booted(): void
     {
         static::deleted(function (self $model) {

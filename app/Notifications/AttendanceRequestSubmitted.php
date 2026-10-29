@@ -33,7 +33,7 @@ class AttendanceRequestSubmitted extends Notification implements ShouldQueue
         return [
             'type'    => 'attendance_request',
             'title'   => 'Pengajuan Kehadiran Baru',
-            'message' => "Pengajuan {$this->attendanceRequest->type_label} dari {$this->attendanceRequest->user->name} membutuhkan persetujuan Anda.",
+            'message' => "Pengajuan {$this->attendanceRequest->full_type_label} dari {$this->attendanceRequest->user->name} membutuhkan persetujuan Anda.",
             'data'    => ['attendance_request_id' => $this->attendanceRequest->id],
         ];
     }
@@ -47,15 +47,19 @@ class AttendanceRequestSubmitted extends Notification implements ShouldQueue
         $jamSelesai = $this->attendanceRequest->end_time
             ? Carbon::parse($this->attendanceRequest->end_time)->format('H:i')
             : '-';
+        $details = $this->attendanceRequest->update_time_details;
+        $waktu   = $details
+            ? collect($details)->map(fn($d) => "{$d['label']}: " . ($d['time'] ?? '-'))->implode("\n")
+            : "Waktu: {$jamMulai} - {$jamSelesai}";
 
         return WhatsAppMessage::create(
             " PENGAJUAN KEHADIRAN BARU\n\n" .
                 "Halo " . ucwords($notifiable->name) . ",\n" .
                 "Ada pengajuan penyesuaian kehadiran dari staf Anda:\n\n" .
                 "Pemohon: " . ucwords($this->attendanceRequest->user->name) . "\n" .
-                "Jenis: {$this->attendanceRequest->type_label}\n" .
+                "Jenis: {$this->attendanceRequest->full_type_label}\n" .
                 "Tanggal: {$tanggal}\n" .
-                "Waktu: {$jamMulai} - {$jamSelesai}\n" .
+                "{$waktu}\n" .
                 "Alasan: \"{$this->attendanceRequest->reason}\"\n\n" .
                 "Setujui atau tolak di SIMIKA:\n"
         );

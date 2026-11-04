@@ -25,7 +25,7 @@
                             Selamat Datang, {{ strtoupper(auth()->user()->name) }}! 👋
                         </h1>
                         <p class="text-primary-100 text-base mb-4">
-                            Ringkasan aktivitas dan status cuti Anda
+                            Ringkasan aktivitas dan status pengajuan anda
                         </p>
                         <div class="flex flex-wrap gap-2">
                             <span class="bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1 text-sm">
@@ -63,7 +63,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="font-medium text-primary-900 dark:text-primary-100 text-sm">Ajukan Cuti</p>
+                                <p class="font-medium text-primary-900 dark:text-primary-100 text-sm">Ajukan Izin/Cuti
+                                </p>
                                 <p class="text-xs text-primary-600 dark:text-primary-300">Buat pengajuan baru</p>
                             </div>
                         </a>
@@ -79,7 +80,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="font-medium text-blue-900 dark:text-blue-100 text-sm">Riwayat Cuti</p>
+                                <p class="font-medium text-blue-900 dark:text-blue-100 text-sm">Riwayat Izin/Cuti</p>
                                 <p class="text-xs text-blue-600 dark:text-blue-300">Lihat pengajuan Anda</p>
                             </div>
                         </a>
@@ -155,7 +156,8 @@
                                     </svg>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Semua pengajuan cuti Anda</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Semua pengajuan izin dan cuti Anda
+                            </p>
                         </div>
 
                         <!-- Remaining Leave Card -->
@@ -192,7 +194,7 @@
                     <!-- Recent Leave Applications -->
                     @if ($recentLeaves->count() > 0)
                         <div class="mt-6">
-                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Pengajuan Cuti
+                            <h4 class="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Pengajuan Izin/Cuti
                                 Terakhir</h4>
                             <div class="space-y-3">
                                 @foreach ($recentLeaves as $leave)

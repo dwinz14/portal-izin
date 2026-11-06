@@ -111,7 +111,7 @@ class LeaveAdjustmentService
 
             // Aturan yang sama dengan pengajuan baru; cuti ini sendiri dikecualikan dari pengecekan bentrok.
             $newDays = $this->rules->assertSchedulable(
-                $locked->user_id,
+                $locked->user,
                 $locked->leaveType,
                 $newStart,
                 $newEnd,

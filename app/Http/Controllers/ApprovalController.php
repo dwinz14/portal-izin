@@ -14,7 +14,6 @@ use App\Notifications\LeaveRequestRevisionRequested;
 use App\Services\LeaveApprovalService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 use App\Services\ActivityLogger;
 
 class ApprovalController extends Controller
@@ -121,7 +120,8 @@ class ApprovalController extends Controller
 
         $revisedTotalHari = LeaveHelper::calculateWorkingDays(
             $request->revised_start_date,
-            $request->revised_end_date
+            $request->revised_end_date,
+            $approval->leave->user->workSchedule()
         );
 
         // Update approval dengan data revisi
@@ -223,21 +223,5 @@ class ApprovalController extends Controller
     private function finalApprove($leave)
     {
         app(LeaveApprovalService::class)->finalApprove($leave);
-    }
-
-    private function calculateWorkingDays($startDate, $endDate)
-    {
-        $start = Carbon::parse($startDate);
-        $end = Carbon::parse($endDate);
-        $workingDays = 0;
-
-        while ($start <= $end) {
-            if ($start->dayOfWeek !== Carbon::SATURDAY && $start->dayOfWeek !== Carbon::SUNDAY) {
-                $workingDays++;
-            }
-            $start->addDay();
-        }
-
-        return $workingDays;
     }
 }

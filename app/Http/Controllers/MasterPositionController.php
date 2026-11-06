@@ -4,22 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\Position;
 use App\Models\JabatanExternal;
+use App\Enums\WorkSchedule;
+use App\Services\ActivityLogger;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MasterPositionController extends Controller
 {
+    private const PER_PAGE_OPTIONS = [10, 25, 50, 100];
+    private const SORTABLE = ['nama_jabatan', 'work_schedule', 'users_count'];
 
     /**
      * Display a listing of the positions.
      */
     public function index(Request $request)
     {
-
-        $positions = Position::query()
-            ->paginate(10);
-
-        return view('admin.positions.index', compact('positions'));
+        return view('admin.positions.index', $this->listData($request));
     }
 
     /**
@@ -36,14 +37,16 @@ class MasterPositionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_jabatan' => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/|unique:positions,nama_jabatan',
+            'nama_jabatan'  => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/|unique:positions,nama_jabatan',
+            'work_schedule' => ['required', Rule::enum(WorkSchedule::class)],
         ]);
 
         // Sanitize and normalize: trim and convert to lowercase
         $nama_jabatan = strtolower(trim($request->nama_jabatan));
 
         Position::create([
-            'nama_jabatan' => $nama_jabatan,
+            'nama_jabatan'  => $nama_jabatan,
+            'work_schedule' => WorkSchedule::from($request->work_schedule),
         ]);
 
         return redirect()->route('admin.positions.index')->with('success', 'Jabatan berhasil ditambahkan.');
@@ -63,15 +66,35 @@ class MasterPositionController extends Controller
     public function update(Request $request, Position $position)
     {
         $request->validate([
-            'nama_jabatan' => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/|unique:positions,nama_jabatan,' . $position->id,
+            'nama_jabatan'  => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/|unique:positions,nama_jabatan,' . $position->id,
+            'work_schedule' => ['required', Rule::enum(WorkSchedule::class)],
         ]);
 
         // Sanitize and normalize: trim and convert to lowercase
         $nama_jabatan = strtolower(trim($request->nama_jabatan));
 
+        $oldSchedule = $position->work_schedule ?? WorkSchedule::Weekday;
+        $newSchedule = WorkSchedule::from($request->work_schedule);
+
         $position->update([
-            'nama_jabatan' => $nama_jabatan,
+            'nama_jabatan'  => $nama_jabatan,
+            'work_schedule' => $newSchedule,
         ]);
+
+        // Pola hari kerja memengaruhi perhitungan cuti, jadi perubahannya dicatat.
+        if ($oldSchedule !== $newSchedule) {
+            ActivityLogger::log(
+                'admin.position_schedule_changed',
+                'Mengubah pola hari kerja jabatan ' . strtoupper($nama_jabatan)
+                    . " dari \"{$oldSchedule->label()}\" menjadi \"{$newSchedule->label()}\"",
+                $position,
+                [
+                    'jabatan' => strtoupper($nama_jabatan),
+                    'dari'    => $oldSchedule->value,
+                    'ke'      => $newSchedule->value,
+                ]
+            );
+        }
 
         return redirect()->route('admin.positions.index')->with('success', 'Jabatan berhasil diperbarui.');
     }
@@ -100,9 +123,7 @@ class MasterPositionController extends Controller
                 ->with('error', 'Koneksi ke database karyawan gagal. Coba beberapa saat lagi.');
         }
 
-        $positions = Position::query()->paginate(10);
-
-        return view('admin.positions.index', compact('positions', 'newJabatan'));
+        return view('admin.positions.index', $this->listData($request) + compact('newJabatan'));
     }
 
     /**
@@ -180,5 +201,49 @@ class MasterPositionController extends Controller
         return redirect()
             ->route('admin.positions.sync')
             ->with('success', "{$inserted} jabatan baru berhasil ditambahkan.");
+    }
+
+    /**
+     * Data daftar jabatan
+     */
+    private function listData(Request $request): array
+    {
+        // Semua input dari query string divalidasi manual (whitelist), nilai aneh jatuh ke default.
+        $rawSearch = $request->query('search');
+        $search    = is_string($rawSearch) ? trim($rawSearch) : '';
+
+        $rawSchedule = $request->query('schedule');
+        $schedule    = is_string($rawSchedule) ? WorkSchedule::tryFrom($rawSchedule) : null;
+
+        $rawSort   = $request->query('sort');
+        $sort      = is_string($rawSort) && in_array($rawSort, self::SORTABLE, true) ? $rawSort : 'nama_jabatan';
+        $direction = $request->query('direction') === 'desc' ? 'desc' : 'asc';
+
+        $perPage = $request->integer('per_page', 10);
+        if (! in_array($perPage, self::PER_PAGE_OPTIONS, true)) {
+            $perPage = 10;
+        }
+
+        $positions = Position::query()
+            ->withCount('users')
+            ->when($search !== '', function ($q) use ($search) {
+                // Escape % dan _ supaya diperlakukan sebagai teks biasa, bukan wildcard
+                $q->where('nama_jabatan', 'like', '%' . addcslashes($search, '%_\\') . '%');
+            })
+            ->when($schedule, fn($q) => $q->where('work_schedule', $schedule->value))
+            ->orderBy($sort, $direction)
+            ->orderBy('id') // tie-breaker agar urutan antar halaman stabil
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return [
+            'positions'      => $positions,
+            'search'         => $search,
+            'scheduleFilter' => $schedule?->value,
+            'sort'           => $sort,
+            'direction'      => $direction,
+            'perPage'        => $perPage,
+            'perPageOptions' => self::PER_PAGE_OPTIONS,
+        ];
     }
 }

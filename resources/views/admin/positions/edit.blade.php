@@ -26,6 +26,24 @@
                     <x-input-error :messages="$errors->get('nama_jabatan')" class="mt-2" />
                 </div>
 
+                <div>
+                    <label for="work_schedule"
+                        class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                        Pola Hari Kerja <span class="text-red-500">*</span>
+                    </label>
+                    <select id="work_schedule" name="work_schedule" required
+                        class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm px-3.5 py-2.5 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition">
+                        @foreach (\App\Enums\WorkSchedule::options() as $value => $label)
+                            <option value="{{ $value }}" @selected(old('work_schedule', $position->work_schedule?->value ?? 'weekday') === $value)>{{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        Pilih "Setiap hari" untuk jabatan shift 7 hari.
+                    </p>
+                    <x-input-error :messages="$errors->get('work_schedule')" class="mt-2" />
+                </div>
+
                 <div class="flex items-center justify-end space-x-3">
                     <a href="{{ route('admin.positions.index') }}"
                         class="inline-flex items-center justify-center px-4 py-2 bg-red-400 dark:bg-slate-600 border border-gray-300 dark:border-gray-500 rounded-full font-semibold text-xs text-slate-50 dark:text-gray-200 uppercase tracking-widest shadow-sm hover:bg-rose-300 dark:hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:ring-offset-slate-800 transition ease-in-out duration-150">

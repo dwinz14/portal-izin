@@ -7,6 +7,7 @@ use App\Helpers\LeaveHelper;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use App\Models\UserLeaveBalance;
+use App\Models\User;
 
 /**
  * Aturan jadwal cuti yang dipakai bersama oleh pengajuan baru dan perubahan tanggal
@@ -22,26 +23,25 @@ class LeaveRulesService
     ) {}
 
     /**
-     * Pastikan rentang tanggal boleh dipakai. Urutan pengecekan & pesan error
-     * identik dengan yang sebelumnya ada di LeaveController@store.
-     *
+     * @param  User  $employee  Pemohon/pemilik cuti (menentukan pola hari kerja).
      * @param  Leave|null  $existing  Cuti yang SEDANG diubah tanggalnya (sudah final approved).
      *                                null = pengajuan baru.
-     * @return int  Total hari kerja pada rentang tersebut.
+     * @return int  Total hari cuti pada rentang tersebut (sesuai pola hari kerja pemohon).
      *
      * @throws LeaveRuleViolation
      */
     public function assertSchedulable(
-        int $employeeId,
+        User $employee,
         LeaveType $leaveType,
         string $start,
         string $end,
         ?int $penggantiId = null,
         ?Leave $existing = null,
     ): int {
-        $excludeId = $existing?->id;
+        $employeeId = $employee->id;
+        $excludeId  = $existing?->id;
 
-        $totalHari = LeaveHelper::calculateWorkingDays($start, $end);
+        $totalHari = LeaveHelper::calculateWorkingDays($start, $end, $employee->workSchedule());
 
         // Tolak rentang tanpa hari kerja sama sekali
         // (seluruhnya akhir pekan / libur nasional / cuti bersama)

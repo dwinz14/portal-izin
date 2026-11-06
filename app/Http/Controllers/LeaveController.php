@@ -114,7 +114,9 @@ class LeaveController extends Controller
         // Data hari libur (tanggal merah & cuti bersama) untuk menandai kalender
         $holidayMap = PublicHoliday::getHolidayMap();
 
-        return view('leaves.create', compact('penggantiList', 'showReplacement', 'replacementOptional', 'atasanList', 'requiresAtasan', 'leaveTypes', 'userLeaveBalances', 'user', 'holidayMap'));
+        $usesBusinessCalendar = $user->workSchedule()->usesBusinessCalendar();
+
+        return view('leaves.create', compact('penggantiList', 'showReplacement', 'replacementOptional', 'atasanList', 'requiresAtasan', 'leaveTypes', 'userLeaveBalances', 'user', 'holidayMap', 'usesBusinessCalendar'));
     }
 
     public function store(StoreLeaveRequest $request)
@@ -153,7 +155,7 @@ class LeaveController extends Controller
 
         try {
             $totalHari = $this->rules->assertSchedulable(
-                $user->id,
+                $user,
                 $leaveType,
                 $request->start_date,
                 $request->end_date,

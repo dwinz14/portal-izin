@@ -32,7 +32,7 @@
         </div>
     </x-slot>
 
-    <div class="space-y-4" x-data="{ showFilters: false, confirmDelete: false, selectedPosition: null, selectedPositionName: '' }">
+    <div class="space-y-4" x-data="{ showFilters: false, confirmDelete: false, selectedPosition: null, selectedPositionName: '', selectedPositionUsers: 0 }">
         @if (session('success'))
             <div
                 class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-4 py-3 rounded-lg flex items-center">
@@ -131,6 +131,9 @@
                                         Nama Jabatan (dari DB Karyawan)</th>
                                     <th
                                         class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Pola Hari Kerja</th>
+                                    <th
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Aksi</th>
                                 </tr>
                             </thead>
@@ -167,8 +170,77 @@
             </div>
         @endisset
 
+        {{-- Daftar jabatan --}}
         <div
             class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+
+            @php
+                $isFiltered = $search !== '' || $scheduleFilter;
+                $isNonDefault = $isFiltered || $perPage !== 10 || $sort !== 'nama_jabatan' || $direction !== 'asc';
+                $sortUrl = fn(string $col) => route(
+                    'admin.positions.index',
+                    array_merge(request()->except('page'), [
+                        'sort' => $col,
+                        'direction' => $sort === $col && $direction === 'asc' ? 'desc' : 'asc',
+                    ]),
+                );
+                $selectClass =
+                    'rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm py-2 pl-3 pr-8 shadow-sm focus:border-primary-500 focus:ring-primary-500';
+            @endphp
+
+            {{-- Toolbar: search, filter, per-page --}}
+            <form method="GET" action="{{ route('admin.positions.index') }}"
+                class="px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex flex-wrap items-center gap-3">
+                <input type="hidden" name="sort" value="{{ $sort }}">
+                <input type="hidden" name="direction" value="{{ $direction }}">
+
+                <div class="relative flex-1 min-w-[14rem]">
+                    <label for="search" class="sr-only">Cari jabatan</label>
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+                    </svg>
+                    <input type="search" id="search" name="search" value="{{ $search }}"
+                        placeholder="Cari nama jabatan..."
+                        class="block w-full rounded-xl border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-100 text-sm pl-9 pr-3 py-2 shadow-sm focus:border-primary-500 focus:ring-primary-500">
+                </div>
+
+                <div>
+                    <label for="schedule" class="sr-only">Filter pola hari kerja</label>
+                    <select id="schedule" name="schedule" onchange="this.form.submit()"
+                        class="{{ $selectClass }}">
+                        <option value="">Semua pola hari kerja</option>
+                        @foreach (\App\Enums\WorkSchedule::options() as $value => $label)
+                            <option value="{{ $value }}" @selected($scheduleFilter === $value)>{{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="per_page" class="text-xs text-gray-500 dark:text-gray-400">Tampilkan</label>
+                    <select id="per_page" name="per_page" onchange="this.form.submit()"
+                        class="{{ $selectClass }}">
+                        @foreach ($perPageOptions as $option)
+                            <option value="{{ $option }}" @selected($perPage === $option)>{{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <button type="submit"
+                    class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white text-xs font-medium rounded-full shadow-sm transition focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                    Cari
+                </button>
+
+                @if ($isNonDefault)
+                    <a href="{{ route('admin.positions.index') }}"
+                        class="text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 underline">
+                        Reset
+                    </a>
+                @endif
+            </form>
 
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
@@ -177,9 +249,22 @@
                             <th
                                 class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 #</th>
-                            <th
-                                class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Nama Jabatan</th>
+
+                            @foreach ([['nama_jabatan', 'Nama Jabatan'], ['work_schedule', 'Pola Hari Kerja'], ['users_count', 'Jumlah User']] as [$col, $label])
+                                <th scope="col"
+                                    aria-sort="{{ $sort === $col ? ($direction === 'asc' ? 'ascending' : 'descending') : 'none' }}"
+                                    class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    <a href="{{ $sortUrl($col) }}"
+                                        class="group inline-flex items-center gap-1 hover:text-gray-800 dark:hover:text-white">
+                                        {{ $label }}
+                                        <span aria-hidden="true"
+                                            class="{{ $sort === $col ? 'text-primary-600 dark:text-primary-300' : 'opacity-40 group-hover:opacity-80' }}">
+                                            {{ $sort === $col ? ($direction === 'asc' ? '▲' : '▼') : '↕' }}
+                                        </span>
+                                    </a>
+                                </th>
+                            @endforeach
+
                             <th
                                 class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                 Aksi</th>
@@ -193,6 +278,26 @@
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">
                                     {{ strtoupper($position->nama_jabatan) }}</td>
                                 <td class="px-4 py-3 text-sm">
+                                    @php($schedule = $position->work_schedule ?? \App\Enums\WorkSchedule::Weekday)
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                        {{ $schedule === \App\Enums\WorkSchedule::AllDays
+                                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+                                            : 'bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300' }}">
+                                        {{ $schedule->label() }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                    @if ($position->users_count > 0)
+                                        <a href="{{ route('admin.users.index', ['position_id' => $position->id]) }}"
+                                            class="text-primary-600 hover:underline dark:text-primary-300"
+                                            title="Lihat user dengan jabatan ini">{{ $position->users_count }}
+                                            user</a>
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm">
                                     <div class="flex items-center space-x-2">
                                         <a href="{{ route('admin.positions.edit', $position->id) }}"
                                             class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
@@ -204,7 +309,7 @@
                                             </svg>
                                         </a>
                                         <button
-                                            @click="confirmDelete = true; selectedPosition = {{ $position->id }}; selectedPositionName = '{{ $position->nama_jabatan }}'"
+                                            @click="confirmDelete = true; selectedPosition = {{ $position->id }}; selectedPositionName = @js(strtoupper($position->nama_jabatan)); selectedPositionUsers = {{ $position->users_count }}"
                                             class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
                                             title="Hapus">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
@@ -218,14 +323,22 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3"
+                                <td colspan="5"
                                     class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
-                                    <p class="mt-2">Tidak ada data jabatan ditemukan.</p>
+                                    @if ($isFiltered)
+                                        <p class="mt-2">Tidak ada jabatan yang cocok dengan pencarian atau filter.
+                                        </p>
+                                        <a href="{{ route('admin.positions.index') }}"
+                                            class="mt-1 inline-block text-xs text-primary-600 dark:text-primary-300 underline">Reset
+                                            pencarian</a>
+                                    @else
+                                        <p class="mt-2">Tidak ada data jabatan ditemukan.</p>
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse
@@ -233,11 +346,17 @@
                 </table>
             </div>
 
-            @if ($positions->hasPages())
-                <div class="px-4 py-3 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-200 dark:border-slate-700">
+            <div class="px-4 py-3 bg-gray-50 dark:bg-slate-700/50 border-t border-gray-200 dark:border-slate-700">
+                @if ($positions->hasPages())
                     {{ $positions->links() }}
-                </div>
-            @endif
+                @else
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Menampilkan <span
+                            class="font-semibold">{{ $positions->firstItem() ?? 0 }}–{{ $positions->lastItem() ?? 0 }}</span>
+                        dari <span class="font-semibold">{{ $positions->total() }}</span> jabatan
+                    </p>
+                @endif
+            </div>
         </div>
 
         <!-- Modal delete position -->
@@ -251,6 +370,12 @@
                 <p class="mb-4">
                     Apakah Anda yakin ingin menghapus jabatan <span class="font-bold"
                         x-text="selectedPositionName"></span>?
+                </p>
+                <p x-show="selectedPositionUsers > 0"
+                    class="mb-4 text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2">
+                    <span class="font-semibold" x-text="selectedPositionUsers"></span> user saat ini memakai jabatan
+                    ini.
+                    Jika dihapus, jabatan mereka dikosongkan dan pola hari kerjanya kembali ke Senin–Jumat.
                 </p>
                 <form x-bind:action="'{{ route('admin.positions.destroy', ':id') }}'.replace(':id', selectedPosition)"
                     method="POST">

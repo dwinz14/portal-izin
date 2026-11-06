@@ -43,8 +43,8 @@
                         </label>
                         <div class="relative max-w-xl">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -53,25 +53,25 @@
                                 class="block w-full pl-9 pr-9 py-2.5 text-sm bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-gray-100 transition-colors cursor-pointer">
                                 <option value="" class="text-gray-500">-- Silakan Pilih --</option>
                                 @foreach ($leaveTypes as $type)
-                                <option value="{{ $type->id }}" @selected(old('leave_type_id')==$type->id)>
-                                    {{ strtoupper($type->name) }}
-                                    @if ($type->quota > 0 && isset($userLeaveBalances[$type->id]))
-                                    (Sisa Kuota: {{ $userLeaveBalances[$type->id]->remaining }} Hari)
-                                    @elseif ($type->quota > 0)
-                                    (Total Kuota: {{ $type->quota }} Hari)
-                                    @endif
-                                </option>
+                                    <option value="{{ $type->id }}" @selected(old('leave_type_id') == $type->id)>
+                                        {{ strtoupper($type->name) }}
+                                        @if ($type->quota > 0 && isset($userLeaveBalances[$type->id]))
+                                            (Sisa Kuota: {{ $userLeaveBalances[$type->id]->remaining }} Hari)
+                                        @elseif ($type->quota > 0)
+                                            (Total Kuota: {{ $type->quota }} Hari)
+                                        @endif
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         @error('leave_type_id')
-                        <p class="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                            </svg>
-                            {{ $message }}
-                        </p>
+                            <p class="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                {{ $message }}
+                            </p>
                         @enderror
                     </div>
 
@@ -104,7 +104,8 @@
                                             :class="startOpen ? 'ring-2 ring-primary-500 border-primary-500' :
                                                 'border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-gray-500'"
                                             class="relative w-full flex items-center justify-between px-3.5 py-2 bg-white dark:bg-slate-900 border rounded-lg shadow-sm text-sm text-left focus:outline-none transition-all duration-200">
-                                            <span :class="startDate ? 'text-gray-900 dark:text-gray-100 font-medium' :
+                                            <span
+                                                :class="startDate ? 'text-gray-900 dark:text-gray-100 font-medium' :
                                                     'text-gray-400 dark:text-gray-500'"
                                                 x-text="startDate ? formatDisplay(startDate) : 'Pilih tanggal mulai'"></span>
                                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
@@ -157,7 +158,7 @@
                                         </div>
                                     </div>
                                     @error('start_date')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror
                                 </div>
 
@@ -167,14 +168,16 @@
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tanggal
                                         Selesai</label>
                                     <div class="relative" @click.outside="endOpen = false">
-                                        <button type="button" @click="startDate && (endOpen = !endOpen)" :class="[!startDate ?
+                                        <button type="button" @click="startDate && (endOpen = !endOpen)"
+                                            :class="[!startDate ?
                                                 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700' :
                                                 endOpen ?
                                                 'ring-2 ring-primary-500 border-primary-500 bg-white dark:bg-slate-900' :
                                                 'bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 hover:border-gray-400 dark:hover:border-gray-500'
                                             ]"
                                             class="relative w-full flex items-center justify-between px-3.5 py-2 border rounded-lg shadow-sm text-sm text-left focus:outline-none transition-all duration-200">
-                                            <span :class="endDate ? 'text-gray-900 dark:text-gray-100 font-medium' :
+                                            <span
+                                                :class="endDate ? 'text-gray-900 dark:text-gray-100 font-medium' :
                                                     'text-gray-400 dark:text-gray-500'"
                                                 x-text="endDate ? formatDisplay(endDate) : (startDate ? 'Pilih tanggal selesai' : 'Pilih tanggal mulai dulu')"></span>
                                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
@@ -216,8 +219,8 @@
                                             <div class="grid grid-cols-7 gap-y-1">
                                                 <template x-for="day in endDays" :key="day.key">
                                                     <div class="flex items-center justify-center">
-                                                        <button x-show="!day.pad" type="button" @click="selectEnd(day)"
-                                                            :class="dayClass(day, 'end')"
+                                                        <button x-show="!day.pad" type="button"
+                                                            @click="selectEnd(day)" :class="dayClass(day, 'end')"
                                                             :title="day.holiday ? day.holiday.name : ''"
                                                             x-text="day.d"></button>
                                                         <span x-show="day.pad" class="w-7 h-7 block"></span>
@@ -227,7 +230,7 @@
                                         </div>
                                     </div>
                                     @error('end_date')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror
                                 </div>
                             </div>
@@ -255,7 +258,8 @@
                                     class="flex items-center gap-2.5 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg">
                                     <div
                                         class="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-md text-blue-600 dark:text-blue-400">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -264,8 +268,11 @@
                                         <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Total Durasi
                                             Cuti</p>
                                         <p class="text-xs text-blue-700 dark:text-blue-300">
-                                            <span class="font-bold text-sm" x-text="workdays"></span> hari kerja
-                                            efektif terpilih.
+                                            <span class="font-bold text-sm" x-text="workdays"></span>
+                                            <span
+                                                x-text="usesBusinessCalendar
+        ? 'hari kerja efektif terpilih.'
+        : 'hari terpilih (pola kerja setiap hari, termasuk akhir pekan dan tanggal merah).'"></span>
                                         </p>
                                     </div>
                                 </div>
@@ -278,11 +285,20 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <p class="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-                                        Rentang ini mencakup <span class="font-bold" x-text="holidaysInRange"></span>
-                                        hari libur yang <span class="font-semibold underline">tidak akan
-                                            memotong</span> kuota Anda.
-                                    </p>
+                                    <div class="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                                        <p x-show="usesBusinessCalendar">
+                                            Rentang ini mencakup <span class="font-bold"
+                                                x-text="holidaysInRange"></span>
+                                            hari libur yang <span class="font-semibold underline">tidak akan
+                                                memotong</span> kuota anda.
+                                        </p>
+                                        <p x-show="!usesBusinessCalendar">
+                                            Rentang ini mencakup <span class="font-bold"
+                                                x-text="holidaysInRange"></span>
+                                            hari libur/cuti bersama yang <span class="font-semibold underline">tetap
+                                                dihitung</span>
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {{-- Warning: Mendadak --}}
@@ -319,64 +335,69 @@
 
                         {{-- ── BAGIAN 3: PERSONIL TERLIBAT (Atasan & Pengganti) ──────── --}}
                         @if ($showReplacement || $requiresAtasan)
-                        <section>
-                            <h3
-                                class="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                                <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                Persetujuan
-                            </h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                @if ($requiresAtasan)
-                                <div>
-                                    <label
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Atasan
-                                        Langsung (Approver)</label>
-                                    <x-select-dropdown name="atasan_id" label="" :options="$atasanList->map(
+                            <section>
+                                <h3
+                                    class="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                                    <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                    Persetujuan
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    @if ($requiresAtasan)
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Atasan
+                                                Langsung (Approver)</label>
+                                            <x-select-dropdown name="atasan_id" label="" :options="$atasanList->map(
                                                 fn($u) => [
                                                     'id' => $u->id,
                                                     'name' => strtoupper($u->name . ' (' . $u->role . ')'),
                                                 ],
-                                            )" :selected="old('atasan_id')" placeholder="-- Cari & Pilih Atasan --"
-                                        searchable="true" />
-                                </div>
-                                @endif
+                                            )"
+                                                :selected="old('atasan_id')" placeholder="-- Cari & Pilih Atasan --"
+                                                searchable="true" />
+                                        </div>
+                                    @endif
 
-                                @if ($showReplacement)
-                                @php
-                                $penggantiOptions = $penggantiList->map(
-                                fn($u) => [
-                                'id' => $u->id,
-                                'name' => strtoupper($u->name . ' (' . $u->role . ')'),
-                                ],
-                                );
+                                    @if ($showReplacement)
+                                        @php
+                                            $penggantiOptions = $penggantiList->map(
+                                                fn($u) => [
+                                                    'id' => $u->id,
+                                                    'name' => strtoupper($u->name . ' (' . $u->role . ')'),
+                                                ],
+                                            );
 
-                                // Mode opsional: sediakan pilihan kosong agar pengganti bisa dikosongkan lagi
-                                if ($replacementOptional) {
-                                $penggantiOptions = $penggantiOptions->prepend(['id' => '', 'name' => 'TANPA
-                                PENGGANTI']);
-                                }
-                                @endphp
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rekan
-                                        Pengganti (Backup)
-                                        @if ($replacementOptional)
-                                        <span
-                                            class="text-xs font-normal text-gray-400 dark:text-gray-500">(opsional)</span>
-                                        @endif
-                                    </label>
-                                    <x-select-dropdown name="pengganti_id" label="" :options="$penggantiOptions"
-                                        :selected="old('pengganti_id')"
-                                        :placeholder="$replacementOptional ? '-- Tanpa Pengganti / Pilih Rekan --' : '-- Cari & Pilih Rekan --'"
-                                        searchable="true" />
+                                            // Mode opsional: sediakan pilihan kosong agar pengganti bisa dikosongkan lagi
+                                            if ($replacementOptional) {
+                                                $penggantiOptions = $penggantiOptions->prepend([
+                                                    'id' => '',
+                                                    'name' => 'TANPA
+                                PENGGANTI',
+                                                ]);
+                                            }
+                                        @endphp
+                                        <div>
+                                            <label
+                                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rekan
+                                                Pengganti (Backup)
+                                                @if ($replacementOptional)
+                                                    <span
+                                                        class="text-xs font-normal text-gray-400 dark:text-gray-500">(opsional)</span>
+                                                @endif
+                                            </label>
+                                            <x-select-dropdown name="pengganti_id" label="" :options="$penggantiOptions"
+                                                :selected="old('pengganti_id')" :placeholder="$replacementOptional
+                                                    ? '-- Tanpa Pengganti / Pilih Rekan --'
+                                                    : '-- Cari & Pilih Rekan --'" searchable="true" />
+                                        </div>
+                                    @endif
                                 </div>
-                                @endif
-                            </div>
-                        </section>
-                        <hr class="border-gray-100 dark:border-slate-700">
+                            </section>
+                            <hr class="border-gray-100 dark:border-slate-700">
                         @endif
 
                         {{-- ── BAGIAN 4: DETAIL & LAMPIRAN ─────────────────────────────── --}}
@@ -400,7 +421,7 @@
                                         placeholder="Jelaskan secara detail alasan permohonan cuti/izin Anda di sini..."
                                         class="block w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm resize-none transition-colors">{{ old('alasan') }}</textarea>
                                     @error('alasan')
-                                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror
                                 </div>
 
@@ -433,8 +454,8 @@
                                 <span x-show="submitting" style="display: none;" class="flex items-center gap-2">
                                     <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
                                         fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4"></circle>
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor"
                                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                                         </path>
@@ -451,37 +472,37 @@
 
     {{-- ── MODAL ERROR (Kuota Habis, dsb) ────────────────────────────────────────── --}}
     @if ($errors->has('msg'))
-    <div x-data="{ show: true }" x-show="show" x-transition
-        class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div @click.outside="show = false"
-            class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-2xl max-w-sm w-full transform transition-all">
-            <div class="flex items-center gap-3">
-                <div
-                    class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
+        <div x-data="{ show: true }" x-show="show" x-transition
+            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div @click.outside="show = false"
+                class="bg-white dark:bg-slate-800 p-5 rounded-xl shadow-2xl max-w-sm w-full transform transition-all">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Gagal Mengajukan</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ $errors->first('msg') }}</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Gagal Mengajukan</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ $errors->first('msg') }}</p>
+                <div class="mt-5">
+                    <button @click="show = false"
+                        class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium text-sm transition-colors">
+                        Mengerti, Tutup
+                    </button>
                 </div>
-            </div>
-            <div class="mt-5">
-                <button @click="show = false"
-                    class="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 rounded-lg font-medium text-sm transition-colors">
-                    Mengerti, Tutup
-                </button>
             </div>
         </div>
-    </div>
     @endif
 
     {{-- ── MODAL PREVIEW GAMBAR BUKTI ────────────────────────────────────────────── --}}
-    <div x-data="{ open: false, src: '' }" x-on:open-image-preview.window="open = true; src = $event.detail.src"
-        x-show="open" x-transition @click.self="open = false"
+    <div x-data="{ open: false, src: '' }" x-on:open-image-preview.window="open = true; src = $event.detail.src" x-show="open"
+        x-transition @click.self="open = false"
         class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
         style="display:none">
         <div class="bg-white dark:bg-slate-800 p-2 rounded-xl shadow-2xl max-w-2xl w-full relative">
@@ -529,6 +550,7 @@
                 isSickLeave: false,
                 showProof: false,
                 holidays: @json($holidayMap ?? []),
+                usesBusinessCalendar: @json($usesBusinessCalendar ?? true),
                 startDate: @json(old('start_date', '')),
                 endDate: @json(old('end_date', '')),
                 startOpen: false,
@@ -547,12 +569,14 @@
                 get workdays() {
                     if (!this.startDate || !this.endDate || this.endDate < this.startDate) return 0;
                     let n = 0;
-                    const cur = new Date(this.startDate + 'T00:00:00');
                     const end = new Date(this.endDate + 'T00:00:00');
-                    while (cur <= end) {
+                    // Increment ada di header for, jadi tidak mungkin terhapus tak sengaja (mencegah infinite loop).
+                    for (const cur = new Date(this.startDate + 'T00:00:00'); cur <= end; cur.setDate(cur.getDate() +
+                        1)) {
                         const d = cur.getDay();
-                        if (d !== 0 && d !== 6 && !this.holidays[toYMD(cur)]) n++;
-                        cur.setDate(cur.getDate() + 1);
+                        const isNonWorking = this.usesBusinessCalendar && (d === 0 || d === 6 || this.holidays[toYMD(
+                            cur)]);
+                        if (!isNonWorking) n++;
                     }
                     return n;
                 },
@@ -592,7 +616,8 @@
                         const dow = date.getDay();
                         const dStr = toYMD(date);
                         const isWeekend = dow === 0 || dow === 6;
-                        const isDisabled = isWeekend || (this.isSickLeave && dStr >= C.todayStr);
+                        const isDisabled = (this.usesBusinessCalendar && isWeekend) || (this.isSickLeave && dStr >= C
+                            .todayStr);
 
                         let zone = 'normal';
                         if (!this.isSickLeave) {

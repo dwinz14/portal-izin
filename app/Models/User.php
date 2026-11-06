@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
 use App\Models\LeaveType;
+use App\Enums\WorkSchedule;
 
 class User extends Authenticatable
 {
@@ -85,6 +86,11 @@ class User extends Authenticatable
     public function position()
     {
         return $this->belongsTo(Position::class);
+    }
+
+    public function workSchedule(): WorkSchedule
+    {
+        return $this->position?->work_schedule ?? WorkSchedule::Weekday;
     }
 
     public function office()

@@ -2,26 +2,20 @@
 
 namespace App\Helpers;
 
+use App\Enums\WorkSchedule;
 use App\Models\PublicHoliday;
 use Carbon\Carbon;
 use InvalidArgumentException;
 
 class LeaveHelper
 {
-    /**
-     * Hitung jumlah hari kerja (Senin-Jumat) antara dua tanggal,
-     * tidak termasuk libur nasional (tanggal merah) dan cuti bersama
-     * yang jatuh di hari kerja. Tanggal mulai dan selesai ikut dihitung.
-     *
-     * Cuti bersama juga dikurangkan di sini karena jatahnya sudah
-     * dipotong dari kuota cuti tahunan saat HRD generate kuota
-     * (kuota = 12 - jumlah cuti bersama), jadi tidak dihitung lagi
-     * sebagai hari cuti di dalam pengajuan.
-     */
     public static function calculateWorkingDays(
         string|Carbon $startDate,
-        string|Carbon $endDate
+        string|Carbon $endDate,
+        ?WorkSchedule $schedule = null
     ): int {
+        $schedule ??= WorkSchedule::Weekday;
+
         $start = Carbon::parse($startDate)->startOfDay();
         $end = Carbon::parse($endDate)->startOfDay();
 
@@ -29,6 +23,11 @@ class LeaveHelper
             throw new InvalidArgumentException(
                 'Tanggal mulai tidak boleh lebih besar dari tanggal selesai.'
             );
+        }
+
+        // Pola 7 hari: semua hari kalender dihitung, tidak perlu cek weekend/libur.
+        if (! $schedule->usesBusinessCalendar()) {
+            return (int) $start->diffInDays($end) + 1;
         }
 
         $nonWorkingDates = collect();

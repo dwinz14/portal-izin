@@ -126,7 +126,7 @@ class LeavePrintController extends Controller
     }
 ');
 
-        $filename = 'form-cuti-' . $leave->id . '-' . now()->format('Ymd_His') . '.pdf';
+        $filename = 'form-' . $leave->id . '-' . now()->format('Ymd_His') . '.pdf';
 
         return $request->query('download') === '1'
             ? $pdf->download($filename)

@@ -69,6 +69,9 @@
                                 Gender</th>
                             <th
                                 class="px-4 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
+                                Batas Pengajuan</th>
+                            <th
+                                class="px-4 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
                                 Status</th>
                             <th
                                 class="px-4 py-3 text-left text-sm font-medium text-stone-500 dark:text-gray-300 uppercase tracking-wider">
@@ -94,6 +97,13 @@
                                         {{ $leaveType->gender === 'L' ? 'Laki-laki' : 'Perempuan' }}
                                     @else
                                         Semua
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                                    @if ($leaveType->advance_notice_days > 0)
+                                        H-{{ $leaveType->advance_notice_days }}
+                                    @else
+                                        <span class="text-gray-500 dark:text-gray-400">Tanpa aturan</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-sm">

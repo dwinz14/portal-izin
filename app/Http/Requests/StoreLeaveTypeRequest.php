@@ -18,6 +18,7 @@ class StoreLeaveTypeRequest extends FormRequest
             'quota' => ['required', 'integer', 'min:0'],
             'gender' => ['nullable', 'in:L,P'],
             'min_years' => ['required', 'integer', 'min:0'],
+            'advance_notice_days' => ['required', 'integer', 'min:0', 'max:365'],
             'is_active' => ['boolean'],
             'is_annual_leave' => ['boolean'],
         ];
@@ -30,6 +31,10 @@ class StoreLeaveTypeRequest extends FormRequest
             'name.unique' => 'Nama jenis cuti sudah terdaftar.',
             'quota.required' => 'Kuota wajib diisi.',
             'quota.min' => 'Kuota tidak boleh negatif.',
+            'advance_notice_days.required' => 'Batas pengajuan wajib diisi (isi 0 jika tanpa aturan mendadak).',
+            'advance_notice_days.integer' => 'Batas pengajuan harus berupa angka bulat.',
+            'advance_notice_days.min' => 'Batas pengajuan tidak boleh negatif.',
+            'advance_notice_days.max' => 'Batas pengajuan maksimal 365 hari.',
         ];
     }
 

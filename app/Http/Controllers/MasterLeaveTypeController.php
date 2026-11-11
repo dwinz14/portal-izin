@@ -6,6 +6,7 @@ use App\Models\LeaveType;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreLeaveTypeRequest;
 use App\Http\Requests\UpdateLeaveTypeRequest;
+use App\Services\ActivityLogger;
 
 class MasterLeaveTypeController extends Controller
 {
@@ -63,7 +64,25 @@ class MasterLeaveTypeController extends Controller
      */
     public function update(UpdateLeaveTypeRequest $request, LeaveType $leaveType)
     {
+        $oldNotice = (int) $leaveType->advance_notice_days;
+
         $leaveType->update($request->validated());
+
+        // Batas pengajuan menentukan klasifikasi "mendadak", jadi perubahannya dicatat.
+        $newNotice = (int) $leaveType->advance_notice_days;
+        if ($oldNotice !== $newNotice) {
+            ActivityLogger::log(
+                'admin.leave_type_notice_changed',
+                'Mengubah batas pengajuan ' . strtoupper($leaveType->name)
+                    . ' dari ' . $this->noticeLabel($oldNotice) . ' menjadi ' . $this->noticeLabel($newNotice),
+                $leaveType,
+                [
+                    'jenis_cuti' => strtoupper($leaveType->name),
+                    'dari'       => $oldNotice,
+                    'ke'         => $newNotice,
+                ]
+            );
+        }
 
         return redirect()->route('admin.leave-types.index')
             ->with('success', 'Jenis cuti berhasil diperbarui.');
@@ -100,5 +119,10 @@ class MasterLeaveTypeController extends Controller
         $status = $leaveType->is_active ? 'diaktifkan' : 'dinonaktifkan';
 
         return redirect()->back()->with('success', "Jenis cuti {$leaveType->name} berhasil {$status}.");
+    }
+
+    private function noticeLabel(int $days): string
+    {
+        return $days > 0 ? "H-{$days}" : 'tanpa aturan';
     }
 }

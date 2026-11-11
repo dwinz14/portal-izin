@@ -32,8 +32,8 @@ class LeaveRequestSubmitted extends Notification implements ShouldQueue
     {
         return [
             'type'    => 'leave_request',
-            'title'   => 'Pengajuan Cuti Baru',
-            'message' => "Pengajuan cuti dari {$this->leave->user->name} membutuhkan persetujuan Anda.",
+            'title'   => 'Pengajuan Baru',
+            'message' => "Pengajuan dari {$this->leave->user->name} membutuhkan persetujuan Anda.",
             'data'    => ['leave_id' => $this->leave->id],
         ];
     }

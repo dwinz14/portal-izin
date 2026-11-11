@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Form Cuti - {{ $leave->user->name }}</title>
+    <title>Form Pengajuan - {{ $leave->user->name }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         /* Basic A4-friendly styles */
@@ -157,9 +157,9 @@
             <!-- Logo Perusahaan -->
             <div class="company" style="margin-bottom: 15px;">
                 @if ($logoData)
-                <img src="{{ $logoData }}" alt="Logo Perusahaan" style="max-height: 50px;">
+                    <img src="{{ $logoData }}" alt="Logo Perusahaan" style="max-height: 50px;">
                 @else
-                <div style="font-weight: bold; font-size: 14px;">Logo Perusahaan</div>
+                    <div style="font-weight: bold; font-size: 14px;">Logo Perusahaan</div>
                 @endif
             </div>
 
@@ -230,14 +230,14 @@
         <div class="section-title">Riwayat Persetujuan</div>
         <div class="approvals">
             @php
-            $statusLabels = [
-            'approved' => 'Disetujui',
-            'rejected' => 'Ditolak',
-            'revision_requested' => 'Revisi Diminta',
-            'revision_accepted' => 'Revisi Disetujui',
-            'revision_rejected' => 'Revisi Ditolak',
-            ];
-            $i = 1;
+                $statusLabels = [
+                    'approved' => 'Disetujui',
+                    'rejected' => 'Ditolak',
+                    'revision_requested' => 'Revisi Diminta',
+                    'revision_accepted' => 'Revisi Disetujui',
+                    'revision_rejected' => 'Revisi Ditolak',
+                ];
+                $i = 1;
             @endphp
 
             <table>
@@ -251,22 +251,22 @@
                 </thead>
                 <tbody>
                     @forelse ($histories as $h)
-                    <tr>
-                        <td style="text-align:center;">{{ $i++ }}</td>
-                        <td>{{ ucwords(optional($h->approver)->name ?? '—') }}</td>
-                        <td style="text-align:center;">
-                            {{ $statusLabels[$h->status] ?? strtoupper($h->status) }}
-                        </td>
-                        <td style="text-align:center;">
-                            {{ $h->created_at->format('d M Y H:i') }}
-                        </td>
-                    </tr>
+                        <tr>
+                            <td style="text-align:center;">{{ $i++ }}</td>
+                            <td>{{ ucwords(optional($h->approver)->name ?? '—') }}</td>
+                            <td style="text-align:center;">
+                                {{ $statusLabels[$h->status] ?? strtoupper($h->status) }}
+                            </td>
+                            <td style="text-align:center;">
+                                {{ $h->created_at->format('d M Y H:i') }}
+                            </td>
+                        </tr>
                     @empty
-                    <tr>
-                        <td colspan="4" style="text-align:center;">
-                            Belum ada riwayat persetujuan
-                        </td>
-                    </tr>
+                        <tr>
+                            <td colspan="4" style="text-align:center;">
+                                Belum ada riwayat persetujuan
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

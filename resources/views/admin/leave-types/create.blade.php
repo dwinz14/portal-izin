@@ -43,6 +43,17 @@
                 </div>
 
                 <div>
+                    <x-input-label for="advance_notice_days" :value="__('Batas Pengajuan (Hari Sebelum Tanggal Mulai)')" />
+                    <x-text-input id="advance_notice_days" name="advance_notice_days" type="number" min="0"
+                        max="365" class="mt-1 block w-full" :value="old('advance_notice_days', 7)" required />
+                    <x-input-error :messages="$errors->get('advance_notice_days')" class="mt-2" />
+                    <p class="text-sm text-gray-500 mt-1">
+                        Pengajuan dengan tanggal mulai kurang dari batas ini dicatat sebagai <strong>mendadak</strong>
+                        (contoh: 7 = H-7). Isi <strong>0</strong> jika jenis ini tidak memiliki aturan mendadak.
+                    </p>
+                </div>
+
+                <div>
                     <x-input-label for="gender" :value="__('Batasan Gender')" />
                     <select id="gender" name="gender"
                         class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">

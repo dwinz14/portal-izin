@@ -5,7 +5,7 @@
 
                 <h2
                     class="border-l-4 border-primary-700 pl-4 font-bold text-xl text-gray-800 dark:text-gray-100 leading-tight">
-                    {{ __('Ajukan Izin Cuti') }}
+                    {{ __('Ajukan Izin atau Cuti') }}
                 </h2>
 
                 <a href="{{ route('cuti.index') }}"
@@ -39,7 +39,7 @@
                         class="p-5 sm:p-6 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/50">
                         <label for="leave_type_id"
                             class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            Pilih Jenis Cuti / Izin <span class="text-red-500">*</span>
+                            Pilih Jenis Pengajuan <span class="text-red-500">*</span>
                         </label>
                         <div class="relative max-w-xl">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -53,7 +53,9 @@
                                 class="block w-full pl-9 pr-9 py-2.5 text-sm bg-white dark:bg-slate-900 border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-gray-100 transition-colors cursor-pointer">
                                 <option value="" class="text-gray-500">-- Silakan Pilih --</option>
                                 @foreach ($leaveTypes as $type)
-                                    <option value="{{ $type->id }}" @selected(old('leave_type_id') == $type->id)>
+                                    <option value="{{ $type->id }}"
+                                        data-advance-notice-days="{{ (int) $type->advance_notice_days }}"
+                                        @selected(old('leave_type_id') == $type->id)>
                                         {{ strtoupper($type->name) }}
                                         @if ($type->quota > 0 && isset($userLeaveBalances[$type->id]))
                                             (Sisa Kuota: {{ $userLeaveBalances[$type->id]->remaining }} Hari)
@@ -242,9 +244,10 @@
                                     class="flex flex-wrap items-center gap-3 p-2.5 rounded-lg bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-gray-400">
                                     <span class="font-bold text-gray-800 dark:text-gray-200">Indikator
                                         Tanggal:</span>
-                                    <span class="flex items-center gap-1"><span
+                                    <span x-show="noticeDays > 0" class="flex items-center gap-1"><span
                                             class="w-2.5 h-2.5 rounded-full bg-orange-200 border border-orange-300"></span>
-                                        Zona Mendadak</span>
+                                        <span
+                                            x-text="'Zona Mendadak (kurang dari H-' + noticeDays + ')'"></span></span>
                                     <span class="flex items-center gap-1"><span
                                             class="w-2.5 h-2.5 rounded-full bg-red-100 border border-red-200"></span>
                                         Libur Nasional</span>
@@ -266,7 +269,7 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Total Durasi
-                                            Cuti</p>
+                                        </p>
                                         <p class="text-xs text-blue-700 dark:text-blue-300">
                                             <span class="font-bold text-sm" x-text="workdays"></span>
                                             <span
@@ -310,8 +313,9 @@
                                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                                     </svg>
                                     <p class="text-xs text-orange-800 dark:text-orange-300 leading-relaxed">
-                                        <span class="font-bold">Pengajuan Mendadak!</span> Jarak kurang dari
-                                        1 minggu. Sistem akan mencatat sebagai cuti mendadak.
+                                        <span class="font-bold">Pengajuan Mendadak</span> Jarak kurang dari
+                                        H-<span x-text="noticeDays"></span>. Sistem akan mencatat sebagai pengajuan
+                                        mendadak.
                                     </p>
                                 </div>
 
@@ -524,8 +528,6 @@
 
             const _yesterday = new Date(_now);
             _yesterday.setDate(_yesterday.getDate() - 1);
-            const _mendadakEnd = new Date(_now);
-            _mendadakEnd.setDate(_mendadakEnd.getDate() + 6);
 
             const toYMD = (d) => [
                 d.getFullYear(),
@@ -536,7 +538,6 @@
             const C = {
                 todayStr: toYMD(_now),
                 yesterdayStr: toYMD(_yesterday),
-                mendadakEndStr: toYMD(_mendadakEnd),
             };
 
             const MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September',
@@ -548,6 +549,7 @@
             return {
                 showForm: {{ $errors->any() ? 'true' : 'false' }},
                 isSickLeave: false,
+                noticeDays: 0,
                 showProof: false,
                 holidays: @json($holidayMap ?? []),
                 usesBusinessCalendar: @json($usesBusinessCalendar ?? true),
@@ -562,8 +564,15 @@
                 MONTHS,
                 DAYS_SHORT,
 
+                get mendadakEndStr() {
+                    if (this.noticeDays <= 0) return null;
+                    const end = new Date(_now);
+                    end.setDate(end.getDate() + this.noticeDays - 1);
+                    return toYMD(end);
+                },
+
                 get isMendadak() {
-                    return !this.isSickLeave && !!this.startDate && this.startDate <= C.mendadakEndStr;
+                    return !!this.startDate && !!this.mendadakEndStr && this.startDate <= this.mendadakEndStr;
                 },
 
                 get workdays() {
@@ -572,7 +581,7 @@
                     const end = new Date(this.endDate + 'T00:00:00');
                     // Increment ada di header for, jadi tidak mungkin terhapus tak sengaja (mencegah infinite loop).
                     for (const cur = new Date(this.startDate + 'T00:00:00'); cur <= end; cur.setDate(cur.getDate() +
-                        1)) {
+                            1)) {
                         const d = cur.getDay();
                         const isNonWorking = this.usesBusinessCalendar && (d === 0 || d === 6 || this.holidays[toYMD(
                             cur)]);
@@ -622,7 +631,7 @@
                         let zone = 'normal';
                         if (!this.isSickLeave) {
                             if (dStr < C.todayStr) zone = 'past';
-                            else if (dStr <= C.mendadakEndStr) zone = 'mendadak';
+                            else if (this.mendadakEndStr && dStr <= this.mendadakEndStr) zone = 'mendadak';
                         }
 
                         cells.push({
@@ -719,12 +728,17 @@
 
                 // Menerjemahkan jenis cuti terpilih menjadi flag UI (tidak menyentuh tanggal).
                 applyLeaveTypeFlags(selectEl) {
-                    const name = (selectEl.options[selectEl.selectedIndex]?.text || '').toLowerCase();
+                    const opt = selectEl.options[selectEl.selectedIndex];
+                    const name = (opt?.text || '').toLowerCase();
                     const isSickWith = name.includes('izin sakit dengan surat dokter');
                     const isSickOut = name.includes('izin sakit tanpa surat dokter');
 
                     this.isSickLeave = isSickWith || isSickOut;
                     this.showProof = isSickWith;
+
+                    // Batas pengajuan normal (hari) dari master jenis cuti; 0 = tanpa aturan mendadak.
+                    const days = parseInt(opt?.dataset.advanceNoticeDays ?? '0', 10);
+                    this.noticeDays = Number.isFinite(days) && days > 0 ? days : 0;
                 },
 
                 onLeaveTypeChange(selectEl) {

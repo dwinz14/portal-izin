@@ -145,7 +145,6 @@ class LeaveController extends Controller
             }
         }
 
-        $isSickLeave = in_array(strtolower($leaveType->name), ['izin sakit dengan surat dokter', 'izin sakit tanpa surat dokter']);
         $requiresProof = strtolower($leaveType->name) === 'izin sakit dengan surat dokter';
 
         // Validasi ketersediaan jenis cuti untuk user
@@ -176,7 +175,7 @@ class LeaveController extends Controller
 
         try {
             // Transaction untuk insert data
-            return DB::transaction(function () use ($request, $user, $totalHari, $leaveType, $isSickLeave, $proofImagePath, $penggantiId) {
+            return DB::transaction(function () use ($request, $user, $totalHari, $leaveType, $proofImagePath, $penggantiId) {
 
                 // Buat record cuti
                 $leave = Leave::create([
@@ -189,7 +188,7 @@ class LeaveController extends Controller
                     'alasan' => $request->alasan,
                     'proof_image' => $proofImagePath,
                     'status_final' => 'pending',
-                    'is_mendadak' => ! $isSickLeave && \Carbon\Carbon::parse($request->start_date)->lt(\Carbon\Carbon::today()->addWeek()),
+                    'is_mendadak' => $leaveType->isMendadakFor($request->start_date),
                 ]);
 
                 // Log setelah leave berhasil dibuat

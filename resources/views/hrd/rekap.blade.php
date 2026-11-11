@@ -145,7 +145,7 @@
                         <tr>
                             <th class="px-3 py-3 text-left w-32 whitespace-nowrap">Nama</th>
                             <th class="px-3 py-3 text-left w-28 whitespace-nowrap">Jabatan</th>
-                            <th class="px-3 py-3 text-left w-40 whitespace-nowrap">Tanggal Cuti</th>
+                            <th class="px-3 py-3 text-left w-40 whitespace-nowrap">Periode Tanggal</th>
                             <th class="px-3 py-3 text-left w-28 whitespace-nowrap">Jenis</th>
                             <th class="px-3 py-3 text-left w-28 whitespace-nowrap">Pengganti</th>
                             <th class="px-3 py-3 text-left w-32">Alasan</th>

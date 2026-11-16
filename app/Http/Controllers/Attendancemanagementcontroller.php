@@ -39,6 +39,7 @@ class AttendanceManagementController extends Controller
         ]);
 
         $attendanceRequests = AttendanceRequest::with(['user.position', 'user.office'])
+            ->whereHas('user')
             ->deletableBy($request->user())
             ->when($filters['q'] ?? null, function ($query, $keyword) {
                 // Escape wildcard LIKE agar input "%" atau "_" tidak dianggap pola

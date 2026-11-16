@@ -397,25 +397,32 @@
                                                     title="Cuti Mendatang"></span>
                                             @endif
                                         </div>
+
                                         <div>
                                             <div
                                                 class="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                                 {{ ucwords($leave->user->name) }}
                                             </div>
-                                            <div class="flex items-center gap-2 mt-0.5">
+
+                                            {{-- NIK --}}
+                                            <div class="mt-1">
                                                 <span
                                                     class="font-mono text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 rounded">
                                                     {{ $leave->user->nik ?? '-' }}
                                                 </span>
-                                                @if ($leave->alasan)
-                                                    <span
-                                                        class="text-xs text-slate-400 dark:text-slate-500 truncate max-w-[140px]"
-                                                        title="{{ $leave->alasan }}">
-                                                        &middot; {{ $leave->alasan }}
-                                                    </span>
-                                                @endif
                                             </div>
+
+                                            {{-- Alasan --}}
+                                            @if ($leave->alasan)
+                                                <div class="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-[220px] truncate"
+                                                    title="{{ $leave->alasan }}">
+                                                    <span
+                                                        class="font-medium text-slate-600 dark:text-slate-300">Alasan:</span>
+                                                    {{ $leave->alasan }}
+                                                </div>
+                                            @endif
                                         </div>
+
                                     </div>
                                 </td>
 
@@ -475,7 +482,7 @@
                                                             stroke-width="2"
                                                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    Sudah Lewat (Koreksi)
+                                                    Sudah Lewat
                                                 </span>
                                             @endif
                                         </div>
@@ -686,7 +693,7 @@
                                 <span class="font-medium text-slate-800 dark:text-slate-200 text-right">
                                     {{ $start->translatedFormat('d M Y') }} &ndash;
                                     {{ $end->translatedFormat('d M
-                                                                            Y') }}
+                                                                                                                                                    Y') }}
                                 </span>
                             </div>
 

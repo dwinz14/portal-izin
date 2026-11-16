@@ -31,6 +31,7 @@ class LeaveReplacementController extends Controller
         $today = Carbon::today()->toDateString();
 
         $leaves = Leave::with(['user', 'pengganti', 'leaveType'])
+            ->whereHas('user')
             ->adjustableBy(Auth::user())
             ->orderByRaw('CASE WHEN end_date >= ? THEN 0 ELSE 1 END', [$today])
             ->orderByRaw('CASE WHEN end_date >= ? THEN end_date END ASC', [$today])

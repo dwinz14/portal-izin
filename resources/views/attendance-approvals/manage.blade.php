@@ -1,22 +1,21 @@
 @php
-// State yang dipulihkan bila validasi form Hapus gagal (modal dibuka lagi).
-// Kata konfirmasi sengaja TIDAK dipulihkan: harus diketik ulang.
-$hasFilter = collect($filters)->filter()->isNotEmpty();
+    // State yang dipulihkan bila validasi form Hapus gagal (modal dibuka lagi).
+    // Kata konfirmasi sengaja TIDAK dipulihkan: harus diketik ulang.
+    $hasFilter = collect($filters)->filter()->isNotEmpty();
 
-$restored = [
-'base' => url('approval-kehadiran'),
-'showFilter' => $hasFilter,
-'modal' => old('_modal') === 'hapus',
-'row' => [
-'id' => old('_ctx_id') ? (int) old('_ctx_id') : null,
-'label' => old('_ctx_label', ''),
-'past' => (bool) old('_ctx_past'),
-],
-'alasan' => old('alasan', ''),
-];
+    $restored = [
+        'base' => url('approval-kehadiran'),
+        'showFilter' => $hasFilter,
+        'modal' => old('_modal') === 'hapus',
+        'row' => [
+            'id' => old('_ctx_id') ? (int) old('_ctx_id') : null,
+            'label' => old('_ctx_label', ''),
+            'past' => (bool) old('_ctx_past'),
+        ],
+        'alasan' => old('alasan', ''),
+    ];
 
-$inputClass =
-'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm
+    $inputClass = 'w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-slate-700 dark:text-gray-200 shadow-sm
 focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
 @endphp
 
@@ -42,20 +41,19 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
         </div>
     </x-slot>
 
-    <div x-data="manageAttendance({{ \Illuminate\Support\Js::from($restored) }})"
-        class="max-w-6xl mx-auto pb-10 space-y-4">
+    <div x-data="manageAttendance({{ \Illuminate\Support\Js::from($restored) }})" class="max-w-6xl mx-auto pb-10 space-y-4">
 
         <x-toast-notification />
 
         @if ($errors->any())
-        <div
-            class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
-            <ul class="list-disc list-inside">
-                @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
+            <div
+                class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         {{-- ═══ FILTER ═══ --}}
@@ -75,10 +73,11 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                 <form method="GET" action="{{ route('approval-kehadiran.manage') }}">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         <div>
-                            <label for="q" class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Nama
+                            <label for="q"
+                                class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Nama
                                 Pemohon</label>
-                            <input type="text" id="q" name="q" value="{{ $filters['q'] ?? '' }}" maxlength="100"
-                                placeholder="Cari nama..." class="{{ $inputClass }}">
+                            <input type="text" id="q" name="q" value="{{ $filters['q'] ?? '' }}"
+                                maxlength="100" placeholder="Cari nama..." class="{{ $inputClass }}">
                         </div>
                         <div>
                             <label for="type"
@@ -86,8 +85,9 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                             <select id="type" name="type" class="{{ $inputClass }}">
                                 <option value="">-- Semua Jenis --</option>
                                 @foreach ($typeLabels as $value => $label)
-                                <option value="{{ $value }}" @selected(($filters['type'] ?? '' )===$value)>{{ $label }}
-                                </option>
+                                    <option value="{{ $value }}" @selected(($filters['type'] ?? '') === $value)>
+                                        {{ $label }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -95,8 +95,8 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                             <label for="date_from"
                                 class="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Dari
                                 Tanggal</label>
-                            <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
-                                class="{{ $inputClass }}">
+                            <input type="date" id="date_from" name="date_from"
+                                value="{{ $filters['date_from'] ?? '' }}" class="{{ $inputClass }}">
                         </div>
                         <div>
                             <label for="date_to"
@@ -112,10 +112,10 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                             Terapkan
                         </button>
                         @if ($hasFilter)
-                        <a href="{{ route('approval-kehadiran.manage') }}"
-                            class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                            Reset
-                        </a>
+                            <a href="{{ route('approval-kehadiran.manage') }}"
+                                class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                                Reset
+                            </a>
                         @endif
                     </div>
                 </form>
@@ -139,87 +139,90 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
                         @forelse ($attendanceRequests as $item)
-                        @php
-                        $jam = collect([$item->start_time, $item->end_time])
-                        ->filter()
-                        ->map(fn($t) => substr($t, 0, 5))
-                        ->implode(' - ');
+                            @php
+                                $jam = collect([$item->start_time, $item->end_time])
+                                    ->filter()
+                                    ->map(fn($t) => substr($t, 0, 5))
+                                    ->implode(' - ');
 
-                        // Data baris untuk Alpine (di-escape aman oleh Js::from)
-                        $rowData = [
-                        'id' => $item->id,
-                        'label' =>
-                        ucwords($item->user->name ?? '-') .
-                        ' - ' .
-                        $item->type_label .
-                        ' (' .
-                        $item->date->format('d/m/Y') .
-                        ')',
-                        'past' => $item->date->copy()->startOfDay()->lt(today()),
-                        ];
-                        @endphp
-                        <tr>
-                            <td class="px-6 py-4">
-                                <p class="font-medium text-gray-800 dark:text-gray-100">
-                                    {{ ucwords($item->user->name ?? '-') }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ strtoupper(optional($item->user->position)->nama_jabatan ?? '-') }}</p>
-                            </td>
-                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
-                                {{ $item->type_label }}
-                                @if ($item->update_type)
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ $item->update_type_label }}</p>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                                {{ $item->date->translatedFormat('d M Y') }}
-                                @if ($jam !== '')
-                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ $jam }}</p>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300 max-w-xs">
-                                <p title="{{ $item->reason }}">{{ \Illuminate\Support\Str::limit($item->reason, 60) }}
-                                </p>
-                                @if ($item->proof_image)
-                                <a href="{{ asset('storage/' . $item->proof_image) }}" target="_blank" rel="noopener"
-                                    class="text-xs text-blue-700 dark:text-blue-400 hover:underline">Lihat
-                                    bukti</a>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                                {{ $item->approved_at?->translatedFormat('d M Y, H:i') ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex justify-end">
-                                    <button type="button"
-                                        @click="openHapus({{ \Illuminate\Support\Js::from($rowData) }})"
-                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                        </svg>
-                                        Hapus
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                                // Data baris untuk Alpine (di-escape aman oleh Js::from)
+                                $rowData = [
+                                    'id' => $item->id,
+                                    'label' =>
+                                        ucwords($item->user->name ?? '-') .
+                                        ' - ' .
+                                        $item->type_label .
+                                        ' (' .
+                                        $item->date->format('d/m/Y') .
+                                        ')',
+                                    'past' => $item->date->copy()->startOfDay()->lt(today()),
+                                ];
+                            @endphp
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <p class="font-medium text-gray-800 dark:text-gray-100">
+                                        {{ ucwords($item->user->name ?? '-') }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                    {{ $item->type_label }}
+                                    @if ($item->update_type)
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            {{ $item->update_type_label }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                    {{ $item->date->translatedFormat('d M Y') }}
+                                    @if ($jam !== '')
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ $jam }}</p>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300 max-w-xs">
+                                    <p title="{{ $item->reason }}">
+                                        {{ \Illuminate\Support\Str::limit($item->reason, 60) }}
+                                    </p>
+                                    @if ($item->proof_image)
+                                        <a href="{{ asset('storage/' . $item->proof_image) }}" target="_blank"
+                                            rel="noopener"
+                                            class="text-xs text-blue-700 dark:text-blue-400 hover:underline">Lihat
+                                            bukti</a>
+                                    @endif
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                                    {{ $item->approved_at?->translatedFormat('d M Y, H:i') ?? '-' }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex justify-end">
+                                        <button type="button"
+                                            @click="openHapus({{ \Illuminate\Support\Js::from($rowData) }})"
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 text-xs font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                            </svg>
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">
-                                {{ $hasFilter ? 'Tidak ada pengajuan yang cocok dengan filter.' : 'Belum ada pengajuan
-                                kehadiran yang Anda setujui.' }}
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="px-6 py-10 text-center text-gray-400 dark:text-gray-500">
+                                    {{ $hasFilter
+                                        ? 'Tidak ada pengajuan yang cocok dengan filter.'
+                                        : 'Belum ada pengajuan
+                                                                    kehadiran yang Anda setujui.' }}
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
             @if ($attendanceRequests->hasPages())
-            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700">
-                {{ $attendanceRequests->links() }}
-            </div>
+                <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700">
+                    {{ $attendanceRequests->links() }}
+                </div>
             @endif
         </div>
 
@@ -241,7 +244,8 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                     <div class="flex items-center gap-4">
                         <div
                             class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 backdrop-blur-sm border border-white/30">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                             </svg>
@@ -314,8 +318,8 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                             class="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-red-600 text-white text-sm font-black tracking-wide rounded-xl hover:bg-red-700 shadow-lg shadow-red-200 dark:shadow-red-900 focus:ring-4 focus:ring-red-100 dark:focus:ring-red-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">
                             <svg x-show="submitting" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"
                                 x-cloak>
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4" />
+                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                    stroke="currentColor" stroke-width="4" />
                                 <path class="opacity-75" fill="currentColor"
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
@@ -333,7 +337,11 @@ focus:border-primary-500 focus:ring-primary-500 sm:text-xs';
                 base: restored.base,
                 showFilter: restored.showFilter,
                 modal: false,
-                row: { id: null, label: '', past: false },
+                row: {
+                    id: null,
+                    label: '',
+                    past: false
+                },
                 alasan: '',
                 confirmText: '',
                 submitting: false,

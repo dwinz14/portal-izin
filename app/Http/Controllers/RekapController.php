@@ -57,24 +57,24 @@ class RekapController extends Controller
             'created_at'
         ])
             ->with([
-                'user:id,name,position_id,office_id',
+                'user' => fn($q) => $q->withTrashed()->select('id', 'name', 'position_id', 'office_id'),
                 'user.position:id,nama_jabatan',
                 'user.office:id,nama_kantor',
                 'leaveType:id,name',
-                'pengganti:id,name',
-                'approvals.approver:id,name',
+                'pengganti' => fn($q) => $q->withTrashed()->select('id', 'name'),
+                'approvals.approver' => fn($q) => $q->withTrashed()->select('id', 'name'),
             ]);
 
         // Apply filters
         if ($positionId) {
             $query->whereHas('user', function ($q) use ($positionId) {
-                $q->where('position_id', $positionId);
+                $q->withTrashed()->where('position_id', $positionId);
             });
         }
 
         if ($officeId) {
             $query->whereHas('user', function ($q) use ($officeId) {
-                $q->where('office_id', $officeId);
+                $q->withTrashed()->where('office_id', $officeId);
             });
         }
 

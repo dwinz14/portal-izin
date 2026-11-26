@@ -24,8 +24,7 @@ class ApprovalController extends Controller
 
         // Subquery untuk mengecek apakah semua approval step sebelumnya sudah approved
         $approvals = Approval::with(['leave.user', 'leave.leaveType', 'leave.pengganti', 'leave.approvals', 'approver'])
-            ->where('approver_id', $userId)
-            ->where('status', 'pending')
+            ->pendingForActiveOwner($userId)
             ->whereNotExists(function ($query) {
                 $query->select(\DB::raw(1))
                     ->from('approvals as a2')
@@ -41,12 +40,15 @@ class ApprovalController extends Controller
     public function history()
     {
         $histories = ApprovalHistory::with([
+            'leave.user' => fn($q) => $q->withTrashed(),
             'leave.user.position',
             'leave.leaveType',
             'leave.approvals' => function ($query) {
                 $query->orderBy('step');
             },
-            'approver'
+            // Approver lain di timeline bisa saja sudah dihapus; riwayat harus tetap utuh
+            'leave.approvals.approver' => fn($q) => $q->withTrashed(),
+            'approver',
         ])
             ->where('approved_by', Auth::id())
             ->latest()

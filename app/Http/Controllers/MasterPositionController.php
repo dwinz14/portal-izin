@@ -112,7 +112,7 @@ class MasterPositionController extends Controller
     /**
      * Tampilkan preview jabatan dari DB karyawan yang belum ada di positions.
      */
-    public function sync()
+    public function sync(Request $request)
     {
         try {
             $newJabatan = JabatanExternal::getNewOnly();

@@ -40,11 +40,12 @@ class RekapCutiExport implements
     {
         $q = Leave::query()
             ->with([
+                'user' => fn($uq) => $uq->withTrashed(),
                 'user.position',
                 'user.office',
-                'pengganti:id,name',
-                'approvalHistories.approver:id,name',
-                'approvals.approver:id,name',
+                'pengganti' => fn($pq) => $pq->withTrashed()->select('id', 'name'),
+                'approvalHistories.approver' => fn($aq) => $aq->withTrashed()->select('id', 'name'),
+                'approvals.approver' => fn($aq) => $aq->withTrashed()->select('id', 'name'),
                 'leaveType',
             ]);
 
@@ -52,14 +53,14 @@ class RekapCutiExport implements
         if (!empty($this->filters['position_id'])) {
             $positionId = $this->filters['position_id'];
             $q->whereHas('user', function ($uq) use ($positionId) {
-                $uq->where('position_id', $positionId);
+                $uq->withTrashed()->where('position_id', $positionId);
             });
         }
         // filter kantor (berdasarkan user->office di leave->user)
         if (!empty($this->filters['office_id'])) {
             $officeId = $this->filters['office_id'];
             $q->whereHas('user', function ($uq) use ($officeId) {
-                $uq->where('office_id', $officeId);
+                $uq->withTrashed()->where('office_id', $officeId);
             });
         }
 

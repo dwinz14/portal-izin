@@ -47,7 +47,12 @@ class RekapKehadiranExport implements
     public function query()
     {
         $q = AttendanceRequest::query()
-            ->with(['user.position', 'user.office', 'approver']);
+            ->with([
+                'user' => fn($uq) => $uq->withTrashed(),
+                'user.position',
+                'user.office',
+                'approver' => fn($aq) => $aq->withTrashed(),
+            ]);
 
         if (! empty($this->filters['date_from'])) {
             $q->whereDate('date', '>=', $this->filters['date_from']);
@@ -63,11 +68,11 @@ class RekapKehadiranExport implements
         }
         if (! empty($this->filters['office_id'])) {
             $officeId = $this->filters['office_id'];
-            $q->whereHas('user', fn($uq) => $uq->where('office_id', $officeId));
+            $q->whereHas('user', fn($uq) => $uq->withTrashed()->where('office_id', $officeId));
         }
         if (! empty($this->filters['position_id'])) {
             $positionId = $this->filters['position_id'];
-            $q->whereHas('user', fn($uq) => $uq->where('position_id', $positionId));
+            $q->whereHas('user', fn($uq) => $uq->withTrashed()->where('position_id', $positionId));
         }
 
         return $q->orderBy('date', 'asc')->orderBy('created_at', 'asc');

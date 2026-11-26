@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 
 class Approval extends Model
 {
@@ -34,6 +35,12 @@ class Approval extends Model
     public function approver()
     {
         return $this->belongsTo(User::class, 'approver_id');
+    }
+    public function scopePendingForActiveOwner(Builder $query, int $approverId): Builder
+    {
+        return $query->where('approver_id', $approverId)
+            ->where('status', 'pending')
+            ->whereHas('leave.user');
     }
     public function isFinalStep(): bool
     {

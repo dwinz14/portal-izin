@@ -14,8 +14,7 @@ class AttendanceApprovalController extends Controller
     public function index()
     {
         $attendanceRequests = AttendanceRequest::with(['user.position', 'user.office'])
-            ->where('approver_id', Auth::id())
-            ->where('status', AttendanceRequest::STATUS_PENDING)
+            ->pendingApprovalFor(Auth::id())
             ->oldest()
             ->paginate(10);
 
@@ -24,7 +23,11 @@ class AttendanceApprovalController extends Controller
 
     public function history()
     {
-        $histories = AttendanceRequest::with(['user.position', 'user.office'])
+        $histories = AttendanceRequest::with([
+            'user' => fn($q) => $q->withTrashed(),
+            'user.position',
+            'user.office',
+        ])
             ->where('approver_id', Auth::id())
             ->whereIn('status', [AttendanceRequest::STATUS_APPROVED, AttendanceRequest::STATUS_REJECTED])
             ->latest('updated_at')

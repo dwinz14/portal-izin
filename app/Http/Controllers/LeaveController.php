@@ -319,6 +319,7 @@ class LeaveController extends Controller
     public function replacements()
     {
         $leaves = Leave::with('user')
+            ->whereHas('user')
             ->where('pengganti_id', Auth::id())
             ->where('status_final', 'approved')
             ->orderByRaw("

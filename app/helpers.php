@@ -28,8 +28,7 @@ if (!function_exists('getFilteredMenuItems')) {
 
         // Badge for "Approval Cuti" - count pending approvals for current user
         $badgeCounts['approval.index'] = Approval::with(['leave.approvals'])
-            ->where('approver_id', $userId)
-            ->where('status', 'pending')
+            ->pendingForActiveOwner($userId)
             ->get()
             ->filter(function (Approval $approval) {
                 $prev = $approval->leave->approvals->where('step', '<', $approval->step);
@@ -42,9 +41,7 @@ if (!function_exists('getFilteredMenuItems')) {
             ->where('is_revision_pending', true)
             ->count();
 
-        $badgeCounts['approval-kehadiran.index'] = AttendanceRequest::where('approver_id', $userId)
-            ->where('status', AttendanceRequest::STATUS_PENDING)
-            ->count();
+        $badgeCounts['approval-kehadiran.index'] = AttendanceRequest::pendingApprovalFor($userId)->count();
 
         $badgeCounts['kehadiran.index'] = AttendanceRequest::where('user_id', $userId)
             ->where('status', AttendanceRequest::STATUS_PENDING)

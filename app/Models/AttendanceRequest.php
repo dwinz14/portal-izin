@@ -88,6 +88,13 @@ class AttendanceRequest extends Model
         return $this->belongsTo(User::class, 'approver_id');
     }
 
+    public function scopePendingApprovalFor(Builder $query, int $approverId): Builder
+    {
+        return $query->where('approver_id', $approverId)
+            ->where('status', self::STATUS_PENDING)
+            ->whereHas('user');
+    }
+
     /**
      * Pengajuan kehadiran approved yang BOLEH dihapus oleh $user (atasan yang menyetujuinya).
      */

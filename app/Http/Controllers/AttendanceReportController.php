@@ -27,13 +27,18 @@ class AttendanceReportController extends Controller
     {
         $filters = $this->validatedFilters($request);
 
-        $attendanceRequests = AttendanceRequest::with(['user.position', 'user.office', 'approver'])
+        $attendanceRequests = AttendanceRequest::with([
+            'user' => fn($q) => $q->withTrashed(),
+            'user.position',
+            'user.office',
+            'approver' => fn($q) => $q->withTrashed(),
+        ])
             ->when($filters['status'] ?? null,      fn($q, $v) => $q->where('status', $v))
             ->when($filters['type'] ?? null,        fn($q, $v) => $q->where('type', $v))
             ->when($filters['date_from'] ?? null,   fn($q, $v) => $q->whereDate('date', '>=', $v))
             ->when($filters['date_to'] ?? null,     fn($q, $v) => $q->whereDate('date', '<=', $v))
-            ->when($filters['office_id'] ?? null,   fn($q, $v) => $q->whereHas('user', fn($u) => $u->where('office_id', $v)))
-            ->when($filters['position_id'] ?? null, fn($q, $v) => $q->whereHas('user', fn($u) => $u->where('position_id', $v)))
+            ->when($filters['office_id'] ?? null,   fn($q, $v) => $q->whereHas('user', fn($u) => $u->withTrashed()->where('office_id', $v)))
+            ->when($filters['position_id'] ?? null, fn($q, $v) => $q->whereHas('user', fn($u) => $u->withTrashed()->where('position_id', $v)))
             ->latest('date')
             ->paginate(15)
             ->withQueryString();
